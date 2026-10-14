@@ -125,3 +125,16 @@ Fewer tokens per session and per sheet read, same guidance. Owner: "apply the te
 ## Decisions
 - No upstream sync; updates are manual from now on (owner, 2026-10-14).
 - Headings, code blocks, inline code and every number stay byte-identical; prose, reference lists and external URLs are compressed or dropped.
+
+# Phase 4: index replaces rules (2026-10-14)
+
+## Why
+Owner wants the always-loaded file to be an index into the OWASP files, not rules: one line per sheet with its use case and the file to read for detail.
+
+## Steps
+20. [x] `skills/owasp/INDEX.md`: 133 lines, "use case → file", grouped by category. Check: `scripts/check-index.sh` → `OK: 133 sheets, each indexed once`.
+21. [x] `SKILL.md` body points to `INDEX.md`; `allowed-tools` covers the skill folder. Delete `SECURITY-RULES.md` and `scripts/check-rules.sh`.
+22. [ ] Commit, push, reinstall with `--copy`; `~/.claude/CLAUDE.md` imports `@skills/owasp/INDEX.md` instead of `@SECURITY.md`; headless webhook test reads the sheet.
+
+## Decisions
+- Always-loaded content is the index only; the 7 core rules and the 107 distilled rules are dropped (owner, 2026-10-14).
