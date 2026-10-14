@@ -58,16 +58,16 @@ Deprecated stubs and their link replacements (from the first import):
 `Access_Control` → `Authorization.md`; `Injection_Prevention_in_Java` → `Java_Security.md`; `TLS_Cipher_String`, `Transport_Layer_Protection` → `Transport_Layer_Security.md`.
 
 ## Steps
-1. [ ] Branch: repo is empty, so first commit goes to `main` (nothing to branch from). Write `LICENSE`, `NOTICE.md`. Check: `head -1 LICENSE` → `# Attribution-ShareAlike 4.0 International`.
-2. [ ] Copy sheets: `cp ~/.claude/security/owasp/*.md skills/owasp/sheets/`. Check: `ls skills/owasp/sheets | wc -l` → `133`.
-3. [ ] Write `skills/owasp/SKILL.md` from `~/.claude/security/INDEX.md`. Check: `scripts/check-index.sh` → `OK: 133 sheets, all indexed, no missing`.
-4. [ ] Write `scripts/sync-owasp.sh`. Check: `scripts/sync-owasp.sh ae965343 && git status --porcelain skills/owasp/sheets` → empty (byte-identical reproduction).
-5. [ ] Write `SECURITY-RULES.md` (from current `~/.claude/SECURITY.md`, line pointing to the skill). Check: `wc -c` < 2000.
-6. [ ] Write `README.md`. Check: install command, `@` import line, token table, update steps, license section present.
-7. [ ] Run `/ponytail-review` over scripts.
-8. [ ] Commit (`feat: add owasp skill with OWASP cheat sheets`), review `git diff --staged` stat, push `main` (owner asked to push).
-9. [ ] Dogfood install: `npx skills@latest add ralvares/claude-security-skills -g -y`. Check: `~/.claude/skills/owasp/SKILL.md` exists, `check-index.sh` passes against it.
-10. [ ] Switch local setup: `~/.claude/SECURITY.md` = contents of `SECURITY-RULES.md`; move `~/.claude/security/` to `~/.claude/skills-archive/security-pre-skill/`. Check: fresh `claude -p "Plan a webhook receiver. Only list which OWASP files you would read."` invokes `owasp` and names `Webhook_Security.md`.
+1. [x] Branch: repo is empty, so first commit goes to `main` (nothing to branch from). Write `LICENSE`, `NOTICE.md`. Check: `head -1 LICENSE` → `# Attribution-ShareAlike 4.0 International`.
+2. [x] Copy sheets: `cp ~/.claude/security/owasp/*.md skills/owasp/sheets/`. Check: `ls skills/owasp/sheets | wc -l` → `133`.
+3. [x] Write `skills/owasp/SKILL.md` from `~/.claude/security/INDEX.md`. Check: `scripts/check-index.sh` → `OK: 133 sheets, all indexed, no missing`.
+4. [x] Write `scripts/sync-owasp.sh`. Check: `scripts/sync-owasp.sh ae965343 && git status --porcelain skills/owasp/sheets` → empty (byte-identical reproduction).
+5. [x] Write `SECURITY-RULES.md` (from current `~/.claude/SECURITY.md`, line pointing to the skill). Check: `wc -c` < 2000.
+6. [x] Write `README.md`. Check: install command, `@` import line, token table, update steps, license section present.
+7. [x] Run `/ponytail-review` over scripts.
+8. [x] Commit (`feat: add owasp skill with OWASP cheat sheets`), review `git diff --staged` stat, push `main` (owner asked to push).
+9. [x] Dogfood install: `npx skills@latest add ralvares/claude-security-skills -g -y`. Check: `~/.claude/skills/owasp/SKILL.md` exists, `check-index.sh` passes against it.
+10. [x] Switch local setup: `~/.claude/SECURITY.md` = contents of `SECURITY-RULES.md`; move `~/.claude/security/` to `~/.claude/skills-archive/security-pre-skill/`. Check: fresh `claude -p "Plan a webhook receiver. Only list which OWASP files you would read."` invokes `owasp` and names `Webhook_Security.md`.
 
 ## Constraints
 - Sheets are third-party content under CC BY-SA 4.0: keep attribution, state changes, same license for the repo.
@@ -76,12 +76,12 @@ Deprecated stubs and their link replacements (from the first import):
 - Global rules files stay small (< 2 KB).
 
 ## Done when
-- [ ] `scripts/check-index.sh` passes.
-- [ ] `scripts/sync-owasp.sh ae965343` leaves no diff.
-- [ ] Pushed to `origin/main`.
-- [ ] Installed via `npx skills` and listed by Claude Code.
-- [ ] Headless webhook test invokes the skill and reads only the webhook rows.
-- [ ] `~/.claude/SECURITY.md` < 2 KB, old `~/.claude/security/` archived.
+- [x] `scripts/check-index.sh` passes.
+- [x] `scripts/sync-owasp.sh ae965343` leaves no diff.
+- [x] Pushed to `origin/main`.
+- [x] Installed via `npx skills` and listed by Claude Code.
+- [x] Headless webhook test invokes the skill and picks the webhook rows (reads outside the project need a `Read(~/.claude/skills/**)` allow rule in headless mode).
+- [x] `~/.claude/SECURITY.md` < 2 KB, old `~/.claude/security/` archived.
 
 ## Decisions
 - Structure: one `owasp` skill (owner, 2026-10-14).
