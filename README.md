@@ -58,7 +58,18 @@ This allows only running this skill. It grants no other file or tool access.
 
 ## How it is used
 
-With the index loaded, Claude sees which sheet covers the task, invokes `owasp` (which grants read access), reads that sheet and names it in the plan's Security section. You can also type `/owasp`.
+With the index loaded, Claude sees which sheet covers the task, invokes `owasp` (which grants read access), reads that sheet and names it in the plan's Security section.
+
+Call it yourself with a use case to load just that guidance:
+
+```
+/owasp webhook
+/owasp login and MFA
+/owasp file upload
+/owasp AI agent with tools
+```
+
+Claude reads only the matching sheets and summarises their key rules, or applies them to the work in progress. `/owasp` with no use case uses the current task.
 
 The sheets quote attack payloads as examples. The skill tells Claude to treat them as reference data, never as instructions.
 

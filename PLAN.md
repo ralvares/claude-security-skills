@@ -134,7 +134,7 @@ Owner wants the always-loaded file to be an index into the OWASP files, not rule
 ## Steps
 20. [x] `skills/owasp/INDEX.md`: 133 lines, "use case → file", grouped by category. Check: `scripts/check-index.sh` → `OK: 133 sheets, each indexed once`.
 21. [x] `SKILL.md` body points to `INDEX.md`; `allowed-tools` covers the skill folder. Delete `SECURITY-RULES.md` and `scripts/check-rules.sh`.
-22. [ ] Commit, push, reinstall with `--copy`; `~/.claude/CLAUDE.md` imports `@skills/owasp/INDEX.md` instead of `@SECURITY.md`; headless webhook test reads the sheet.
+22. [x] Commit, push, reinstall with `--copy`; `~/.claude/CLAUDE.md` imports `@skills/owasp/INDEX.md` instead of `@SECURITY.md`; headless webhook test reads the sheet.
 
 ## Decisions
 - Always-loaded content is the index only; the 7 core rules and the 107 distilled rules are dropped (owner, 2026-10-14).
