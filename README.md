@@ -14,10 +14,10 @@ Building a webhook receiver, for example, loads the router, `Webhook_Security.md
 ## Install
 
 ```bash
-npx skills@latest add ralvares/claude-security-skills -g -y
+npx skills@latest add ralvares/claude-security-skills -g -y --copy
 ```
 
-This puts the skill in `~/.claude/skills/owasp/`. Without Node:
+This puts the skill in `~/.claude/skills/owasp/`. Keep `--copy`: without it the installer links the folder from `~/.agents/skills/`, and Claude Code checks read permission on the link target too, so the sheets need a prompt every time. Without Node:
 
 ```bash
 git clone https://github.com/ralvares/claude-security-skills
@@ -31,6 +31,30 @@ Then make the rules always on. Copy `SECURITY-RULES.md` to `~/.claude/SECURITY.m
 ```
 
 Check it in Claude Code: `/owasp` should appear in the skill list.
+
+## Permissions
+
+The sheets live outside your projects, and Claude Code asks before reading files outside the working directory. The skill grants itself read access to its own `sheets/` folder and nothing else:
+
+```yaml
+allowed-tools: Read(/${CLAUDE_SKILL_DIR}/sheets/**)
+```
+
+Because the skill grants a permission, Claude Code asks you once to allow the skill itself. Choose "don't ask again" and the sheets load silently from then on.
+
+Headless runs (`claude -p`, CI, scripts) cannot answer that question. Allow the skill up front, either per run:
+
+```bash
+claude -p "..." --allowedTools "Skill(owasp)"
+```
+
+or for every session, in `~/.claude/settings.json`:
+
+```json
+{ "permissions": { "allow": ["Skill(owasp)"] } }
+```
+
+This allows only running this skill. It grants no other file or tool access.
 
 ## How it is used
 
