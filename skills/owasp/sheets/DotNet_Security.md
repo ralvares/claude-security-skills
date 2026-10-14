@@ -2,63 +2,57 @@
 
 ## Introduction
 
-This page intends to provide quick basic .NET security tips for developers.
+Quick basic .NET security tips for developers.
 
 ### The .NET Framework
 
-The .NET Framework is Microsoft's principal platform for enterprise development. It is the supporting API for ASP.NET, Windows Desktop applications, Windows Communication Foundation services, SharePoint, Visual Studio Tools for Office and other technologies.
+.NET Framework = Microsoft's principal enterprise development platform. Supporting API for ASP.NET, Windows Desktop applications, Windows Communication Foundation services, SharePoint, Visual Studio Tools for Office, other technologies.
 
-The .NET Framework constitutes a collection of APIs that facilitate the usage of an advanced type system, managing data, graphics, networking, file operations, and more - essentially covering the vast majority of requirements for developing enterprise applications within the Microsoft ecosystem. It is a nearly ubiquitous library that is strongly named and versioned at the assembly level.
+Collection of APIs for advanced type system, data management, graphics, networking, file operations, etc. - covers vast majority of enterprise application requirements in Microsoft ecosystem. Nearly ubiquitous library; strongly named and versioned at assembly level.
 
 ### Updating the Framework
 
-The .NET Framework is kept up-to-date by Microsoft with the Windows Update service. Developers do not normally need to run separate updates to the Framework. Windows Update can be accessed at [Windows Update](http://windowsupdate.microsoft.com/) or from the Windows Update program on a Windows computer.
+Microsoft updates .NET Framework via Windows Update service; developers normally need no separate Framework updates. Access Windows Update or Windows Update program on Windows computer.
 
-Individual frameworks can be kept up to date using [NuGet](https://docs.microsoft.com/en-us/nuget/). As Visual Studio prompts for updates, build it into your lifecycle.
+Individual frameworks updatable via NuGet. Visual Studio prompts for updates; build into lifecycle.
 
-Remember that third-party libraries have to be updated separately and not all of them use NuGet. ELMAH for instance, requires a separate update effort.
+Third-party libraries need separate updates; not all use NuGet. ELMAH, for instance, needs separate update effort.
 
 ### Security Announcements
 
-Receive security notifications by selecting the "Watch" button at the following repositories:
+Get security notifications via "Watch" button at repositories:
 
-- [.NET Core Security Announcements](https://github.com/dotnet/announcements/issues?q=is%3Aopen+is%3Aissue+label%3ASecurity)
-- [ASP.NET Core & Entity Framework Core Security Announcements](https://github.com/aspnet/Announcements/issues?q=is%3Aopen+is%3Aissue+label%3ASecurity)
+- .NET Core Security Announcements
+- ASP.NET Core & Entity Framework Core Security Announcements
 
 ## .NET General Guidance
 
-This section contains general guidance for .NET applications.
-This applies to all .NET applications, including ASP.NET, WPF, WinForms, and others.
+General guidance for all .NET applications, incl. ASP.NET, WPF, WinForms, others.
 
-The OWASP Top 10 lists the most prevalent and dangerous threats to web security in the world today and is reviewed every few years
-and updated with the latest threat data. This section of the cheat sheet is based on this list.
-Your approach to securing your web application should be to start at the top threat A1 below and work down;
-this will ensure that any time spent on security will be spent most effectively and
-cover the top threats first and lesser threats afterwards. After covering the Top 10 it is generally advisable
-to assess for other threats or get a professionally completed Penetration Test.
+OWASP Top 10 = most prevalent, dangerous web security threats; reviewed every few years, updated with latest threat data. This section based on it. Secure web app starting at top threat A1 below, working down: spends security time most effectively, covers top threats first. After Top 10, generally assess other threats or get professional Penetration Test.
 
 ### A01 Broken Access Control
 
 #### Weak Account management
 
-Ensure cookies are sent with the HttpOnly flag set to prevent client side scripts from accessing the cookie:
+Send cookies with HttpOnly flag set, preventing client side scripts accessing cookie:
 
 ```csharp
 CookieHttpOnly = true,
 ```
 
-Reduce the time period a session can be stolen in by reducing session timeout and removing sliding expiration:
+Reduce window for session theft: reduce session timeout, remove sliding expiration:
 
-The decision to use sliding expiration depends on your application's threat model. Setting `SlidingExpiration` to `false` enforces an absolute session lifetime, which limits how long a stolen session can be reused, at the cost of reduced usability for long-lived interactive sessions. For some applications, enabling sliding expiration (`true`) may be preferred for user experience, as it keeps the session alive as long as the user is active. This convenience comes with increased risk if a session is compromised.
+Sliding expiration use depends on app threat model. `SlidingExpiration` `false` enforces absolute session lifetime, limiting stolen session reuse, at cost of reduced usability for long-lived interactive sessions. Some apps may prefer sliding expiration (`true`) for user experience: keeps session alive while user active. Convenience raises risk if session compromised.
 
 ```csharp
 ExpireTimeSpan = TimeSpan.FromMinutes(60),
 SlidingExpiration = false
 ```
 
-See [here](https://github.com/johnstaveley/SecurityEssentials/blob/master/SecurityEssentials/App_Start/Startup.Auth.cs) for an example of a full startup code snippet.
+Full startup code snippet example available (SecurityEssentials Startup.Auth.cs).
 
-Ensure cookies are sent over HTTPS in production. This should be enforced in the config transforms:
+Send cookies over HTTPS in production. Enforce in config transforms:
 
 ```xml
 <httpCookies requireSSL="true" />
@@ -67,7 +61,7 @@ Ensure cookies are sent over HTTPS in production. This should be enforced in the
 </authentication>
 ```
 
-Protect LogOn, Registration and password reset methods against brute force attacks by throttling requests (see code below). Consider also using ReCaptcha.
+Protect LogOn, Registration, password reset methods vs brute force by throttling requests (see code below). Consider ReCaptcha too.
 
 ```csharp
 [HttpPost]
@@ -79,15 +73,15 @@ Requests = 3, Seconds = 60)]
 public async Task<ActionResult> LogOn(LogOnViewModel model, string returnUrl)
 ```
 
-DO NOT: Roll your own authentication or session management. Use the one provided by .NET.
+DO NOT: Roll your own authentication or session management. Use .NET's.
 
-DO NOT: Tell someone if the account exists on LogOn, Registration or Password reset. Say something like 'Either the username or password was incorrect', or 'If this account exists then a reset token will be sent to the registered email address'. This protects against account enumeration.
+DO NOT: Reveal whether account exists on LogOn, Registration or Password reset. Say e.g. 'Either the username or password was incorrect', or 'If this account exists then a reset token will be sent to the registered email address'. Protects vs account enumeration.
 
-The feedback to the user should be identical whether or not the account exists, both in terms of content and behavior. E.g., if the response takes 50% longer when the account is real then membership information can be guessed and tested.
+User feedback must be identical whether or not account exists, in content and behavior. E.g., response taking 50% longer when account real → membership information guessable/testable.
 
 #### Missing function-level access control
 
-DO: Authorize users on all externally facing endpoints. The .NET framework has many ways to authorize a user, use them at method level:
+DO: Authorize users on all externally facing endpoints. .NET framework has many authorization ways; use at method level:
 
 ```csharp
 [Authorize(Roles = "Admin")]
@@ -95,21 +89,21 @@ DO: Authorize users on all externally facing endpoints. The .NET framework has m
 public ActionResult Index(int page = 1)
 ```
 
-or better yet, at controller level:
+or better, at controller level:
 
 ```csharp
 [Authorize]
 public class UserController
 ```
 
-You can also check roles in code using identity features in .net: `System.Web.Security.Roles.IsUserInRole(userName, roleName)`
+Can also check roles in code using .net identity features: `System.Web.Security.Roles.IsUserInRole(userName, roleName)`
 
-You can find more information in the [Authorization Cheat Sheet](Authorization.md) and
+More: [Authorization Cheat Sheet](Authorization.md) and
 [Authorization Testing Automation Cheat Sheet](Authorization_Testing_Automation.md).
 
 #### Insecure Direct object references
 
-When you have a resource (object) which can be accessed by a reference (in the sample below this is the `id`), you need to ensure that the user is intended to have access to that resource.
+Resource (object) accessed by reference (below: `id`): ensure user is intended to access that resource.
 
 ```csharp
 // Insecure
@@ -134,48 +128,45 @@ public ActionResult Edit(int id)
 }
 ```
 
-More information can be found in the [Insecure Direct Object Reference Prevention Cheat Sheet](Insecure_Direct_Object_Reference_Prevention.md).
+More: [Insecure Direct Object Reference Prevention Cheat Sheet](Insecure_Direct_Object_Reference_Prevention.md).
 
 ### A02 Cryptographic Failures
 
 #### General cryptography guidance
 
 - **Never, ever write your own cryptographic functions.**
-- Wherever possible, try and avoid writing any cryptographic code at all. Instead try and either use pre-existing secrets management solutions or the secret management solution provided by your cloud provider. For more information, see the [OWASP Secrets Management Cheat Sheet](Secrets_Management.md).
-- If you cannot use a pre-existing secrets management solution, try and use a trusted and well known implementation library rather than using the libraries built into .NET as it is far too easy to make cryptographic errors with them.
-- Make sure your application or protocol can easily support a future change of cryptographic algorithms.
+- Wherever possible avoid writing any cryptographic code. Use pre-existing secrets management solutions or cloud provider's. See [OWASP Secrets Management Cheat Sheet](Secrets_Management.md).
+- If no pre-existing secrets management solution usable, use trusted well known implementation library rather than libraries built into .NET; too easy to make cryptographic errors with them.
+- Ensure app/protocol easily supports future cryptographic algorithm change.
 
 #### Hashing
 
-DO: Use a strong hashing algorithm.
+DO: Use strong hashing algorithm.
 
-- In .NET (both Framework and Core), the strongest hashing algorithm for general hashing requirements is
-  [System.Security.Cryptography.SHA512](https://docs.microsoft.com/en-us/dotnet/api/system.security.cryptography.sha512).
-- For new ASP.NET Core applications, use ASP.NET Core Identity and its `PasswordHasher<TUser>` for password storage. [Microsoft advises against calling `KeyDerivation.Pbkdf2` directly for this purpose](https://learn.microsoft.com/en-us/aspnet/core/security/data-protection/consumer-apis/password-hashing?view=aspnetcore-10.0); it is a low-level primitive intended for integration with existing cryptographic systems.
-- Do not use general-purpose hashes such as SHA-512 directly for password storage.
-- Refer to the [Password Storage Cheat Sheet](Password_Storage.md) for more information.
+- .NET (Framework and Core): strongest hashing algorithm for general hashing requirements: System.Security.Cryptography.SHA512.
+- New ASP.NET Core apps: use ASP.NET Core Identity and its `PasswordHasher<TUser>` for password storage. Microsoft advises against calling `KeyDerivation.Pbkdf2` directly for this; low-level primitive for integration with existing cryptographic systems.
+- Don't use general-purpose hashes such as SHA-512 directly for password storage.
+- See [Password Storage Cheat Sheet](Password_Storage.md).
 
 #### Passwords
 
-DO: Follow the [Authentication Cheat Sheet](Authentication.md#implement-proper-password-strength-controls) for password length and breached-password screening. Allow long passphrases without mandatory character-composition rules.
+DO: Follow [Authentication Cheat Sheet](Authentication.md#implement-proper-password-strength-controls) for password length + breached-password screening. Allow long passphrases without mandatory character-composition rules.
 
 #### Encryption
 
-DO: Use a strong encryption algorithm such as [AES-256](https://csrc.nist.gov/pubs/fips/197/final) where personally identifiable data needs to be restored to its original format.
+DO: Use strong encryption algorithm such as AES-256 where personally identifiable data must be restored to original format.
 
-DO: Protect encryption keys more than any other asset. Find more information about storing encryption keys at rest in the
-  [Key Management Cheat Sheet](Key_Management.md#storage).
+DO: Protect encryption keys more than any other asset. Storing keys at rest: [Key Management Cheat Sheet](Key_Management.md#storage).
 
-DO: Use TLS 1.2+ for your entire site. Get a free certificate [LetsEncrypt.org](https://letsencrypt.org/) and automate renewals.
+DO: Use TLS 1.2+ for entire site. Get free certificate (LetsEncrypt.org); automate renewals.
 
-DO NOT: [Allow SSL, this is now obsolete](https://github.com/ssllabs/research/wiki/SSL-and-TLS-Deployment-Best-Practices).
+DO NOT: Allow SSL; now obsolete.
 
-DO: Have a strong TLS policy (see [SSL Best Practices](https://www.ssllabs.com/projects/best-practices/index.html)), use TLS 1.2+ wherever possible. Then check the configuration using [SSL Test](https://www.ssllabs.com/ssltest/) or [TestSSL](https://testssl.sh/).
+DO: Strong TLS policy (see SSL Best Practices), TLS 1.2+ wherever possible. Check configuration with SSL Test or TestSSL.
 
-More information on Transport Layer Protection can be found in the
-[Transport Layer Security Cheat Sheet](Transport_Layer_Security.md).
+More: [Transport Layer Security Cheat Sheet](Transport_Layer_Security.md).
 
-DO: Ensure headers are not disclosing information about your application. See [HttpHeaders.cs](https://github.com/johnstaveley/SecurityEssentials/blob/master/SecurityEssentials/Core/HttpHeaders.cs), [Dionach StripHeaders](https://github.com/Dionach/StripHeaders/), disable via `web.config` or [Startup.cs](https://medium.com/bugbountywriteup/security-headers-1c770105940b).
+DO: Ensure headers don't disclose app information. See HttpHeaders.cs, Dionach StripHeaders; disable via `web.config` or Startup.cs.
 
 e.g Web.config
 
@@ -220,22 +211,22 @@ app.UseCsp(opts => opts
  );
 ```
 
-More information about headers can be found at the [OWASP Secure Headers Project](https://owasp.org/www-project-secure-headers/).
+More: OWASP Secure Headers Project.
 
 #### Encryption for storage
 
-- Use the [Windows Data Protection API (DPAPI)](https://docs.microsoft.com/en-us/dotnet/standard/security/how-to-use-data-protection) for secure local storage of sensitive data.
-- Where DPAPI cannot be used, follow the algorithm guidance in the [OWASP Cryptographic Storage Cheat Sheet](Cryptographic_Storage.md#algorithms).
+- Use Windows Data Protection API (DPAPI) for secure local storage of sensitive data.
+- Where DPAPI unusable, follow algorithm guidance in [OWASP Cryptographic Storage Cheat Sheet](Cryptographic_Storage.md#algorithms).
 
-The following code snippet shows an example of using AES-GCM to perform encryption/decryption of data. It is strongly recommended to have a cryptography expert review your final design and code, as even the most trivial error can severely weaken your encryption.
+Snippet: AES-GCM encryption/decryption of data. Strongly recommended: cryptography expert reviews final design + code; even trivial error severely weakens encryption.
 
-The code is based on example from here: [https://www.scottbrady91.com/c-sharp/aes-gcm-dotnet](https://www.scottbrady91.com/c-sharp/aes-gcm-dotnet)
+Code based on example at scottbrady91.com (c-sharp/aes-gcm-dotnet).
 
-A few constraints/pitfalls with this code:
+Constraints/pitfalls:
 
-- It does not take into account key rotation or management which is a whole topic in itself.
-- It is important to use a different nonce for every encryption operation, even if the same key is used.
-- The key will need to be stored securely.
+- Ignores key rotation/management (whole topic itself).
+- Use different nonce for every encryption operation, even with same key.
+- Key must be stored securely.
 
 <details>
   <summary>Click here to view the "AES-GCM symmetric encryption" code snippet.</summary>
@@ -319,21 +310,21 @@ public static class AesGcmSimple
 
 #### Encryption for transmission
 
-- Again, follow the algorithm guidance in the [OWASP Cryptographic Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html#algorithms).
+- Again follow algorithm guidance in [OWASP Cryptographic Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html#algorithms).
 
-The following code snippet shows an example of using Elliptic Curve/Diffie-Hellman (ECDH) together with AES-GCM to perform encryption/decryption of data between two different sides without the need to transfer the symmetric key between the two sides. Instead, the sides exchange public keys and can then use ECDH to generate a shared secret which can be used for the symmetric encryption.
+Snippet: Elliptic Curve/Diffie-Hellman (ECDH) with AES-GCM to encrypt/decrypt data between two sides without transferring symmetric key. Sides exchange public keys; ECDH generates shared secret for symmetric encryption.
 
-Again, it is strongly recommended to have a cryptography expert review your final design and code, as even the most trivial error can severely weaken your encryption.
+Again strongly recommended: cryptography expert reviews final design + code; even trivial error severely weakens encryption.
 
-Note that this code sample relies on the `AesGcmSimple` class from the [previous section](#encryption-for-storage).
+Sample relies on `AesGcmSimple` class from [previous section](#encryption-for-storage).
 
-A few constraints/pitfalls with this code:
+Constraints/pitfalls:
 
-- It does not take into account key rotation or management which is a whole topic in itself.
-- The code deliberately enforces a new nonce for every encryption operation but this must be managed as a separate data item alongside the ciphertext.
-- The private keys will need to be stored securely.
-- The code does not consider the validation of public keys before use.
-- Overall, there is no verification of authenticity between the two sides.
+- Ignores key rotation/management (whole topic itself).
+- Code deliberately enforces new nonce per encryption operation; must be managed as separate data item alongside ciphertext.
+- Private keys must be stored securely.
+- No validation of public keys before use.
+- No verification of authenticity between two sides.
 
 <details>
   <summary>Click here to view the "ECDH asymmetric encryption" code snippet.</summary>
@@ -440,12 +431,12 @@ public class ECDHSimple
 
 #### SQL Injection
 
-DO: Using an object relational mapper (ORM) or stored procedures is the most effective way of countering the SQL Injection vulnerability.
+DO: Object relational mapper (ORM) or stored procedures = most effective counter to SQL Injection.
 
-DO: Use parameterized queries where a direct SQL query must be used. More Information can be found in the
+DO: Parameterized queries where direct SQL query unavoidable. See
 [Query Parameterization Cheat Sheet](Query_Parameterization.md).
 
-E.g., using Entity Framework:
+E.g., Entity Framework:
 
 ```csharp
 var sql = @"Update [User] SET FirstName = @FirstName WHERE Id = @Id";
@@ -455,9 +446,9 @@ context.Database.ExecuteSqlCommand(
     new SqlParameter("@Id", id));
 ```
 
-DO NOT: Concatenate strings anywhere in your code and execute them against your database (Known as *dynamic SQL*).
+DO NOT: Concatenate strings anywhere in code and execute against database (*dynamic SQL*).
 
-Note: You can still accidentally do this with ORMs or Stored procedures so check everywhere. For example:
+Note: Still possible accidentally with ORMs or Stored procedures; check everywhere. E.g.:
 
 ```csharp
 string sql = "SELECT * FROM Users WHERE UserName='" + txtUser.Text + "' AND Password='"
@@ -465,14 +456,13 @@ string sql = "SELECT * FROM Users WHERE UserName='" + txtUser.Text +�
 context.Database.ExecuteSqlCommand(sql); // SQL Injection vulnerability!
 ```
 
-DO: Practice Least Privilege - connect to the database using an account with a minimum set of permissions required
-to do its job, not the database administrator account.
+DO: Least Privilege - connect to database with account having minimum permissions needed, not database administrator account.
 
 #### OS Injection
 
-General guidance about OS Injection can be found in the [OS Command Injection Defense Cheat Sheet](OS_Command_Injection_Defense.md).
+General OS Injection guidance: [OS Command Injection Defense Cheat Sheet](OS_Command_Injection_Defense.md).
 
-DO: Use [System.Diagnostics.Process.Start](https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.process.start?view=netframework-4.7.2) to call underlying OS functions.
+DO: Use System.Diagnostics.Process.Start to call underlying OS functions.
 
 e.g
 
@@ -485,11 +475,11 @@ process.StartInfo = startInfo;
 process.Start();
 ```
 
-DO NOT: Assume that this mechanism will protect against malicious input designed to break out of one argument and then tamper with another argument to the process. This will still be possible.
+DO NOT: Assume this mechanism protects vs malicious input breaking out of one argument and tampering with another argument to the process. Still possible.
 
-DO: Use allowlist validation on all user supplied input wherever possible. Input validation prevents improperly formed data from entering an information system. For more information please see the [Input Validation Cheat Sheet](Input_Validation.md).
+DO: Allowlist validation on all user supplied input wherever possible. Input validation prevents improperly formed data entering information system. See [Input Validation Cheat Sheet](Input_Validation.md).
 
-e.g Validating user input using [IPAddress.TryParse Method](https://docs.microsoft.com/en-us/dotnet/api/system.net.ipaddress.tryparse?view=netframework-4.8)
+e.g Validating user input using IPAddress.TryParse Method
 
 ``` csharp
 //User input
@@ -514,38 +504,35 @@ if (!string.IsNullOrEmpty(ipAddress))
 }
 ```
 
-DO: Try to only accept characters which are simple alphanumeric.
+DO: Accept only simple alphanumeric characters where possible.
 
-DO NOT: Assume you can sanitize special characters without actually removing them. Various combinations of ```\```, ```'``` and ```@``` may have an unexpected impact on sanitization attempts.
+DO NOT: Assume special characters sanitizable without removing them. Combinations of ```\```, ```'``` and ```@``` may unexpectedly impact sanitization attempts.
 
-DO NOT: Rely on methods without a security guarantee.
+DO NOT: Rely on methods without security guarantee.
 
-e.g. .NET Core 2.2 and greater and .NET 5 and greater support [ProcessStartInfo.ArgumentList](https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.processstartinfo.argumentlist) which performs some character escaping but the object includes [a disclaimer that it is not safe with untrusted input](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.processstartinfo.argumentlist#remarks).
+e.g. .NET Core 2.2 and greater and .NET 5 and greater support ProcessStartInfo.ArgumentList which performs some character escaping but object includes disclaimer it's not safe with untrusted input.
 
-DO: Look at alternatives to passing raw untrusted arguments via command-line parameters such as encoding using Base64 (which would safely encode any special characters as well) and then decode the parameters in the receiving application.
+DO: Look at alternatives to passing raw untrusted arguments via command-line parameters, e.g. Base64 encoding (safely encodes special characters) then decode parameters in receiving application.
 
 #### LDAP injection
 
-Almost any characters can be used in Distinguished Names. However, some must be escaped with the backslash `\` escape character.
-A table showing which characters that should be escaped for Active Directory can be found at the in the
-[LDAP Injection Prevention Cheat Sheet](LDAP_Injection_Prevention.md).
+Almost any characters usable in Distinguished Names; some must be escaped with backslash `\` escape character.
+Table of characters to escape for Active Directory: [LDAP Injection Prevention Cheat Sheet](LDAP_Injection_Prevention.md).
 
-Note: The space character must be escaped only if it is the leading or trailing character in a component name, such as a Common Name.
-Embedded spaces should not be escaped.
+Note: space character must be escaped only if leading or trailing character in component name, such as Common Name.
+Embedded spaces not escaped.
 
-More information can be found in the [LDAP Injection Prevention Cheat Sheet](LDAP_Injection_Prevention.md).
+More: [LDAP Injection Prevention Cheat Sheet](LDAP_Injection_Prevention.md).
 
 ### A04 Insecure Design
 
-Insecure design refers to security failures in the design of the application or system. This is different than the other items
-in the OWASP Top 10 list which refer to implementation failures. The topic of secure design is therefore not related to a specific
-technology or language and is therefore out of scope for this cheat sheet. See the [Secure Product Design Cheat Sheet](Secure_Product_Design.md) for more information.
+Insecure design = security failures in application/system design; other OWASP Top 10 items refer to implementation failures. Secure design not tied to specific technology/language → out of scope here. See [Secure Product Design Cheat Sheet](Secure_Product_Design.md).
 
 ### A05 Security Misconfiguration
 
 #### Debug and Stack Trace
 
-Ensure debug and trace are off in production. This can be enforced using web.config transforms:
+Ensure debug and trace off in production. Enforce via web.config transforms:
 
 ```xml
 <compilation xdt:Transform="RemoveAttributes(debug)" />
@@ -554,7 +541,7 @@ Ensure debug and trace are off in production. This can be enforced using web.con
 
 DO NOT: Use default passwords
 
-DO: Redirect a request made over HTTP to HTTPS:
+DO: Redirect HTTP requests to HTTPS:
 
 E.g, Global.asax.cs:
 
@@ -581,9 +568,9 @@ E.g., Startup.cs in `Configure()`:
 
 #### Cross-site request forgery
 
-DO NOT: Send sensitive data without validating Anti-Forgery-Tokens ([.NET](https://docs.microsoft.com/en-us/aspnet/web-api/overview/security/preventing-cross-site-request-forgery-csrf-attacks) / [.NET Core](https://learn.microsoft.com/en-us/aspnet/core/security/anti-request-forgery?view=aspnetcore-7.0#aspnet-core-antiforgery-configuration)).
+DO NOT: Send sensitive data without validating Anti-Forgery-Tokens (.NET / .NET Core).
 
-DO: Send the anti-forgery token with every POST/PUT request:
+DO: Send anti-forgery token with every POST/PUT request:
 
 ##### Using .NET Framework
 
@@ -603,7 +590,7 @@ using (Html.BeginForm("LogOff", "Account", FormMethod.Post, new { id = "logoutFo
 }
 ```
 
-Then validate it at the method or preferably the controller level:
+Then validate at method or preferably controller level:
 
 ```csharp
 [HttpPost]
@@ -611,7 +598,7 @@ Then validate it at the method or preferably the controller level:
 public ActionResult LogOff()
 ```
 
-Make sure the tokens are removed completely for invalidation on logout.
+Ensure tokens removed completely for invalidation on logout.
 
 ```csharp
 /// <summary>
@@ -633,17 +620,17 @@ public void RemoveAntiForgeryCookie(Controller controller)
 
 ##### Using .NET Core 2.0 or later
 
-Starting with .NET Core 2.0 it is possible to [automatically generate and verify the antiforgery token](https://docs.microsoft.com/en-us/aspnet/core/security/anti-request-forgery?view=aspnetcore-7.0#aspnet-core-antiforgery-configuration).
+Since .NET Core 2.0 antiforgery token can be automatically generated and verified.
 
-With [FormTagHelper enabled](https://learn.microsoft.com/en-us/aspnet/core/security/anti-request-forgery?view=aspnetcore-7.0#aspnet-core-antiforgery-configuration), a form with `method="post"` and an absent or empty `action` automatically gets an antiforgery token unless token generation is disabled. This does not apply to every form. You can check whether tag helpers are enabled in your main `_ViewImports.cshtml` file:
+With FormTagHelper enabled, form with `method="post"` and absent/empty `action` automatically gets antiforgery token unless token generation disabled. Doesn't apply to every form. Check tag helpers enabled in main `_ViewImports.cshtml`:
 
 ```csharp
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 ```
 
-`IHtmlHelper.BeginForm` generates an antiforgery token by default for methods other than GET. Token generation must be paired with server-side validation, as described below.
+`IHtmlHelper.BeginForm` generates antiforgery token by default for methods other than GET. Token generation must be paired with server-side validation, below.
 
-For forms that need antiforgery protection without automatic token generation, add the token explicitly:
+Forms needing antiforgery protection without automatic token generation: add token explicitly:
 
 ```html
 <form action="RelevantAction" >
@@ -651,7 +638,7 @@ For forms that need antiforgery protection without automatic token generation, a
 </form>
 ```
 
-To automatically validate all requests other than GET, HEAD, OPTIONS and TRACE you need to add a global action filter with the [AutoValidateAntiforgeryToken](https://docs.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.mvc.autovalidateantiforgerytokenattribute?view=aspnetcore-7.0) attribute inside your `Startup.cs` as mentioned in the following [article](https://andrewlock.net/automatically-validating-anti-forgery-tokens-in-asp-net-core-with-the-autovalidateantiforgerytokenattribute/):
+To automatically validate all requests other than GET, HEAD, OPTIONS and TRACE, add global action filter with AutoValidateAntiforgeryToken attribute in `Startup.cs`:
 
 ```csharp
 services.AddMvc(options =>
@@ -660,7 +647,7 @@ services.AddMvc(options =>
 });
 ```
 
-If you need to disable the attribute validation for a specific method on a controller you can add the [IgnoreAntiforgeryToken](https://docs.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.mvc.ignoreantiforgerytokenattribute?view=aspnetcore-7.0) attribute to the controller method (for MVC controllers) or parent class (for Razor pages):
+To disable validation for specific controller method, add IgnoreAntiforgeryToken attribute to controller method (MVC controllers) or parent class (Razor pages):
 
 ```csharp
 [IgnoreAntiforgeryToken]
@@ -673,7 +660,7 @@ public IActionResult Delete()
 public class UnsafeModel : PageModel
 ```
 
-If you need to also validate the token on GET, HEAD, OPTIONS and TRACE requests you can add the [ValidateAntiforgeryToken](https://docs.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.mvc.validateantiforgerytokenattribute?view=aspnetcore-7.0) attribute to the controller method (for MVC controllers) or parent class (for Razor pages):
+To also validate token on GET, HEAD, OPTIONS and TRACE requests, add ValidateAntiforgeryToken attribute to controller method (MVC controllers) or parent class (Razor pages):
 
 ```csharp
 [HttpGet]
@@ -687,7 +674,7 @@ public IActionResult DoSomethingDangerous()
 public class SafeModel : PageModel
 ```
 
-In case you can't use a global action filter, add the [AutoValidateAntiforgeryToken](https://docs.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.mvc.autovalidateantiforgerytokenattribute?view=aspnetcore-7.0) attribute to your controller classes or razor page models:
+Without global action filter, add AutoValidateAntiforgeryToken attribute to controller classes or razor page models:
 
 ```csharp
 [AutoValidateAntiforgeryToken]
@@ -701,9 +688,9 @@ public class SafeModel : PageModel
 
 ##### Using .Net Core or .NET Framework with AJAX
 
-You will need to attach the anti-forgery token to AJAX requests.
+Attach anti-forgery token to AJAX requests.
 
-If you are using jQuery in an ASP.NET Core MVC view this can be achieved using this snippet:
+jQuery in ASP.NET Core MVC view:
 
 ```javascript
 @inject  Microsoft.AspNetCore.Antiforgery.IAntiforgery antiforgeryProvider
@@ -719,29 +706,28 @@ $.ajax(
 })
 ```
 
-If you are using the .NET Framework, you can find some code snippets [here](https://docs.microsoft.com/en-us/aspnet/web-api/overview/security/preventing-cross-site-request-forgery-csrf-attacks#anti-csrf-and-ajax).
+.NET Framework: code snippets in Microsoft docs (anti-CSRF and AJAX).
 
-More information can be found in the [Cross-Site Request Forgery Prevention Cheat Sheet](Cross-Site_Request_Forgery_Prevention.md).
+More: [Cross-Site Request Forgery Prevention Cheat Sheet](Cross-Site_Request_Forgery_Prevention.md).
 
 ### A06 Vulnerable and Outdated Components
 
-DO: Keep the .NET framework updated with the latest patches
+DO: Keep .NET framework updated with latest patches
 
-DO: Keep your [NuGet](https://docs.microsoft.com/en-us/nuget/) packages up to date
+DO: Keep NuGet packages up to date
 
-DO: Run the [OWASP Dependency Checker](Vulnerable_Dependency_Management.md#tools) against your application as part of your build process and act on any high or critical level vulnerabilities.
+DO: Run [OWASP Dependency Checker](Vulnerable_Dependency_Management.md#tools) against app as part of build; act on high or critical level vulnerabilities.
 
-DO: Include SCA (software composition analysis) tools in your CI/CD pipeline to ensure that any new vulnerabilities
-in your dependencies are detected and acted upon.
+DO: Include SCA (software composition analysis) tools in CI/CD pipeline so new dependency vulnerabilities detected and acted upon.
 
 ### A07 Identification and Authentication Failures
 
-DO: Use [ASP.NET Core Identity](https://docs.microsoft.com/en-us/aspnet/core/security/authentication/identity?view=aspnetcore-2.2&).
-ASP.NET Core Identity framework is well configured by default, where it uses secure password hashes and an individual salt. Identity uses the PBKDF2 hashing function for passwords, and generates a random salt per user.
+DO: Use ASP.NET Core Identity.
+Well configured by default: secure password hashes and individual salt. Uses PBKDF2 hashing function for passwords; random salt per user.
 
-DO: Configure password length and composition settings according to [NIST’s password guidance](https://pages.nist.gov/800-63-4/sp800-63b/authenticators/#passwordver): at least 15 characters when passwords can be used without multifactor authentication (MFA), or at least eight when only used with MFA, without mandatory character-composition rules.
+DO: Configure password length/composition per NIST password guidance: at least 15 characters when passwords usable without multifactor authentication (MFA), at least eight when used only with MFA, no mandatory character-composition rules.
 
-This ASP.NET Core Identity example assumes passwords can be used without MFA. Identity’s [default password validator](https://github.com/dotnet/aspnetcore/blob/215a587e52efa710de84138b0a3374b860b924d8/src/Identity/Extensions.Core/src/PasswordValidator.cs) measures length in UTF-16 code units, so add Unicode code-point length validation to enforce NIST’s minimum. These settings also do not implement breached-password screening; follow the [Authentication Cheat Sheet](Authentication.md#implement-proper-password-strength-controls) for the complete policy.
+Example assumes passwords usable without MFA. Identity's default password validator measures length in UTF-16 code units; add Unicode code-point length validation to enforce NIST minimum. Settings also don't implement breached-password screening; follow [Authentication Cheat Sheet](Authentication.md#implement-proper-password-strength-controls) for complete policy.
 
 ``` csharp
 //Startup.cs
@@ -764,7 +750,7 @@ services.Configure<IdentityOptions>(options =>
 });
 ```
 
-DO: Set a cookie policy
+DO: Set cookie policy
 
 e.g
 
@@ -785,38 +771,36 @@ DO: Digitally sign assemblies and executable files
 
 DO: Use Nuget package signing
 
-DO: Review code and configuration changes to avoid malicious code
-or dependencies being introduced
+DO: Review code/configuration changes to avoid introducing malicious code or dependencies
 
-DO NOT: Send unsigned or unencrypted serialized objects over the network
+DO NOT: Send unsigned or unencrypted serialized objects over network
 
-DO: Perform integrity checks or validate digital signatures on serialized
-objects received from the network
+DO: Integrity checks or digital signature validation on serialized objects received from network
 
-DO NOT: Use the BinaryFormatter type which is dangerous and [not recommended](https://learn.microsoft.com/en-us/dotnet/standard/serialization/binaryformatter-security-guide) for data processing.
-.NET offers several in-box serializers that can handle untrusted data safely:
+DO NOT: Use BinaryFormatter type; dangerous and not recommended for data processing.
+.NET in-box serializers handling untrusted data safely:
 
-- XmlSerializer and DataContractSerializer to serialize object graphs into and from XML. Do not confuse DataContractSerializer with NetDataContractSerializer.
-- BinaryReader and BinaryWriter for reading and writing primitive data types (such as Int32, Double, Boolean, and String) in binary format.
-- The System.Text.Json APIs to serialize object graphs into JSON.
+- XmlSerializer and DataContractSerializer: object graphs to/from XML. Don't confuse DataContractSerializer with NetDataContractSerializer.
+- BinaryReader and BinaryWriter: primitive data types (such as Int32, Double, Boolean, and String) in binary format.
+- System.Text.Json APIs: object graphs to JSON.
 
 ### A09 Security Logging and Monitoring Failures
 
-DO: Ensure all login, access control, and server-side input validation failures are logged with sufficient user context to identify suspicious or malicious accounts.
+DO: Log all login, access control, server-side input validation failures with sufficient user context to identify suspicious/malicious accounts.
 
-DO: Establish effective monitoring and alerting so suspicious activities are detected and responded to in a timely fashion.
+DO: Establish effective monitoring + alerting for timely detection/response to suspicious activities.
 
-DO NOT: Log generic error messages such as: ```csharp Log.Error("Error was thrown");```. Instead, log the stack trace, error message and user ID who caused the error.
+DO NOT: Log generic error messages such as: ```csharp Log.Error("Error was thrown");```. Log stack trace, error message, user ID causing error.
 
 DO NOT: Log sensitive data such as user's passwords.
 
 #### Logging
 
-What logs to collect and more information about logging can be found in the [Logging Cheat Sheet](Logging.md).
+What to log + more: [Logging Cheat Sheet](Logging.md).
 
-.NET Core comes with a LoggerFactory, which is in Microsoft.Extensions.Logging. More information about ILogger can be found [here](https://docs.microsoft.com/en-us/dotnet/api/microsoft.extensions.logging.ilogger).
+.NET Core has LoggerFactory, in Microsoft.Extensions.Logging. ILogger docs in Microsoft docs.
 
-Here's how to log all errors from the `Startup.cs`, so that anytime an error is thrown it will be logged:
+Log all errors from `Startup.cs` so any thrown error is logged:
 
 ``` csharp
 public void Configure(IApplicationBuilder app, IHostingEnvironment env)
@@ -845,7 +829,7 @@ public void Configure(IApplicationBuilder app, IHostingEnvironment env)
 }
 ```
 
-E.g. injecting into the class constructor, which makes writing unit test simpler. This is recommended if instances of the class will be created using dependency injection (e.g. MVC controllers). The below example logs unsuccessful login attempts and sets [`lockoutOnFailure: true`](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity-configuration?view=aspnetcore-10.0#lockout) so failed password attempts count toward the configured lockout threshold for accounts with lockout enabled.
+Inject into class constructor: simpler unit tests. Recommended if instances created via dependency injection (e.g. MVC controllers). Example logs unsuccessful login attempts and sets [`lockoutOnFailure: true`](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity-configuration?view=aspnetcore-10.0#lockout) so failed password attempts count toward configured lockout threshold for accounts with lockout enabled.
 
 ``` csharp
 public class AccountsController : Controller
@@ -884,46 +868,44 @@ public class AccountsController : Controller
 
 #### Monitoring
 
-Monitoring allow us to validate the performance and health of a running system through key performance indicators.
+Monitoring validates performance + health of running system via key performance indicators.
 
-In .NET a great option to add monitoring capabilities is [Application Insights](https://docs.microsoft.com/en-us/azure/azure-monitor/app/asp-net-core).
+.NET monitoring option: Application Insights.
 
-More information about Logging and Monitoring can be found [here](https://github.com/microsoft/code-with-engineering-playbook/blob/main/docs/observability/README.md).
+More on Logging and Monitoring: Microsoft code-with-engineering-playbook observability.
 
 ### A10 Server-Side Request Forgery (SSRF)
 
-DO: Validate and sanitize all user input before using it to make a request
+DO: Validate + sanitize all user input before using it to make request
 
-DO: Use an allowlist of allowed protocols and domains
+DO: Use allowlist of allowed protocols and domains
 
-DO: Use `IPAddress.TryParse()` and `Uri.CheckHostName()` to ensure that IP addresses and domain names are valid
+DO: Use `IPAddress.TryParse()` and `Uri.CheckHostName()` to ensure IP addresses and domain names valid
 
 DO NOT: Follow HTTP redirects
 
-DO NOT: Forward raw HTTP responses to the user
+DO NOT: Forward raw HTTP responses to user
 
-For more information please see the [Server-Side Request Forgery Prevention Cheat Sheet](Server_Side_Request_Forgery_Prevention.md).
+More: [Server-Side Request Forgery Prevention Cheat Sheet](Server_Side_Request_Forgery_Prevention.md).
 
 ### OWASP 2013 & 2017
 
-Below are vulnerabilities that were included in the 2013 or 2017 OWASP Top 10 list
-that were not included in the 2021 list. These vulnerabilities are still relevant
-but were not included in the 2021 list because they have become less prevalent.
+Vulnerabilities in 2013 or 2017 OWASP Top 10 but not 2021 list. Still relevant; dropped from 2021 because less prevalent.
 
 #### A04:2017 XML External Entities (XXE)
 
-XXE attacks occur when an XML parse does not properly process user input that contains external entity declarations in the doctype of an XML payload.
+XXE: XML parser improperly processes user input containing external entity declarations in doctype of XML payload.
 
-[This article](https://docs.microsoft.com/en-us/dotnet/standard/data/xml/xml-processing-options) discusses the most common XML Processing Options for .NET.
+Microsoft article discusses most common XML Processing Options for .NET.
 
-Please refer to the [XXE cheat sheet](XML_External_Entity_Prevention.md#net) for more detailed information on preventing XXE and other XML Denial of Service attacks.
+Preventing XXE and other XML Denial of Service attacks: [XXE cheat sheet](XML_External_Entity_Prevention.md#net).
 
 #### A07:2017 Cross-Site Scripting (XSS)
 
-DO NOT: Trust any data the user sends you. Prefer allowlists (always safe) over denylists.
+DO NOT: Trust any user-sent data. Prefer allowlists (always safe) over denylists.
 
-You get encoding of all HTML content with MVC3. To properly encode all content whether HTML,
-JavaScript, CSS, LDAP, etc., use the Microsoft AntiXSS library:
+MVC3 encodes all HTML content. To properly encode all content whether HTML,
+JavaScript, CSS, LDAP, etc., use Microsoft AntiXSS library:
 
 `Install-Package AntiXSS`
 
@@ -937,10 +919,9 @@ encoderType="Microsoft.Security.Application.AntiXssEncoder, AntiXssLibrary"
 maxRequestLength="4096" />
 ```
 
-DO NOT: Use the `[AllowHTML]` attribute or helper class `@Html.Raw` unless you are absolutely
-sure that the content you are writing to the browser is safe and has been escaped properly.
+DO NOT: Use `[AllowHTML]` attribute or helper class `@Html.Raw` unless absolutely sure content written to browser is safe and properly escaped.
 
-DO: Enable a [Content Security Policy](Content_Security_Policy.md#context). This will prevent your pages from accessing assets they should not be able to access (e.g. malicious scripts):
+DO: Enable [Content Security Policy](Content_Security_Policy.md#context). Prevents pages accessing assets they shouldn't (e.g. malicious scripts):
 
 ```xml
 <system.webServer>
@@ -951,7 +932,7 @@ DO: Enable a [Content Security Policy](Content_Security_Policy.md#context). This
                 font-src 'self'; script-src 'self'" />
 ```
 
-More information can be found in the [Cross Site Scripting Prevention Cheat Sheet](Cross_Site_Scripting_Prevention.md).
+More: [Cross Site Scripting Prevention Cheat Sheet](Cross_Site_Scripting_Prevention.md).
 
 #### A08:2017 Insecure Deserialization
 
@@ -959,18 +940,18 @@ DO NOT: Accept Serialized Objects from Untrusted Sources
 
 DO: Validate User Input
 
-Malicious users are able to use objects like cookies to insert malicious information to change user roles. In some cases, hackers are able to elevate their privileges to administrator rights by using a pre-existing or cached password hash from a previous session.
+Malicious users can use objects like cookies to insert malicious information changing user roles. Sometimes hackers elevate to administrator rights using pre-existing or cached password hash from previous session.
 
 DO: Prevent Deserialization of Domain Objects
 
-DO: Run the Deserialization Code with Limited Access Permissions
-If a deserialized hostile object tries to initiate a system process or access a resource within the server or the host's OS, it will be denied access and a permission flag will be raised so that a system administrator is made aware of any anomalous activity on the server.
+DO: Run Deserialization Code with Limited Access Permissions
+If deserialized hostile object tries to initiate system process or access resource within server or host OS, access denied and permission flag raised so system administrator learns of anomalous activity on server.
 
-More information about Insecure Deserialization can be found in the [Deserialization Cheat Sheet](Deserialization.md#net-csharp).
+More: [Deserialization Cheat Sheet](Deserialization.md#net-csharp).
 
 #### A10:2013 Unvalidated redirects and forwards
 
-A protection against this was introduced in MVC 3 template. Here is the code:
+Protection introduced in MVC 3 template. Code:
 
 ```csharp
 public async Task<ActionResult> LogOn(LogOnViewModel model, string returnUrl)
@@ -1001,51 +982,49 @@ private ActionResult RedirectToLocal(string returnUrl)
 
 ### Other advice
 
-- Protect against Clickjacking and Man-in-the-Middle attack from capturing an initial Non-TLS request: Set the `X-Frame-Options` and `Strict-Transport-Security` (HSTS) headers. Full details [here](https://github.com/johnstaveley/SecurityEssentials/blob/master/SecurityEssentials/Core/HttpHeaders.cs)
-- Protect against a man-in-the-middle attack for a user who has never been to your site before. Register for [HSTS preload](https://hstspreload.org/)
-- Maintain security testing and analysis on Web API services. They are hidden inside MVC sites, and are public parts of a site that
-will be found by an attacker. All of the MVC guidance and much of the WCF guidance applies to Web API as well.
-- Also see the [Unvalidated Redirects and Forwards Cheat Sheet](Unvalidated_Redirects_and_Forwards.md).
+- Protect vs Clickjacking and Man-in-the-Middle capturing initial Non-TLS request: set `X-Frame-Options` and `Strict-Transport-Security` (HSTS) headers. Details: SecurityEssentials HttpHeaders.cs
+- Protect vs man-in-the-middle for user who never visited site before: register for HSTS preload
+- Maintain security testing/analysis on Web API services. Hidden inside MVC sites; public parts of site attackers will find. All MVC guidance and much WCF guidance applies to Web API too.
+- Also see [Unvalidated Redirects and Forwards Cheat Sheet](Unvalidated_Redirects_and_Forwards.md).
 
 #### Sample project
 
-For more information on all of the above and code samples incorporated into a sample MVC5 application with an enhanced security baseline
-go to [Security Essentials Baseline project](http://github.com/johnstaveley/SecurityEssentials/).
+All above + code samples in sample MVC5 application with enhanced security baseline: Security Essentials Baseline project.
 
 ## Guidance for specific topics
 
-This section contains guidance for specific topics in .NET.
+Guidance for specific .NET topics.
 
 ### Configuration and Deployment
 
 - Lock down config files.
-    - Remove all aspects of configuration that are not in use.
-    - **Do not store secrets in source-controlled config files (`web.config`, `appsettings.json`).** Keep secrets out of the configuration file entirely.
-        - Modern .NET (Core / 6+ / 8+): use [User Secrets](https://learn.microsoft.com/en-us/aspnet/core/security/app-secrets) for development and a managed secret store (Azure Key Vault, AWS Secrets Manager, HashiCorp Vault) accessed via Managed Identity / Workload Identity for production.
-        - Legacy .NET Framework (4.7.1+): use [Configuration Builders](https://learn.microsoft.com/en-us/aspnet/config-builder) (e.g. `Microsoft.Configuration.ConfigurationBuilders.Azure`, `...Environment`) to inject secrets at runtime from a secret store or environment variables, so they never appear in `web.config`.
-        - Only as a last resort — for legacy applications that cannot be modified — encrypt sensitive `web.config` sections using `aspnet_regiis -pe` ([command line help](https://docs.microsoft.com/en-us/previous-versions/dotnet/netframework-2.0/k6h9cz8h(v=vs.80))). Note that this only protects the file at rest on the server; the application still loads the plaintext into memory.
-- For ClickOnce applications, the .NET Framework should be upgraded to use the latest version to ensure support of TLS 1.2 or later.
+    - Remove all unused configuration.
+    - **Do not store secrets in source-controlled config files (`web.config`, `appsettings.json`).** Keep secrets out of configuration file entirely.
+        - Modern .NET (Core / 6+ / 8+): use User Secrets for development; managed secret store (Azure Key Vault, AWS Secrets Manager, HashiCorp Vault) via Managed Identity / Workload Identity for production.
+        - Legacy .NET Framework (4.7.1+): use Configuration Builders (e.g. `Microsoft.Configuration.ConfigurationBuilders.Azure`, `...Environment`) to inject secrets at runtime from secret store or environment variables, so they never appear in `web.config`.
+        - Last resort only — legacy applications that cannot be modified — encrypt sensitive `web.config` sections using `aspnet_regiis -pe` (command line help). Only protects file at rest on server; application still loads plaintext into memory.
+- ClickOnce applications: upgrade .NET Framework to latest version to ensure TLS 1.2 or later support.
 
 ### Data Access
 
-- Use [Parameterized SQL](https://docs.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqlcommand.prepare?view=netframework-4.7.2) commands for all data access, without exception.
-- Do not use [SqlCommand](https://docs.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqlcommand) with a string parameter made up of a [concatenated SQL String](https://docs.microsoft.com/en-gb/visualstudio/code-quality/ca2100-review-sql-queries-for-security-vulnerabilities?view=vs-2017).
-- List allowable values coming from the user. Use enums, [TryParse](https://docs.microsoft.com/en-us/dotnet/api/system.int32.tryparse#System_Int32_TryParse_System_String_System_Int32__) or lookup values to assure that the data coming from the user is as expected.
-    - Enums are still vulnerable to unexpected values because .NET only validates a successful cast to the underlying data type, integer by default. [Enum.IsDefined](https://docs.microsoft.com/en-us/dotnet/api/system.enum.isdefined) can validate whether the input value is valid within the list of defined constants.
-- Apply the principle of least privilege when setting up the Database User in your database of choice. The database user should only be able to access items that make sense for the use case.
-- Use of [Entity Framework](https://docs.microsoft.com/en-us/ef/) is a very effective [SQL injection](SQL_Injection_Prevention.md) prevention mechanism. **Remember that building your own ad hoc queries in Entity Framework is just as susceptible to SQLi as a plain SQL query**.
-- When using SQL Server, prefer [integrated authentication](https://learn.microsoft.com/en-us/sql/connect/odbc/linux-mac/using-integrated-authentication?view=sql-server-ver16) over [SQL authentication](https://learn.microsoft.com/en-us/sql/relational-databases/security/choose-an-authentication-mode?view=sql-server-ver16#connecting-through-sql-server-authentication).
-- Use [Always Encrypted](https://docs.microsoft.com/en-us/sql/relational-databases/security/encryption/always-encrypted-database-engine) where possible for sensitive data (SQL Server 2016+ and Azure SQL)
+- Use Parameterized SQL commands for all data access, without exception.
+- Don't use SqlCommand with string parameter made of concatenated SQL String.
+- List allowable values from user. Use enums, TryParse or lookup values to assure data from user as expected.
+    - Enums still vulnerable to unexpected values: .NET validates only successful cast to underlying data type, integer by default. Enum.IsDefined validates input value within list of defined constants.
+- Least privilege for Database User in database of choice. Database user accesses only items sensible for use case.
+- Entity Framework = very effective [SQL injection](SQL_Injection_Prevention.md) prevention mechanism. **Building own ad hoc queries in Entity Framework just as susceptible to SQLi as plain SQL query**.
+- SQL Server: prefer integrated authentication over SQL authentication.
+- Use Always Encrypted where possible for sensitive data (SQL Server 2016+ and Azure SQL)
 
 ## ASP NET Web Forms Guidance
 
-ASP.NET Web Forms is the original browser-based application development API for the .NET Framework, and is still the most common enterprise platform for web application development.
+ASP.NET Web Forms = original browser-based application development API for .NET Framework; still most common enterprise platform for web application development.
 
-- Always use [HTTPS](http://support.microsoft.com/kb/324069).
-- Enable [requireSSL](https://docs.microsoft.com/en-us/dotnet/api/system.web.configuration.httpcookiessection.requiressl) on cookies and form elements and [HttpOnly](https://docs.microsoft.com/en-us/dotnet/api/system.web.configuration.httpcookiessection.httponlycookies) on cookies in the web.config.
-- Implement [customErrors](https://docs.microsoft.com/en-us/dotnet/api/system.web.configuration.customerror).
-- Make sure [tracing](http://www.iis.net/configreference/system.webserver/tracing) is turned off.
-- While ViewState isn't always appropriate for web development, using it can provide CSRF mitigation. To make the ViewState protect against CSRF attacks you need to set the [ViewStateUserKey](https://docs.microsoft.com/en-us/dotnet/api/system.web.ui.page.viewstateuserkey):
+- Always use HTTPS.
+- Enable requireSSL on cookies and form elements and HttpOnly on cookies in web.config.
+- Implement customErrors.
+- Ensure tracing turned off.
+- ViewState not always appropriate for web development, but can mitigate CSRF. For ViewState CSRF protection set ViewStateUserKey:
 
 ```csharp
 protected override OnInit(EventArgs e) {
@@ -1054,7 +1033,7 @@ protected override OnInit(EventArgs e) {
 }
 ```
 
-If you don't use Viewstate, then look to the default main page of the ASP.NET Web Forms default template for a manual anti-CSRF token using a double-submit cookie.
+Without Viewstate, see default main page of ASP.NET Web Forms default template for manual anti-CSRF token using double-submit cookie.
 
 ```csharp
 private const string AntiXsrfTokenKey = "__AntiXsrfToken";
@@ -1109,8 +1088,8 @@ protected void master_Page_PreLoad(object sender, EventArgs e)
 }
 ```
 
-- Consider [HSTS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security) in IIS. See [here](https://support.microsoft.com/en-us/help/954002/how-to-add-a-custom-http-response-header-to-a-web-site-that-is-hosted) for the procedure.
-- This is a recommended `web.config` setup that handles HSTS among other things.
+- Consider HSTS in IIS. Procedure in Microsoft docs.
+- Recommended `web.config` setup handling HSTS among other things.
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -1164,13 +1143,13 @@ protected void master_Page_PreLoad(object sender, EventArgs e)
  </configuration>
 ```
 
-- Remove the version header by adding the following line in `Machine.config` file:
+- Remove version header by adding line to `Machine.config` file:
 
 ```xml
 <httpRuntime enableVersionHeader="false" />
 ```
 
-- Also remove the Server header using the HttpContext Class in your code.
+- Also remove Server header using HttpContext Class in code.
 
 ```csharp
 HttpContext.Current.Response.Headers.Remove("Server");
@@ -1178,42 +1157,42 @@ HttpContext.Current.Response.Headers.Remove("Server");
 
 ### HTTP validation and encoding
 
-- Do not disable [validateRequest](http://www.asp.net/whitepapers/request-validation) in the `web.config` or the page setup. This value enables limited XSS protection in ASP.NET and should be left intact as it provides partial prevention of Cross Site Scripting. Complete request validation is recommended in addition to the built-in protections.
-- The 4.5 version of the .NET Frameworks includes the [AntiXssEncoder](https://docs.microsoft.com/en-us/dotnet/api/system.web.security.antixss.antixssencoder?view=netframework-4.7.2) library, which has a comprehensive input encoding library for the prevention of XSS. Use it.
-- List allowable values anytime user input is accepted.
-- Validate the format of URIs using [Uri.IsWellFormedUriString](https://docs.microsoft.com/en-us/dotnet/api/system.uri.iswellformeduristring).
+- Don't disable validateRequest in `web.config` or page setup. Enables limited XSS protection in ASP.NET; leave intact, partial XSS prevention. Complete request validation recommended in addition to built-in protections.
+- .NET Framework 4.5 includes AntiXssEncoder library, comprehensive input encoding library for XSS prevention. Use it.
+- List allowable values whenever user input accepted.
+- Validate URI format with Uri.IsWellFormedUriString.
 
 ### Forms authentication
 
-- Use cookies for persistence when possible. `Cookieless` auth will default to [UseDeviceProfile](https://docs.microsoft.com/en-us/dotnet/api/system.web.httpcookiemode?view=netframework-4.7.2).
-- Don't trust the URI of the request for persistence of the session or authorization. It can be easily faked.
-- Reduce the Forms Authentication timeout from the default of *20 minutes* to the shortest period appropriate for your application. If [slidingExpiration](https://docs.microsoft.com/en-us/dotnet/api/system.web.security.formsauthentication.slidingexpiration?view=netframework-4.7.2) is used this timeout resets after each request, so active users won't be affected.
-- If HTTPS is not used, [slidingExpiration](https://docs.microsoft.com/en-us/dotnet/api/system.web.security.formsauthentication.slidingexpiration?view=netframework-4.7.2) should be disabled. Consider disabling [slidingExpiration](https://docs.microsoft.com/en-us/dotnet/api/system.web.security.formsauthentication.slidingexpiration?view=netframework-4.7.2) even with HTTPS.
+- Use cookies for persistence when possible. `Cookieless` auth defaults to UseDeviceProfile.
+- Don't trust request URI for session persistence or authorization; easily faked.
+- Reduce Forms Authentication timeout from default *20 minutes* to shortest period appropriate for app. If slidingExpiration used, timeout resets after each request, active users unaffected.
+- No HTTPS: disable slidingExpiration. Consider disabling slidingExpiration even with HTTPS.
 - Always implement proper access controls.
     - Compare user provided username with `User.Identity.Name`.
     - Check roles against `User.Identity.IsInRole`.
-- Use the [ASP.NET Membership provider and role provider](https://docs.microsoft.com/en-us/dotnet/framework/wcf/samples/membership-and-role-provider), but review the password storage. The default storage hashes the password with a single iteration of SHA-1 which is rather weak. The ASP.NET MVC4 template uses [ASP.NET Identity](http://www.asp.net/identity/overview/getting-started/introduction-to-aspnet-identity) instead of ASP.NET Membership, and ASP.NET Identity uses PBKDF2 by default which is better. Review the OWASP [Password Storage Cheat Sheet](Password_Storage.md) for more information.
+- Use ASP.NET Membership provider and role provider, but review password storage. Default storage hashes password with single iteration of SHA-1; rather weak. ASP.NET MVC4 template uses ASP.NET Identity instead of ASP.NET Membership; ASP.NET Identity uses PBKDF2 by default, better. See OWASP [Password Storage Cheat Sheet](Password_Storage.md).
 - Explicitly authorize resource requests.
-- Leverage role based authorization using `User.Identity.IsInRole`.
+- Use role based authorization via `User.Identity.IsInRole`.
 
 ## XAML Guidance
 
-- Work within the constraints of Internet Zone security for your application.
-- Use ClickOnce deployment. For enhanced permissions, use permission elevation at runtime or trusted application deployment at install time.
+- Work within Internet Zone security constraints.
+- Use ClickOnce deployment. Enhanced permissions: permission elevation at runtime or trusted application deployment at install time.
 
 ## Windows Forms Guidance
 
-- Use partial trust when possible. Partially trusted Windows applications reduce the attack surface of an application. Manage a list of what permissions your app must use, and what it may use, and then make the request for those permissions declaratively at runtime.
-- Use ClickOnce deployment. For enhanced permissions, use permission elevation at runtime or trusted application deployment at install time.
+- Use partial trust when possible; reduces attack surface. Manage list of permissions app must use and may use; request them declaratively at runtime.
+- Use ClickOnce deployment. Enhanced permissions: permission elevation at runtime or trusted application deployment at install time.
 
 ## WCF Guidance
 
-- Use HTTPS for RESTful requests regardless of HTTP method, and choose methods according to their semantics. Keep sensitive values out of URLs, which can be exposed in logs and browser history even with HTTPS. [POST can carry sensitive form data in the request body rather than the URL](https://www.rfc-editor.org/rfc/rfc9110.html#section-17.9), but POST alone does not provide confidentiality or authorization.
-- Avoid [BasicHttpBinding](https://docs.microsoft.com/en-us/dotnet/api/system.servicemodel.basichttpbinding?view=netframework-4.7.2). It has no default security configuration. Use [WSHttpBinding](https://docs.microsoft.com/en-us/dotnet/api/system.servicemodel.wshttpbinding?view=netframework-4.7.2) instead.
-- Use at least two security modes for your binding. Message security includes security provisions in the headers. Transport security means use of SSL. [TransportWithMessageCredential](https://docs.microsoft.com/en-us/dotnet/framework/wcf/samples/ws-transport-with-message-credential) combines the two.
-- Test your WCF implementation with a fuzzer like [ZAP](https://www.zaproxy.org/).
+- HTTPS for RESTful requests regardless of HTTP method; choose methods per semantics. Keep sensitive values out of URLs (exposed in logs, browser history even with HTTPS). POST can carry sensitive form data in request body rather than URL, but POST alone provides no confidentiality or authorization.
+- Avoid BasicHttpBinding; no default security configuration. Use WSHttpBinding.
+- Use at least two security modes for binding. Message security: security provisions in headers. Transport security: SSL. TransportWithMessageCredential combines both.
+- Test WCF implementation with fuzzer like ZAP.
 
 ## References
 
-- [Microsoft: Secure coding guidelines for .NET](https://learn.microsoft.com/en-us/dotnet/standard/security/secure-coding-guidelines)
-- [Microsoft: Introduction to Identity on ASP.NET Core](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity?view=aspnetcore-10.0)
+- Microsoft: Secure coding guidelines for .NET
+- Microsoft: Introduction to Identity on ASP.NET Core

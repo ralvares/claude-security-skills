@@ -2,17 +2,17 @@
 
 ## Introduction
 
-Error handling is a part of the overall security of an application. Except in movies, an attack always begins with a **Reconnaissance** phase in which the attacker will try to gather as much technical information (often *name* and *version* properties) as possible about the target, such as the application server, frameworks, libraries, etc.
+Error handling = part of overall app security. Attack always begins w/ **Reconnaissance**: attacker gathers technical info (often *name* and *version* properties) on target: app server, frameworks, libraries etc.
 
-Unhandled errors can assist an attacker in this initial phase, which is very important for the rest of the attack.
+Unhandled errors assist attacker in this phase.
 
-The OWASP Web Security Testing Guide explains [how error messages can expose application details](https://wstg.owasp.org/v4.2/4-Web_Application_Security_Testing/08-Testing_for_Error_Handling/01-Testing_For_Improper_Error_Handling/).
+OWASP Web Security Testing Guide explains how error messages can expose app details.
 
 ## Context
 
-Issues at the error handling level can reveal a lot of information about the target and can also be used to identify injection points in the target's features.
+Error handling issues reveal much about target, can identify injection points in target's features.
 
-Below is an example of the disclosure of a technology stack, here the Struts2 and Tomcat versions, via an exception rendered to the user:
+Example: technology stack disclosure (Struts2 and Tomcat versions) via exception rendered to user:
 
 ```text
 HTTP Status 500 - For input string: "null"
@@ -43,39 +43,37 @@ java.lang.NumberFormatException: For input string: "null"
 note: The full stack trace of the root cause is available in the Apache Tomcat/7.0.56 logs.
 ```
 
-Below is an example of disclosure of a SQL query error, along with the site installation path, that can be used to identify an injection point:
+Example: SQL query error disclosure plus site installation path; can identify injection point:
 
 ```text
 Warning: odbc_fetch_array() expects parameter /1 to be resource, boolean given
 in D:\app\index_new.php on line 188
 ```
 
-The [OWASP Testing Guide](https://owasp.org/www-project-web-security-testing-guide/stable/4-Web_Application_Security_Testing/01-Information_Gathering/) provides different techniques to obtain technical information from an application.
+OWASP Testing Guide gives techniques to obtain technical info from an app.
 
 ## Objective
 
-The article shows how to configure a global error handler as part of your application's runtime configuration. In some cases, it may be more efficient to define this error handler as part of your code. The outcome being that when an unexpected error occurs then a generic response is returned by the application but the error details are logged server side for investigation, and not returned to the user.
+Configure global error handler in app runtime configuration; sometimes more efficient in code. Outcome: unexpected error → app returns generic response; error details logged server side for investigation, not returned to user.
 
-The following schema shows the target approach:
+Target approach:
 
 ![Overview](../assets/Error_Handling_Cheat_Sheet_Overview.png)
 
-As most recent application topologies are *API based*, we assume in this article that the backend exposes only a REST API and does not contain any user interface content. The application should try and exhaustively cover all possible failure modes and use 5xx errors only to indicate responses to requests that it cannot fulfill, but not provide any content as part of the response that would reveal implementation details. For that, [RFC 7807 - Problem Details for HTTP APIs](https://www.rfc-editor.org/rfc/rfc7807) defines a document format.  
-For the error logging operation itself, the [logging cheat sheet](Logging.md) should be used. This article focuses on the error handling part.
+Recent topologies *API based*; assume backend exposes only REST API, no UI content. App should exhaustively cover all failure modes; use 5xx only for responses to requests it cannot fulfill, w/ no content revealing implementation details. RFC 7807 - Problem Details for HTTP APIs defines document format.  
+Error logging itself: use [logging cheat sheet](Logging.md). This sheet covers error handling only.
 
 ## Proposition
 
-For each technology stack, the following configuration options are proposed:
+Configuration options per technology stack:
 
 ### Standard Java Web Application
 
-For this kind of application, a global error handler can be configured at the **web.xml** deployment descriptor level.
+Global error handler configurable in **web.xml** deployment descriptor. Configuration below works from Servlet specification *version 2.5* up.
 
-We propose here a configuration that can be used from Servlet specification *version 2.5* and above.
+Any unexpected error → redirect to page **error.jsp**, which traces error and returns generic response.
 
-With this configuration, any unexpected error will cause a redirection to the page **error.jsp** in which the error will be traced and a generic response will be returned.
-
-Configuration of the redirection into the **web.xml** file:
+Redirection config in **web.xml**:
 
 ``` xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -91,7 +89,7 @@ version="3.0">
 </web-app>
 ```
 
-Content of the **error.jsp** file:
+Content of **error.jsp**:
 
 ``` java
 <%@ page language="java" isErrorPage="true" contentType="application/json; charset=UTF-8"
@@ -112,9 +110,9 @@ response.setStatus(500);
 
 ### Java SpringMVC/SpringBoot web application
 
-With [SpringMVC](https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html) or [SpringBoot](https://spring.io/projects/spring-boot), you can define a global error handler by implementing the following class in your project. Spring Framework 6 introduced [the problem details based on RFC 7807](https://github.com/spring-projects/spring-framework/issues/27052).
+SpringMVC or SpringBoot: define global error handler by implementing class below. Spring Framework 6 introduced problem details based on RFC 7807.
 
-We indicate to the handler, via the annotation [@ExceptionHandler](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/bind/annotation/ExceptionHandler.html), to act when any exception extending the class *java.lang.Exception* is thrown by the application. We also use the [ProblemDetail class](https://docs.spring.io/spring-framework/docs/6.0.0/javadoc-api/org/springframework/http/ProblemDetail.html) to create the response object.
+Annotation @ExceptionHandler tells handler to act when any exception extending *java.lang.Exception* thrown by app. ProblemDetail class creates response object.
 
 ``` java
 import org.springframework.http.HttpStatus;
@@ -144,14 +142,14 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 
 References:
 
-- [Exception handling with Spring](https://www.baeldung.com/exception-handling-for-rest-with-spring)
-- [Exception handling with SpringBoot](https://www.toptal.com/java/spring-boot-rest-api-error-handling)
+- Exception handling with Spring
+- Exception handling with SpringBoot
 
 ### ASP NET Core web application
 
-With [ASP.NET Core](https://docs.microsoft.com/en-us/aspnet/core/?view=aspnetcore-2.2), you can define a global error handler by indicating that the exception handler is a dedicated API Controller.
+ASP.NET Core: define global error handler by making exception handler a dedicated API Controller.
 
-Content of the API Controller dedicated to the error handling:
+Content of error-handling API Controller:
 
 ``` csharp
 using Microsoft.AspNetCore.Authorization;
@@ -206,7 +204,7 @@ namespace MyProject.Controllers
 }
 ```
 
-Definition in the application **Startup.cs** file of the mapping of the exception handler to the dedicated error handling API controller:
+Mapping exception handler to dedicated error API controller, in app **Startup.cs**:
 
 ``` csharp
 using Microsoft.AspNetCore.Builder;
@@ -251,13 +249,13 @@ namespace MyProject
 
 References:
 
-- [Exception handling with ASP.Net Core](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/error-handling?view=aspnetcore-2.1)
+- Exception handling with ASP.Net Core
 
 ### ASP NET Web API web application
 
-With [ASP.NET Web API](https://www.asp.net/web-api) (from the standard .NET framework and not from the .NET Core framework), you can define and register handlers in order to trace and handle any error that occurs in the application.
+ASP.NET Web API (standard .NET framework, not .NET Core): define and register handlers to trace and handle any app error.
 
-Definition of the handler for the tracing of the error details:
+Handler tracing error details:
 
 ``` csharp
 using System;
@@ -285,7 +283,7 @@ namespace MyProject.Security
 }
 ```
 
-Definition of the handler for the management of the error in order to return a generic response:
+Handler managing error to return generic response:
 
 ``` csharp
 using Newtonsoft.Json;
@@ -346,7 +344,7 @@ namespace MyProject.Security
 }
 ```
 
-Registration of the both handlers in the application **WebApiConfig.cs** file:
+Registration of both handlers in app **WebApiConfig.cs**:
 
 ``` csharp
 using MyProject.Security;
@@ -369,7 +367,7 @@ namespace MyProject
 }
 ```
 
-Setting customErrors section to the **Web.config** file within the ```csharp <system.web>``` node as follows.
+Set customErrors section in **Web.config** within ```csharp <system.web>``` node:
 
 ```csharp
 <configuration>
@@ -384,19 +382,19 @@ Setting customErrors section to the **Web.config** file within the ```csharp <sy
 
 References:
 
-- [Exception handling with ASP.Net Web API](https://exceptionnotfound.net/the-asp-net-web-api-exception-handling-pipeline-a-guided-tour/)
+- Exception handling with ASP.Net Web API
 
-- [ASP.NET Error Handling](https://docs.microsoft.com/en-us/aspnet/web-forms/overview/getting-started/getting-started-with-aspnet-45-web-forms/aspnet-error-handling)
+- ASP.NET Error Handling
 
 ## Sources of the prototype
 
-The source code of all the sandbox projects created to find the right setup to use is stored in this [GitHub repository](https://github.com/righettod/poc-error-handling).
+Source of all sandbox projects built to find right setup: GitHub repository poc-error-handling (righettod).
 
 ## Appendix HTTP Errors
 
-A reference for HTTP errors can be found here [RFC 2616](https://www.ietf.org/rfc/rfc2616.txt). Using error messages that do not provide implementation details is important to avoid information leakage. In general, consider using 4xx error codes for requests that are due to an error on the part of the HTTP client (e.g. unauthorized access, request body too large) and use 5xx to indicate errors that are triggered on server side, due to an unforeseen bug. Ensure that applications are monitored for 5xx errors which are a good indication of the application failing for some sets of inputs.
+HTTP errors reference: RFC 2616. Error messages w/o implementation details avoid info leakage. Generally 4xx for requests failing due to HTTP client error (e.g. unauthorized access, request body too large); 5xx for server-side errors from unforeseen bug. Monitor apps for 5xx errors: good indicator app fails for some inputs.
 
 ## References
 
-- [OWASP WSTG: Testing for Improper Error Handling](https://wstg.owasp.org/v4.2/4-Web_Application_Security_Testing/08-Testing_for_Error_Handling/01-Testing_For_Improper_Error_Handling/)
-- [RFC 9457: Problem Details for HTTP APIs](https://www.rfc-editor.org/rfc/rfc9457.html)
+- OWASP WSTG: Testing for Improper Error Handling
+- RFC 9457: Problem Details for HTTP APIs

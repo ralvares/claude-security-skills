@@ -2,31 +2,31 @@
 
 ## Introduction
 
-AI agents are autonomous systems powered by Large Language Models (LLMs) that can reason, plan, use tools, maintain memory, and take actions to accomplish goals. This expanded capability introduces unique security risks beyond traditional LLM prompt injection. This cheat sheet provides best practices to secure AI agent architectures and minimize attack surfaces.
+AI agents = autonomous Large Language Model (LLM) systems that reason, plan, use tools, keep memory, take actions toward goals. Expanded capability adds risks beyond traditional LLM prompt injection. Best practices to secure agent architectures and minimize attack surface.
 
 ## Key Risks
 
-- **Prompt Injection (Direct & Indirect)**: Malicious instructions injected via user input or external data sources (websites, documents, emails) that hijack agent behavior. (See [LLM Prompt Injection Prevention Cheat Sheet](LLM_Prompt_Injection_Prevention.md))
-- **Tool Abuse & Privilege Escalation**: Agents exploiting overly permissive tools to perform unintended actions or access unauthorized resources.
-- **Data Exfiltration**: Sensitive information leaked through tool calls, API requests, or agent outputs.
-- **Memory Poisoning**: Malicious data persisted in agent memory to influence future sessions or other users.
-- **Goal Hijacking**: Manipulating agent objectives to serve attacker purposes while appearing legitimate.
-- **Excessive Autonomy**: Agents taking high-impact actions without appropriate human oversight.
-- **High-Impact Action Abuse**: Agents executing irreversible, financial, administrative, or externally visible operations without independent validation.
-- **Decision and Approval Manipulation**: Attackers influencing risk scores, model confidence, or approval thresholds to bypass safeguards.
-- **Cascading Failures**: Compromised agents in multi-agent systems propagating attacks to other agents.
-- **AI Console Malicious Configuration**: AI developer consoles can be compelled to consume data that contains instructions driving malicious changes to the underlying LLM configuration.
-- **Denial of Wallet (DoW)**: Attacks causing excessive API/compute costs through unbounded agent loops.
-- **Sensitive Data Exposure**: PII, credentials, or confidential data inadvertently included in agent context or logs.
-- **Supply Chain Attacks**: Compromising third-party tools, APIs, or data sources used by agents.
+- **Prompt Injection (Direct & Indirect)**: malicious instructions via user input or external data (websites, documents, emails) hijack agent behavior. (See [LLM Prompt Injection Prevention Cheat Sheet](LLM_Prompt_Injection_Prevention.md))
+- **Tool Abuse & Privilege Escalation**: agents exploit overly permissive tools for unintended actions or unauthorized resources.
+- **Data Exfiltration**: sensitive info leaked via tool calls, API requests, agent outputs.
+- **Memory Poisoning**: malicious data persisted in agent memory influences future sessions or other users.
+- **Goal Hijacking**: manipulating agent objectives to serve attacker while appearing legitimate.
+- **Excessive Autonomy**: high-impact actions w/o appropriate human oversight.
+- **High-Impact Action Abuse**: irreversible, financial, administrative, externally visible operations w/o independent validation.
+- **Decision and Approval Manipulation**: attackers influence risk scores, model confidence, approval thresholds to bypass safeguards.
+- **Cascading Failures**: compromised agents in multi-agent systems propagate attacks to other agents.
+- **AI Console Malicious Configuration**: AI developer consoles can be compelled to consume data containing instructions driving malicious changes to underlying LLM configuration.
+- **Denial of Wallet (DoW)**: excessive API/compute costs via unbounded agent loops.
+- **Sensitive Data Exposure**: PII, credentials, confidential data inadvertently in agent context or logs.
+- **Supply Chain Attacks**: compromised third-party tools, APIs, data sources used by agents.
 
 ## Best Practices
 
 ### 1. Tool Security & Least Privilege
 
-- Grant agents the minimum tools required for their specific task.
-- Implement per-tool permission scoping (read-only vs. write, specific resources).
-- Use separate tool sets for different trust levels (e.g., internal vs. user-facing agents).
+- Grant minimum tools required for specific task.
+- Per-tool permission scoping (read-only vs. write, specific resources).
+- Separate tool sets per trust level (e.g., internal vs. user-facing agents).
 - Require explicit tool authorization for sensitive operations.
 
 #### Bad: Over-permissioned Model Context Protocol (MCP) tool configuration
@@ -59,25 +59,25 @@ tools = [
 
 #### Tool Authorization Middleware
 
-Enforce authorization in the execution component, outside the agent's context. A `user_confirmed` flag is insufficient: the component must verify that the approval belongs to the current actor and exact tool call, remains valid, and has not already been consumed. Check and consume the approval in one atomic step immediately before execution so concurrent or repeated requests cannot reuse it. Changes to the target or parameters require new approval. Apply the [High-Impact Action Integrity Controls](#high-impact-action-integrity-controls) and the [Transaction Authorization Cheat Sheet](Transaction_Authorization.md). Fail closed for unknown tools or missing approval requirements.
+Enforce authorization in execution component, outside agent's context. `user_confirmed` flag insufficient: component must verify approval belongs to current actor and exact tool call, remains valid, not already consumed. Check and consume approval in one atomic step immediately before execution → concurrent or repeated requests can't reuse it. Changed target or parameters → new approval. Apply [High-Impact Action Integrity Controls](#high-impact-action-integrity-controls) and [Transaction Authorization Cheat Sheet](Transaction_Authorization.md). Fail closed for unknown tools or missing approval requirements.
 
 ### 2. Input Validation & Prompt Injection Defense
 
-- Treat all external data as untrusted (user messages, retrieved documents, API responses, emails).
-- Implement input sanitization before including external content in agent context.
-- Use delimiters and clear boundaries between instructions and data.
-- Apply content filtering for known injection patterns.
-- Consider using separate LLM calls to validate/summarize untrusted content.
+- Treat all external data untrusted (user messages, retrieved documents, API responses, emails).
+- Sanitize input before including external content in agent context.
+- Delimiters and clear boundaries between instructions and data.
+- Content filtering for known injection patterns.
+- Consider separate LLM calls to validate/summarize untrusted content.
 
-Please refer to the [LLM Prompt Injection Prevention Cheat Sheet](LLM_Prompt_Injection_Prevention.md) for detailed techniques.
+Detailed techniques: [LLM Prompt Injection Prevention Cheat Sheet](LLM_Prompt_Injection_Prevention.md).
 
 ### 3. Memory & Context Security
 
 - Validate and sanitize data before storing in agent memory.
-- Implement memory isolation between users/sessions.
-- Set memory expiration and size limits.
+- Memory isolation between users/sessions.
+- Memory expiration and size limits.
 - Audit memory contents for sensitive data before persistence.
-- Use cryptographic integrity checks for long-term memory.
+- Cryptographic integrity checks for long-term memory.
 
 #### Bad: Unvalidated memory storage
 
@@ -160,11 +160,11 @@ class SecureAgentMemory:
 
 ### 4. Human-in-the-Loop Controls
 
-- Require explicit approval for high-impact or irreversible actions.
-- Implement action previews before execution.
-- Set autonomy boundaries based on action risk levels.
-- Provide clear audit trails of agent decisions and actions.
-- Allow users to interrupt and rollback agent operations.
+- Explicit approval for high-impact or irreversible actions.
+- Action previews before execution.
+- Autonomy boundaries by action risk level.
+- Clear audit trails of agent decisions and actions.
+- Let users interrupt and rollback agent operations.
 
 #### Action Classification Example
 
@@ -192,26 +192,26 @@ def needs_human_approval(tool_name: str) -> bool:
     return ACTION_RISK.get(tool_name, RiskLevel.HIGH) is not RiskLevel.LOW
 ```
 
-Only the two mapped low-risk tools skip human review in this example. Medium, high, critical, and unmapped tools require it. This classification does not grant permission to run a tool; the execution component must still check the actor's authorization and any required approval for the exact action.
+Only two mapped low-risk tools skip human review in example. Medium, high, critical, unmapped tools require it. Classification doesn't grant permission to run tool; execution component must still check actor's authorization and any required approval for exact action.
 
 #### High-Impact Action Integrity Controls
 
-For destructive, financial, administrative, or externally visible actions, add controls beyond a simple approval prompt:
+Destructive, financial, administrative, externally visible actions: add controls beyond simple approval prompt:
 
-- Separate decision-making from execution. The agent can propose an action, but a policy service or execution component should independently validate scope, privilege, and approval state before execution.
-- Bind approval to the exact action. Include the actor, tool name, target resource, normalized parameters, timestamp, and expiry in the approval record.
-- Use short-lived authorization artifacts and replay protection for irreversible operations.
-- Require step-up authentication for critical actions such as account recovery, payment initiation, privilege changes, bulk deletion, or production deployment.
-- Make high-impact actions idempotent where possible and require explicit duplicate confirmation when idempotency is not possible.
+- Separate decision-making from execution. Agent can propose action; policy service or execution component should independently validate scope, privilege, approval state before execution.
+- Bind approval to exact action. Approval record includes actor, tool name, target resource, normalized parameters, timestamp, expiry.
+- Short-lived authorization artifacts and replay protection for irreversible operations.
+- Step-up authentication for critical actions e.g. account recovery, payment initiation, privilege changes, bulk deletion, production deployment.
+- Make high-impact actions idempotent where possible; require explicit duplicate confirmation when idempotency impossible.
 - Fail closed when risk classification, approval validation, policy lookup, or audit logging fails.
 
 ### 5. Output Validation & Guardrails
 
 - Validate agent outputs before execution or display.
-- Implement output filtering for sensitive data leakage.
-- Use structured outputs with schema validation where possible.
-- Set boundaries on output actions (rate limits, scope limits).
-- Apply content safety filters to generated responses.
+- Output filtering for sensitive data leakage.
+- Structured outputs w/ schema validation where possible.
+- Boundaries on output actions (rate limits, scope limits).
+- Content safety filters on generated responses.
 
 #### Output Validation Pipeline
 
@@ -287,18 +287,18 @@ class OutputGuardrails:
 
 ### 6. Monitoring & Observability
 
-- Log all agent decisions, tool calls, and outcomes.
-- Implement anomaly detection for unusual agent behavior.
+- Log all agent decisions, tool calls, outcomes.
+- Anomaly detection for unusual agent behavior.
 - Track token usage and costs per session/user.
-- Set up alerts for security-relevant events.
-- Maintain audit trails for compliance and forensics.
-- Log structured decision metadata for high-risk actions, including action classification, risk score when applicable, authorization outcome, approval identifier, execution result, and policy version.
-- Monitor for drift in approval behavior, repeated approval bypass attempts, elevated privilege usage, abnormal tool invocation frequency, and sudden increases in high-risk actions.
-- When the logs come from a component you did not build, see the [Verifying Third-Party Agent Execution Evidence Cheat Sheet](Verifying_Third_Party_Agent_Execution_Evidence.md) for how to judge what such a record establishes.
+- Alerts for security-relevant events.
+- Audit trails for compliance and forensics.
+- Log structured decision metadata for high-risk actions: action classification, risk score when applicable, authorization outcome, approval identifier, execution result, policy version.
+- Monitor drift in approval behavior, repeated approval bypass attempts, elevated privilege usage, abnormal tool invocation frequency, sudden increases in high-risk actions.
+- Logs from component you didn't build: see [Verifying Third-Party Agent Execution Evidence Cheat Sheet](Verifying_Third_Party_Agent_Execution_Evidence.md) for judging what such record establishes.
 
 #### Agent Monitoring
 
-For elapsed-time windows, use [Python's `timedelta.total_seconds()`](https://docs.python.org/3/library/datetime.html#datetime.timedelta.total_seconds); the `seconds` attribute excludes whole days.
+For elapsed-time windows use Python's `timedelta.total_seconds()`; `seconds` attribute excludes whole days.
 
 ```python
 import structlog
@@ -413,27 +413,27 @@ class AgentMonitor:
 
 ### 7. Multi-Agent Security
 
-- Implement trust boundaries between agents.
+- Trust boundaries between agents.
 - Validate and sanitize inter-agent communications.
 - Prevent privilege escalation through agent chains.
 - Isolate agent execution environments.
-- Apply circuit breakers to prevent cascading failures.
+- Circuit breakers against cascading failures.
 
 #### Secure Multi-Agent Communication
 
-Authenticate communicating agents and enforce the sender's permissions at the receiving service before executing a request. A valid message signature does not grant permission to perform the requested action.
+Authenticate communicating agents; enforce sender's permissions at receiving service before executing request. Valid message signature ≠ permission for requested action.
 
-When message signatures are needed, use a maintained protocol implementation. Protect the sender, intended recipient, message type, payload, creation and expiry times, and a unique message identifier. For HTTP, [RFC 9421 explains why verification must require all security-relevant components to be signed](https://www.rfc-editor.org/rfc/rfc9421.html#section-7.2.1).
+When signatures needed, use maintained protocol implementation. Protect sender, intended recipient, message type, payload, creation and expiry times, unique message identifier. HTTP: RFC 9421 explains why verification must require all security-relevant components signed (Section 7.2.1).
 
-Enforce a bounded validity window and reject repeated message identifiers before execution. A timestamp check alone permits repeated execution within that window; see [RFC 9421's replay considerations](https://www.rfc-editor.org/rfc/rfc9421.html#section-7.2.2). Check and record each identifier in one atomic step, and keep the record for the entire acceptance window, including any clock-skew allowance. Share that state across every receiver instance that can accept the message, and reject messages when it is unavailable; [RFC 9449's DPoP replay guidance notes that single-use checks may not be feasible when servers behind one endpoint have no shared state](https://www.rfc-editor.org/rfc/rfc9449.html#section-11.1). Keep transport encryption: [message signatures do not provide confidentiality](https://www.rfc-editor.org/rfc/rfc9421.html#section-7.1.2).
+Enforce bounded validity window; reject repeated message identifiers before execution. Timestamp check alone permits repeated execution within window; see RFC 9421 replay considerations (Section 7.2.2). Check and record each identifier in one atomic step; keep record for entire acceptance window, incl. clock-skew allowance. Share state across every receiver instance that can accept message; reject messages when unavailable; RFC 9449 DPoP replay guidance notes single-use checks may be infeasible when servers behind one endpoint have no shared state (Section 11.1). Keep transport encryption: message signatures give no confidentiality (RFC 9421 Section 7.1.2).
 
 ### 8. Data Protection & Privacy
 
 - Minimize sensitive data in agent context.
-- Implement data classification and handling rules.
-- Apply encryption for data at rest and in transit.
+- Data classification and handling rules.
+- Encrypt data at rest and in transit.
 - Enforce data retention and deletion policies.
-- Comply with privacy regulations (GDPR, CCPA).
+- Comply w/ privacy regulations (GDPR, CCPA).
 
 #### Data Classification and Handling
 
@@ -533,7 +533,7 @@ class SecureContextBuilder:
 
 ### 9. Secure Agent Testing & Adversarial Validation
 
-AI agents should undergo structured security testing before production deployment and after material changes to prompts, tools, memory, retrieval, policies, or model providers. Testing should exercise both application controls and agent-specific failure modes.
+Structured security testing before production deployment and after material changes to prompts, tools, memory, retrieval, policies, model providers. Exercise application controls and agent-specific failure modes.
 
 #### Abuse-Case Test Matrix
 
@@ -541,64 +541,64 @@ Maintain repeatable test cases for:
 
 | Abuse case | What to validate |
 | --- | --- |
-| Prompt override | System and developer instructions are not silently replaced by user or retrieved content |
-| Tool misuse | Unauthorized tools are denied even when the model requests them confidently |
-| Privilege escalation | Low-trust sessions cannot reach privileged tools, credentials, or admin actions |
-| Memory poisoning | Malicious content is sanitized, scoped, expired, or rejected before persistence |
-| Data exfiltration | Sensitive context is not leaked through tool calls, citations, logs, or final output |
-| Recursive tool abuse | Chain depth, retry, token, and cost limits stop runaway loops |
-| Approval bypass | High-impact actions cannot execute without a valid, unexpired, parameter-bound approval |
-| Multi-agent chaining | One compromised agent cannot cause another agent to exceed its trust boundary |
+| Prompt override | System and developer instructions not silently replaced by user or retrieved content |
+| Tool misuse | Unauthorized tools denied even when model requests them confidently |
+| Privilege escalation | Low-trust sessions can't reach privileged tools, credentials, admin actions |
+| Memory poisoning | Malicious content sanitized, scoped, expired, or rejected before persistence |
+| Data exfiltration | Sensitive context not leaked through tool calls, citations, logs, final output |
+| Recursive tool abuse | Chain depth, retry, token, cost limits stop runaway loops |
+| Approval bypass | High-impact actions can't execute w/o valid, unexpired, parameter-bound approval |
+| Multi-agent chaining | One compromised agent can't make another exceed its trust boundary |
 
 #### CI/CD and Release Gates
 
-- Run adversarial test suites in CI/CD for agent templates, tool policies, and prompt changes.
-- Include regression tests for previously observed injection, memory poisoning, and tool-abuse failures.
-- Block releases when high-risk tool policies, approval logic, or credential scopes change without updated tests.
-- Keep red-team prompts and expected denials version controlled, but do not store secrets or live customer data in test fixtures.
-- Review test changes carefully; attackers may try to weaken or remove security tests in the same pull request that changes agent behavior.
+- Run adversarial test suites in CI/CD for agent templates, tool policies, prompt changes.
+- Regression tests for previously observed injection, memory poisoning, tool-abuse failures.
+- Block releases when high-risk tool policies, approval logic, credential scopes change w/o updated tests.
+- Version-control red-team prompts and expected denials; no secrets or live customer data in test fixtures.
+- Review test changes carefully; attackers may weaken or remove security tests in same PR that changes agent behavior.
 
 #### Validation Evidence
 
-For production agents, retain evidence that shows:
+Production agents: retain evidence showing:
 
-- The tested agent version, model provider, tool policy, and retrieval configuration.
-- The abuse cases executed and their expected results.
-- The approval, denial, timeout, or circuit-breaker behavior observed.
-- Any accepted residual risk and the compensating control.
+- Tested agent version, model provider, tool policy, retrieval configuration.
+- Abuse cases executed and expected results.
+- Approval, denial, timeout, circuit-breaker behavior observed.
+- Accepted residual risk and compensating control.
 
 ## Do's and Don'ts
 
 **Do:**
 
-- Apply least privilege to all agent tools and permissions.
+- Least privilege for all agent tools and permissions.
 - Validate and sanitize all external inputs (user messages, documents, API responses).
-- Implement human-in-the-loop for high-risk actions.
+- Human-in-the-loop for high-risk actions.
 - Isolate memory and context between users/sessions.
-- Monitor agent behavior and set up anomaly detection.
-- Use structured outputs with schema validation.
+- Monitor agent behavior; anomaly detection.
+- Structured outputs w/ schema validation.
 - Sign and verify inter-agent communications.
-- Classify data and apply appropriate protections.
+- Classify data; apply appropriate protections.
 - Separate decision-making from execution for irreversible operations.
-- Perform structured adversarial testing before production deployment.
-- Enforce token, cost, retry, and tool-chain limits.
+- Structured adversarial testing before production deployment.
+- Enforce token, cost, retry, tool-chain limits.
 - Log structured decision metadata for high-risk actions.
 
 **Don't:**
 
 - Give agents unrestricted tool access or wildcard permissions.
 - Trust content from external sources (websites, emails, documents).
-- Allow agents to execute arbitrary code without sandboxing.
-- Store sensitive data in agent memory without encryption/redaction.
-- Let agents make high-impact decisions without human oversight.
-- Ignore cost controls (unbounded loops can cause DoW).
+- Allow arbitrary code execution w/o sandboxing.
+- Store sensitive data in agent memory w/o encryption/redaction.
+- Let agents make high-impact decisions w/o human oversight.
+- Ignore cost controls (unbounded loops → DoW).
 - Pass unsanitized data between agents in multi-agent systems.
 - Log sensitive data (PII, credentials) in plain text.
 - Rely solely on model output for authorization decisions.
-- Skip adversarial testing after prompt, tool, memory, retrieval, or provider changes.
-- Permit unlimited recursion, retries, or tool chaining.
+- Skip adversarial testing after prompt, tool, memory, retrieval, provider changes.
+- Permit unlimited recursion, retries, tool chaining.
 
 ## References
 
-- [OWASP LLM06:2025 Excessive Agency](https://genai.owasp.org/llmrisk/llm062025-excessive-agency/)
-- [NIST Artificial Intelligence Risk Management Framework (AI RMF 1.0)](https://doi.org/10.6028/NIST.AI.100-1)
+- OWASP LLM06:2025 Excessive Agency
+- NIST Artificial Intelligence Risk Management Framework (AI RMF 1.0)

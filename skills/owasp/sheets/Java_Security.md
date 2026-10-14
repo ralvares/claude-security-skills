@@ -2,38 +2,37 @@
 
 ## Injection Prevention in Java
 
-This section aims to provide tips to handle *Injection* in Java application code.
+Tips for handling *Injection* in Java app code.
 
-Sample code used in tips is located [here](https://github.com/righettod/injection-cheat-sheets).
 
 ### What is Injection
 
-[Injection](https://owasp.org/www-project-top-ten/OWASP_Top_Ten_2017/Top_10-2017_A1-Injection) in OWASP Top 10 is defined as following:
+Injection in OWASP Top 10 defined as:
 
 *Consider anyone who can send untrusted data to the system, including external users, internal users, and administrators.*
 
 ### General advice to prevent Injection
 
-The following point can be applied, in a general way, to prevent *Injection* issue:
+General prevention:
 
-1. Apply **Input Validation** (using allowlist approach) combined with **Output Sanitizing+Escaping** on user input/output.
-2. If you need to interact with system, try to use API features provided by your technology stack (Java / .Net / PHP...) instead of building command.
+1. Apply **Input Validation** (allowlist approach) + **Output Sanitizing+Escaping** on user input/output.
+2. System interaction → use tech stack API features (Java / .Net / PHP...) instead of building command.
 
-Additional advice is provided on this [cheatsheet](Input_Validation.md).
+More advice: [cheatsheet](Input_Validation.md).
 
 ## Specific Injection types
 
-*Examples in this section will be provided in Java technology (see Maven project associated) but advice is applicable to others technologies like .Net / PHP / Ruby / Python...*
+*Java examples (see Maven project); advice applies to other tech: .Net / PHP / Ruby / Python...*
 
 ### SQL
 
 #### Symptom
 
-Injection of this type occur when the application uses untrusted user input to build an SQL query using a String and execute it.
+Occurs when app builds SQL query from untrusted user input via String and executes it.
 
 #### How to prevent
 
-Use *Query Parameterization* in order to prevent injection.
+Use *Query Parameterization*.
 
 #### Example
 
@@ -96,11 +95,11 @@ try (Connection con = DriverManager.getConnection(jdbcUrl)) {
 
 #### Symptom
 
-Injection of this type occur when the application uses untrusted user input to build a JPA query using a String and execute it. It's quite similar to SQL injection but here the altered language is not SQL but JPA QL.
+Occurs when app builds JPA query from untrusted user input via String and executes it. Like SQL injection, but altered language = JPA QL.
 
 #### How to prevent
 
-Use Java Persistence Query Language **Query Parameterization** in order to prevent injection.
+Use Java Persistence Query Language **Query Parameterization**.
 
 #### Example
 
@@ -126,17 +125,16 @@ try {
 
 #### References
 
-- [SQLi and JPA](https://software-security.sans.org/developer-how-to/fix-sql-injection-in-java-persistence-api-jpa)
 
 ### Operating System
 
 #### Symptom
 
-Injection of this type occur when the application uses untrusted user input to build an Operating System command using a String and execute it.
+Occurs when app builds OS command from untrusted user input via String and executes it.
 
 #### How to prevent
 
-Use technology stack **API** in order to prevent injection.
+Use tech stack **API**.
 
 #### Example
 
@@ -150,17 +148,16 @@ var reachable = host.isReachable(5000);
 
 #### References
 
-- [Command Injection](https://owasp.org/www-community/attacks/Command_Injection)
 
 ### XML: XPath Injection
 
 #### Symptom
 
-Injection of this type occur when the application uses untrusted user input to build a XPath query using a String and execute it.
+Occurs when app builds XPath query from untrusted user input via String and executes it.
 
 #### How to prevent
 
-Use **XPath Variable Resolver** in order to prevent injection.
+Use **XPath Variable Resolver**.
 
 #### Example
 
@@ -196,7 +193,7 @@ public class SimpleVariableResolver implements XPathVariableResolver {
 }
 ```
 
-Code using it to perform XPath query.
+Code using it for XPath query.
 
 ``` java
 /*Create a XML document builder factory*/
@@ -229,17 +226,16 @@ var containsRalls = book.getTextContent().contains("Ralls, Kim");
 
 #### References
 
-- [XPATH Injection](https://owasp.org/www-community/attacks/XPATH_Injection)
 
 ### HTML/JavaScript/CSS
 
 #### Symptom
 
-Injection of this type occur when the application uses untrusted user input to build an HTTP response and sent it to browser.
+Occurs when app builds HTTP response from untrusted user input and sends it to browser.
 
 #### How to prevent
 
-Use [context-specific output encoding](https://owasp.org/projects/java-encoder?tab=how-to-use) when displaying untrusted text. When the application intentionally accepts HTML markup, use an [HTML sanitization policy](https://github.com/OWASP/java-html-sanitizer#crafting-a-policy) for the permitted elements and attributes. Input validation enforces business rules; it does not replace these XSS controls. See the [XSS Prevention Cheat Sheet](Cross_Site_Scripting_Prevention.md) for HTML, attribute, JavaScript, and CSS context requirements.
+Use context-specific output encoding when displaying untrusted text. App intentionally accepts HTML markup → use HTML sanitization policy for permitted elements/attributes. Input validation enforces business rules; ≠ replacement for these XSS controls. See [XSS Prevention Cheat Sheet](Cross_Site_Scripting_Prevention.md) for HTML, attribute, JavaScript, CSS context requirements.
 
 #### Example
 
@@ -276,28 +272,24 @@ if (!finalSafeOutputExpected.equals(safeOutput))
 
 #### References
 
-- [XSS](https://owasp.org/www-community/attacks/xss/)
-- [OWASP Java HTML Sanitizer](https://github.com/owasp/java-html-sanitizer)
-- [OWASP Java Encoder](https://github.com/owasp/owasp-java-encoder)
-- [Java RegEx](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
 
 ### LDAP
 
-A dedicated [cheatsheet](LDAP_Injection_Prevention.md) has been created.
+Dedicated [cheatsheet](LDAP_Injection_Prevention.md) exists.
 
 ### NoSQL
 
 #### Symptom
 
-Injection of this type occur when the application uses untrusted user input to build a NoSQL API call expression.
+Occurs when app builds NoSQL API call expression from untrusted user input.
 
 #### How to prevent
 
-Validate the expected input type, length, and business format, then use the driver's structured query API. Do not concatenate untrusted values into query strings or accept client-supplied query/operator objects. [MongoDB's driver guidance](https://www.mongodb.com/docs/drivers/client-libraries-best-practices/) distinguishes literal values built through typed APIs from JSON or JavaScript that is parsed as query syntax. A blacklist of punctuation is not needed for the string equality query below. See the [NoSQL Security Cheat Sheet](NoSQL_Security.md#prevent-nosql-injection) for broader controls.
+Validate expected input type, length, business format; then use driver's structured query API. NEVER concatenate untrusted values into query strings or accept client-supplied query/operator objects. MongoDB's driver guidance distinguishes literal values built via typed APIs from JSON/JavaScript parsed as query syntax. Punctuation blacklist not needed for string equality query below. Broader controls: [NoSQL Security Cheat Sheet](NoSQL_Security.md#prevent-nosql-injection).
 
 #### Example - MongoDB
 
-Assume `collection` is an application-configured `MongoCollection<Document>`. This example uses the Java driver's [equality filter builder](https://www.mongodb.com/docs/drivers/java/sync/current/builders/filters/) with a string value; the 50-character limit is an illustrative business rule, not the injection defense.
+Assume `collection` = app-configured `MongoCollection<Document>`. Example uses Java driver's equality filter builder w/ string value; 50-character limit = illustrative business rule, ≠ injection defense.
 
 ```java
 String userInput = "Brooklyn";
@@ -312,34 +304,24 @@ FindIterable<Document> restaurants = collection.find(expression);
 
 #### References
 
-- [Testing for NoSQL injection](https://owasp.org/www-project-web-security-testing-guide/stable/4-Web_Application_Security_Testing/07-Input_Validation_Testing/05.6-Testing_for_NoSQL_Injection.html)
-- [SQL and NoSQL Injection](https://ckarande.gitbooks.io/owasp-nodegoat-tutorial/content/tutorial/a1_-_sql_and_nosql_injection.html)
-- [No SQL, No Injection?](https://arxiv.org/ftp/arxiv/papers/1506/1506.04082.pdf)
 
 ### Log Injection
 
 #### Symptom
 
-[Log Injection](https://owasp.org/www-community/attacks/Log_Injection) occurs when an application includes untrusted data in an application log message (e.g., an attacker can cause an additional log entry that looks like it came from a completely different user, if they can inject CRLF characters in the untrusted data). More information about this attack is available on the OWASP [Log Injection](https://owasp.org/www-community/attacks/Log_Injection) page.
+Log Injection occurs when app includes untrusted data in log message (e.g., attacker injecting CRLF causes extra log entry looking like it came from completely different user). More: OWASP Log Injection page.
 
 #### How to prevent
 
-To prevent an attacker from writing malicious content into the application log, apply defenses such as:
+Defenses:
 
-- Use structured log formats, such as JSON, instead of unstructured text formats.
-  Unstructured formats are susceptible to **C**arriage **R**eturn (CR) and **L**ine **F**eed (LF) injection (see [CWE-93](https://cwe.mitre.org/data/definitions/93.html)).
-- Limit the size of the user input value used to create the log message.
-- Make sure [all XSS defenses](Cross_Site_Scripting_Prevention.md) are applied when viewing log files in a web browser.
+- Use structured log formats (e.g. JSON) over unstructured text. Unstructured formats susceptible to **C**arriage **R**eturn (CR) and **L**ine **F**eed (LF) injection (see CWE-93).
+- Limit size of user input value used in log message.
+- Apply [all XSS defenses](Cross_Site_Scripting_Prevention.md) when viewing log files in browser.
 
 #### Example using Log4j Core 2
 
-The recommended logging policy for a production environment is sending logs to a network socket using the structured
-[JSON Template Layout](https://logging.apache.org/log4j/2.x/manual/json-template-layout.html)
-introduced in
-[Log4j 2.14.0](https://logging.apache.org/log4j/2.x/release-notes.html#release-notes-2-14-0)
-and truncate string values longer than 500 characters using the
-[`maxStringLength` configuration attribute](https://logging.apache.org/log4j/2.x/manual/json-template-layout.html#plugin-attr-maxStringLength).
-The truncation suffix is appended after this limit; this does not cap the encoded byte size or the total JSON document size:
+Recommended production logging policy: send logs to network socket using structured JSON Template Layout (introduced in Log4j 2.14.0); truncate string values longer than 500 characters via `maxStringLength` configuration attribute. Truncation suffix appended after limit; does not cap encoded byte size or total JSON document size:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -365,13 +347,9 @@ The truncation suffix is appended after this limit; this does not cap the encode
 </Configuration>
 ```
 
-See
-[Integration with service-oriented architectures](https://logging.apache.org/log4j/2.x/soa.html)
-on
-[Log4j website](https://logging.apache.org/log4j/2.x/index.html)
-for more tips.
+See Integration with service-oriented architectures on Log4j website for more tips.
 
-Usage of the logger at code level:
+Logger usage in code:
 
 ``` java
 import org.apache.logging.log4j.LogManager;
@@ -392,17 +370,11 @@ logger.warn("Failure for user " + username + " and role {}.", role, ex);
 ...
 ```
 
-See
-[Log4j API Best Practices](https://logging.apache.org/log4j/2.x/manual/api.html#best-practice)
-for more information.
+See Log4j API Best Practices for more info.
 
 #### Example using Logback
 
-The recommended logging policy for a production environment is using the structured
-[JsonEncoder](https://logback.qos.ch/manual/encoders.html#JsonEncoder)
-introduced in
-[Logback 1.3.8](https://logback.qos.ch/news.html#1.3.8).
-In the example below, Logback is configured to roll on 10 log files of 5 MiB each:
+Recommended production logging policy: structured JsonEncoder (introduced in Logback 1.3.8). Example below: Logback rolls on 10 log files of 5 MiB each:
 
 ``` xml
 <?xml version="1.0" encoding="UTF-8" ?>
@@ -432,7 +404,7 @@ In the example below, Logback is configured to roll on 10 log files of 5 MiB eac
 </configuration>
 ```
 
-Usage of the logger at code level:
+Logger usage in code:
 
 ``` java
 import org.slf4j.Logger;
@@ -455,35 +427,27 @@ logger.warn("Failure for user " + username + " and role {}.", role, ex);
 
 #### References
 
-- [Log4j Core Configuration File](https://logging.apache.org/log4j/2.x/manual/configuration.html)
-- [Log4j JSON Template Layout](https://logging.apache.org/log4j/2.x/manual/json-template-layout.html)
-- [Log4j Appenders](https://logging.apache.org/log4j/2.x/manual/appenders.html)
-- [Logback Configuration File](https://logback.qos.ch/manual/configuration.html)
-- [Logback JsonEncoder](https://logback.qos.ch/manual/encoders.html#JsonEncoder)
-- [Logback Appenders](https://logback.qos.ch/manual/appenders.html)
 
 ## Cryptography
 
 ### General cryptography guidance
 
 - **Never, ever write your own cryptographic functions.**
-- Wherever possible, try and avoid writing any cryptographic code at all. Instead try and either use pre-existing secret management solutions or the secret management solution provided by your cloud provider. For more information, see the [OWASP Secrets Management Cheat Sheet](Secrets_Management.md).
-- If you cannot use a pre-existing secret management solution, try and use a trusted and well known implementation library rather than using the libraries built into JCA/JCE as it is far too easy to make cryptographic errors with them.
-- Make sure your application or protocol can easily support a future change of cryptographic algorithms.
-- Use your package manager wherever possible to keep all of your packages up to date. Watch the updates on your development setup, and plan updates to your applications accordingly.
-- We will show examples below based on Google Tink, which is a library created by cryptography experts for using cryptography safely (in the sense of minimizing common mistakes made when using standard cryptography libraries).
+- Avoid writing crypto code where possible. Use existing secret management solutions or cloud provider's. See [OWASP Secrets Management Cheat Sheet](Secrets_Management.md).
+- No existing secret management solution → use trusted, well-known implementation library over built-in JCA/JCE; far too easy to make crypto errors there.
+- App/protocol must easily support future change of cryptographic algorithms.
+- Use package manager to keep all packages up to date. Watch updates on dev setup; plan app updates accordingly.
+- Examples below use Google Tink, library by cryptography experts for safe crypto use (minimizes common mistakes made with standard crypto libraries).
 
 ### Encryption for storage
 
-Follow the algorithm guidance in the [OWASP Cryptographic Storage Cheat Sheet](Cryptographic_Storage.md#algorithms).
+Follow algorithm guidance in [OWASP Cryptographic Storage Cheat Sheet](Cryptographic_Storage.md#algorithms).
 
 #### Symmetric example using Google Tink
 
-Google Tink has documentation on performing common tasks.
+Tink documents common tasks, e.g. how to perform simple symmetric encryption.
 
-For example, this page (from Google's website) shows [how to perform simple symmetric encryption](https://developers.google.com/tink/encrypt-data).
-
-The following code snippet shows an encapsulated use of this functionality:
+Snippet shows encapsulated use:
 
 <details>
   <summary>Click here to view the "Tink symmetric encryption" code snippet.</summary>
@@ -561,15 +525,15 @@ class AesGcmSimple {
 
 #### Symmetric example using built-in JCA/JCE classes
 
-If you absolutely cannot use a separate library, it is still possible to use the built JCA/JCE classes but it is strongly recommended to have a cryptography expert review the full design and code, as even the most trivial error can severely weaken your encryption.
+Separate library impossible → built-in JCA/JCE classes usable, but strongly recommended: cryptography expert reviews full design + code; even most trivial error severely weakens encryption.
 
-The following code snippet shows an example of using AES-GCM to perform encryption/decryption of data.
+Snippet shows AES-GCM encryption/decryption of data.
 
-A few constraints/pitfalls with this code:
+Constraints/pitfalls:
 
-- It does not take into account key rotation or management which is a whole topic in itself.
-- It is important to use a different nonce for every encryption operation, especially if the same key is used. For more information, see [this answer on Cryptography Stack Exchange](https://crypto.stackexchange.com/a/66500).
-- The key will need to be stored securely.
+- No key rotation/management (whole topic itself).
+- Use different nonce for every encryption operation, esp. if same key reused. See [this answer on Cryptography Stack Exchange](https://crypto.stackexchange.com/a/66500).
+- Store key securely.
 
 <details>
   <summary>Click here to view the "JCA/JCE symmetric encryption" code snippet.</summary>
@@ -640,15 +604,13 @@ class AesGcmSimple {
 
 ### Encryption for transmission
 
-Again, follow the algorithm guidance in the [OWASP Cryptographic Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html#algorithms).
+Again follow algorithm guidance in [OWASP Cryptographic Storage Cheat Sheet](Cryptographic_Storage.md#algorithms).
 
 #### Asymmetric example using Google Tink
 
-Google Tink has documentation on performing common tasks.
+Tink documents common tasks, e.g. how to perform hybrid encryption where two parties share data based on asymmetric key pair.
 
-For example, this page (from Google's website) shows [how to perform a hybrid encryption process](https://developers.google.com/tink/exchange-data) where two parties want to share data based on their asymmetric key pair.
-
-The following code snippet shows how this functionality can be used to share secrets between Alice and Bob:
+Snippet shows sharing secrets between Alice and Bob:
 
 <details>
   <summary>Click here to view the "Tink hybrid encryption" code snippet.</summary>
@@ -790,19 +752,19 @@ class HybridSimple {
 
 #### Asymmetric example using built-in JCA/JCE classes
 
-If you absolutely cannot use a separate library, it is still possible to use the built JCA/JCE classes but it is strongly recommended to have a cryptography expert review the full design and code, as even the most trivial error can severely weaken your encryption.
+Separate library impossible → built-in JCA/JCE classes usable, but strongly recommended: cryptography expert reviews full design + code; even most trivial error severely weakens encryption.
 
-This Java 25+ example illustrates Elliptic Curve Diffie-Hellman (ECDH) followed by HKDF-SHA-256 and AES-GCM. Do not use raw ECDH output directly as an AES key: [RFC 5869](https://www.rfc-editor.org/rfc/rfc5869.html#section-3.3) explains why Diffie-Hellman values need extraction. The [Java KDF API](https://docs.oracle.com/en/java/javase/25/docs/api/java.base/javax/crypto/KDF.html) performs both extraction and expansion here. This is a primitive demonstration, not an authenticated communication protocol.
+Java 25+ example: Elliptic Curve Diffie-Hellman (ECDH), then HKDF-SHA-256 and AES-GCM. NEVER use raw ECDH output directly as AES key: [RFC 5869](https://www.rfc-editor.org/rfc/rfc5869.html#section-3.3) explains why Diffie-Hellman values need extraction. Java KDF API does both extraction and expansion here. Primitive demonstration, ≠ authenticated communication protocol.
 
-Note that this code sample relies on the AesGcmSimple class from the [previous section](#symmetric-example-using-built-in-jcajce-classes).
+Code relies on AesGcmSimple class from [previous section](#symmetric-example-using-built-in-jcajce-classes).
 
-A few constraints/pitfalls with this code:
+Constraints/pitfalls:
 
-- It does not take into account key rotation or management which is a whole topic in itself.
-- The code deliberately enforces a new nonce for every encryption operation but this must be managed as a separate data item alongside the ciphertext.
-- The private keys will need to be stored securely.
-- The code does not consider the validation of public keys before use.
-- Public keys must be authenticated independently before use. HKDF does not authenticate the peer; this example omits that protocol and its identity/context binding.
+- No key rotation/management (whole topic itself).
+- Code deliberately enforces new nonce per encryption operation; nonce must be managed as separate data item alongside ciphertext.
+- Store private keys securely.
+- No public key validation before use.
+- Authenticate public keys independently before use. HKDF doesn't authenticate peer; example omits that protocol + identity/context binding.
 
 <details>
   <summary>Click here to view the "JCA/JCE hybrid encryption" code snippet.</summary>
@@ -942,5 +904,3 @@ class ECDHSimple {
 
 ## References
 
-- [Oracle: Secure Coding Guidelines for Java SE](https://www.oracle.com/java/technologies/javase/seccodeguide.html)
-- [Tink: Authenticated Encryption with Associated Data](https://developers.google.com/tink/aead)

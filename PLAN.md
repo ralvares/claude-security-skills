@@ -89,3 +89,39 @@ Deprecated stubs and their link replacements (from the first import):
 - Updates: manual script, no GitHub Action (owner).
 - Always-on rules ship in the repo as `SECURITY-RULES.md` for `@` import (owner).
 - Push to `main` directly: owner asked to push; repo is empty.
+
+# Phase 2: always-on rules cover the whole Cheat Sheet Series (2026-10-14)
+
+## Why
+The 7 rules cover only part of the OWASP Top 10. When Claude does not recognise a task as security work, the skill never loads and the gaps (misconfiguration, supply chain, auth, integrity, logging, crypto) go unchecked. The owner accepts a bigger always-on cost to close that.
+
+## Design
+- `SECURITY-RULES.md` keeps the 7 core rules, then one section per router category (same order as `SKILL.md`). Each bullet is a concrete must or never taken from a sheet, ends with the sheet name in parentheses, at most about 30 words. Every one of the 133 sheets contributes at least one bullet (pure reference sheets, such as `XSS_Filter_Evasion`, may share a bullet).
+- Values come from the sheets, never from memory (for example password hashing parameters, session ID entropy, cookie flags).
+- Budget: at most 24 KB (about 6k tokens) per session. The skill and sheets stay unchanged for detail.
+- `scripts/check-rules.sh`: every sheet in `sheets/` is cited in `SECURITY-RULES.md`; size under 24 KB.
+
+## Steps
+11. [ ] Extract: 7 parallel agents, each reads about 19 sheets in full and writes `sheet | category | 1 to 3 rules` to the scratchpad. Check: 133 sheets present across the outputs.
+12. [ ] Compile `SECURITY-RULES.md` from the extracts: merge duplicates, group by category. Check: `scripts/check-rules.sh` prints `OK: 133 sheets cited, <size> bytes`.
+13. [ ] Spot-check 10 bullets against their sheets (values and wording match).
+14. [ ] Update README cost table, commit, push; copy to `~/.claude/SECURITY.md`.
+
+## Decisions
+- Always-on rules cover the full Cheat Sheet Series, not only the Top 10; cost accepted (owner, 2026-10-14).
+
+# Phase 3: telegraphic style, no sync (2026-10-14)
+
+## Why
+Fewer tokens per session and per sheet read, same guidance. Owner: "apply the telegraphic style also to the md files"; remove the OWASP sync, since rewritten sheets can no longer be regenerated from upstream.
+
+## Steps
+15. [x] Delete `scripts/sync-owasp.sh`; README and NOTICE describe manual updates.
+16. [x] `SECURITY-RULES.md` in telegraphic style. Check: `scripts/check-rules.sh` → `OK: 133 sheets cited, <24576 bytes`.
+17. [ ] Pilot: rewrite 3 sheets (Authorization, Webhook_Security, Java_Security). Check: scratchpad `check_compress.py` reports no lost code blocks, inline code, numbers, headings or sheet links; size ratio recorded.
+18. [ ] Rewrite the remaining 130 sheets in parallel batches with the same rules and checker.
+19. [ ] `scripts/check-index.sh` passes; spot-read 5 sheets for meaning; NOTICE lists the rewrite; commit, push, reinstall with `--copy`.
+
+## Decisions
+- No upstream sync; updates are manual from now on (owner, 2026-10-14).
+- Headings, code blocks, inline code and every number stay byte-identical; prose, reference lists and external URLs are compressed or dropped.

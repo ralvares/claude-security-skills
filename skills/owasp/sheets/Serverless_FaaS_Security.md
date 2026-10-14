@@ -2,10 +2,9 @@
 
 ## Introduction
 
-Serverless computing (Functions as a Service — FaaS) platforms such as AWS Lambda, Azure Functions, and Google Cloud Functions simplify application development and scaling.
-However, the execution model (short-lived, event-driven functions running in managed environments) introduces unique security risks compared to traditional architectures.
+Serverless (Functions as a Service, FaaS) platforms: AWS Lambda, Azure Functions, Google Cloud Functions. Execution model (short-lived, event-driven functions in managed environments) adds unique security risks vs traditional architectures.
 
-This cheat sheet provides best practices to secure serverless applications and minimize attack surfaces.
+Best practices to secure serverless apps, minimize attack surface.
 
 ## Key Risks
 
@@ -14,16 +13,16 @@ This cheat sheet provides best practices to secure serverless applications and m
 - Cold start data leakage (persistent state, side-channel timing).
 - Function chaining abuse (compromised function invoking others).
 - Shared environment risks (multi-tenant leakage, `/tmp` reuse).
-- Hardcoded secrets in code or platform config.
+- Hardcoded secrets in code/platform config.
 - Excessive network access.
 
 ## Best Practices
 
 ### 1. Principle of Least Privilege
 
-- Assign minimal IAM permissions to each function.
-- Use role-per-function (avoid shared high-privilege roles).
-- Scope database/API keys to the smallest set of actions needed.
+- Minimal IAM permissions per function.
+- Role-per-function (no shared high-privilege roles).
+- Scope database/API keys to smallest action set needed.
 
 **Bad IAM Policy (too broad):**
 
@@ -48,9 +47,9 @@ This cheat sheet provides best practices to secure serverless applications and m
 ### 2. Environment Isolation
 
 - Disable default network access unless required (e.g. outbound internet access).
-- Place functions in private subnets with controlled egress.
+- Functions in private subnets w/ controlled egress.
 - Isolate sensitive functions (e.g. payment, auth) from general-purpose ones.
-- Separate production vs. staging environments with strict boundaries.
+- Separate production vs. staging w/ strict boundaries.
 
 **AWS Lambda VPC Config (restrictive):**
 
@@ -64,9 +63,9 @@ VpcConfig:
 
 ### 3. Secure Function Invocation
 
-- Enforce authentication and authorization on all triggers (API Gateway, Pub/Sub, S3, IoT).
-- Validate function-to-function calls with signed tokens or workload identities.
-- Apply rate limiting and throttling to mitigate DoS and abuse.
+- Enforce authentication + authorization on all triggers (API Gateway, Pub/Sub, S3, IoT).
+- Validate function-to-function calls w/ signed tokens or workload identities.
+- Rate limiting + throttling vs DoS/abuse.
 
 **API Gateway Authorizer Example (JWT validation):**
 
@@ -81,10 +80,10 @@ VpcConfig:
 
 ### 4. Event Data Validation
 
-- Treat all event payloads as untrusted input.
-- Apply strong input validation & sanitization (length, type, format).
-- Protect against common injection attacks (SQLi, XSS, JSON injection, deserialization).
-- Strip unnecessary fields and metadata before processing.
+- Treat all event payloads as untrusted.
+- Strong input validation & sanitization (length, type, format).
+- Protect vs injection (SQLi, XSS, JSON injection, deserialization).
+- Strip unnecessary fields/metadata before processing.
 
 Example: Python input validation for Lambda
 
@@ -105,10 +104,10 @@ def lambda_handler(event, context):
 
 ### 5. Cold Start & Execution Context Security
 
-- Do not assume function runtime context is clean between invocations.
-- Avoid storing secrets or temporary sensitive data in global/static variables.
-- Protect against side-channel leaks (timing differences, leftover files in /tmp).
-- For sensitive workloads, enforce single-use execution environments if the platform supports it.
+- Don't assume runtime context clean between invocations.
+- No secrets/temporary sensitive data in global/static variables.
+- Protect vs side-channel leaks (timing differences, leftover files in /tmp).
+- Sensitive workloads: enforce single-use execution environments if platform supports.
 
 **Bad:**
 
@@ -130,15 +129,15 @@ def lambda_handler(event, context):
 
 ### 6. Secrets Management
 
-See the [Secrets Management Cheat Sheet](Secrets_Management.md) for secret lifecycle controls.
+Secret lifecycle: [Secrets Management Cheat Sheet](Secrets_Management.md).
 
-- Fetch secrets at runtime from a vault or caching extension — not from platform-level function configuration (e.g. Lambda Environment Variables).
-- Use ephemeral credentials (STS, workload identity federation).
+- Fetch secrets at runtime from vault/caching extension, not platform-level function config (e.g. Lambda Environment Variables).
+- Ephemeral credentials (STS, workload identity federation).
 - Rotate secrets automatically.
 
 **AWS Lambda Secret Fetch (Python via Parameters and Secrets Extension):**
 
-**Note:** Ensure that the AWS Lambda Parameters and Secrets Extension is added and enabled for your function (for example, as a Lambda layer). Otherwise, `http://localhost:2773` will not be available and requests to it will fail.
+**Note:** AWS Lambda Parameters and Secrets Extension must be added + enabled for function (e.g., as Lambda layer). Otherwise `http://localhost:2773` unavailable, requests fail.
 
 ```python
 import os
@@ -191,8 +190,8 @@ def get_secret(secret_name):
 
 ### 7. Monitoring & Logging
 
-- Use centralized logging (CloudWatch, Azure Monitor, GCP Logging).
-- Mask secrets and PII.
+- Centralized logging (CloudWatch, Azure Monitor, GCP Logging).
+- Mask secrets + PII.
 
 Example: Redacting fields
 
@@ -207,31 +206,31 @@ def log_event(event):
 ### 8. Supply Chain Security
 
 - Scan dependencies (`npm audit`, `pip-audit`, `safety`).
-- Use minimal deployment packages.
-- Sign deployment packages and verify signatures against an approved publisher before deployment. A checksum alone does not authenticate the publisher.
+- Minimal deployment packages.
+- Sign deployment packages; verify signatures vs approved publisher before deployment. Checksum alone doesn't authenticate publisher.
 
-For AWS Lambda, use [code signing configurations](https://docs.aws.amazon.com/lambda/latest/dg/configuration-codesigning.html) with allowed signing profiles and `UntrustedArtifactOnDeployment` set to `Enforce`; the default `Warn` setting allows deployments that fail expiry, publisher, or revocation checks. Layers added to functions with code signing enabled must also be signed by an allowed profile.
+AWS Lambda: use code signing configurations w/ allowed signing profiles + `UntrustedArtifactOnDeployment` set to `Enforce`; default `Warn` allows deployments failing expiry, publisher, or revocation checks. Layers added to code-signing-enabled functions must also be signed by allowed profile.
 
 ## Do’s and Don’ts
 
 **Do**:
 
-- Enforce least privilege per function.
+- Least privilege per function.
 - Validate all event inputs.
 - Fetch secrets from vaults, not platform config.
 - Restrict network egress.
-- Monitor invocations and logs.
+- Monitor invocations + logs.
 
 **Don’t**:
 
-- Hardcode secrets in code or configs.
+- Hardcode secrets in code/configs.
 - Assume clean runtime between invocations.
 - Give `*` IAM permissions.
-- Leave sensitive data in `/tmp` or globals.
+- Leave sensitive data in `/tmp`/globals.
 - Trust event sources blindly.
 
 ## References
 
-- [AWS Lambda: Best practices](https://docs.aws.amazon.com/lambda/latest/dg/best-practices.html)
-- [Azure Functions: Security concepts](https://learn.microsoft.com/en-us/azure/azure-functions/security-concepts)
-- [Google Cloud Run: Security](https://docs.cloud.google.com/run/docs/securing/security)
+- AWS Lambda: Best practices
+- Azure Functions: Security concepts
+- Google Cloud Run: Security

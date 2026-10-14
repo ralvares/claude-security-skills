@@ -2,82 +2,82 @@
 
 ## Introduction
 
-This cheat sheet lists secure development practices for JavaScript and TypeScript that apply everywhere the language runs: browsers, hybrid apps, server-side Node.js, and any other runtime that implements the language ([MDN JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript)). It covers language-level pitfalls (dynamic code execution, prototype pollution, regular expressions), client-side sinks, and TypeScript-specific false confidence. Rules that are equally valid on the client and the server are stated once here; backend and runtime hardening stays in the [Node.js Security Cheat Sheet](Nodejs_Security.md), which this sheet links to instead of duplicating.
+Secure development practices for JavaScript/TypeScript, valid wherever language runs: browsers, hybrid apps, server-side Node.js, any runtime implementing it. Covers language-level pitfalls (dynamic code execution, prototype pollution, regular expressions), client-side sinks, TypeScript-specific false confidence. Rules valid on client and server stated once here; backend/runtime hardening in [Node.js Security Cheat Sheet](Nodejs_Security.md), linked not duplicated.
 
 ## Related Cheat Sheets (Top-Level Links)
 
-- [Node.js Security Cheat Sheet](Nodejs_Security.md) - backend and runtime guidance.
+- [Node.js Security Cheat Sheet](Nodejs_Security.md) - backend, runtime guidance.
 - [Cross Site Scripting Prevention Cheat Sheet](Cross_Site_Scripting_Prevention.md) - output encoding rules per context.
-- [DOM based XSS Prevention Cheat Sheet](DOM_based_XSS_Prevention.md) - client-side XSS sinks and sources.
+- [DOM based XSS Prevention Cheat Sheet](DOM_based_XSS_Prevention.md) - client-side XSS sinks, sources.
 - [Third Party JavaScript Management Cheat Sheet](Third_Party_Javascript_Management.md) - managing external scripts.
 - [Transport Layer Security Cheat Sheet](Transport_Layer_Security.md) - TLS configuration.
-- [OWASP Cheat Sheet Series index](https://cheatsheetseries.owasp.org/) - start here for the full catalog.
+- OWASP Cheat Sheet Series index - full catalog.
 
 ## Dangerous Language Surface
 
 ### `eval`, `Function`, and `with`
 
-Never build code from strings. See [MDN's eval guidance](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval). `eval` and `new Function` execute arbitrary code with the current runtime's privileges, so any attacker-influenced input reaching them is code injection ([CWE-94](https://cwe.mitre.org/data/definitions/94.html)). In browsers, `setTimeout` and `setInterval` with a string argument compile it the same way through implied `eval`.
+Never build code from strings (see MDN eval guidance). `eval`, `new Function` execute arbitrary code w/ current runtime's privileges → attacker-influenced input reaching them = code injection (CWE-94). Browsers: `setTimeout`/`setInterval` w/ string argument compile it same way via implied `eval`.
 
-- Parse data with `JSON.parse`, never `eval`.
-- Replace dynamic dispatch with static maps of functions instead of constructing calls from names.
-- Do not use the `with` statement. It makes scope unpredictable, is forbidden in strict mode, and blocks engine optimizations.
-- Enforce this statically with the `no-eval`, `no-implied-eval`, and `no-new-func` lint rules.
-- In browsers, block string compilation with an enforced Content Security Policy whose `script-src` directive, or `default-src` fallback, omits both `'unsafe-eval'` and `'trusted-types-eval'`. A report-only policy does not block execution ([CSP `EnsureCSPDoesNotBlockStringCompilation`](https://w3c.github.io/webappsec-csp/#can-compile-strings)).
-- CSP is a browser-side control and does not apply to server-side runtimes, so the lint rules remain the primary enforcement everywhere.
+- Parse data w/ `JSON.parse`, never `eval`.
+- Replace dynamic dispatch w/ static maps of functions, not calls constructed from names.
+- Don't use `with`: unpredictable scope, forbidden in strict mode, blocks engine optimizations.
+- Enforce statically w/ lint rules `no-eval`, `no-implied-eval`, `no-new-func`.
+- Browsers: block string compilation w/ enforced Content Security Policy whose `script-src` directive, or `default-src` fallback, omits both `'unsafe-eval'` and `'trusted-types-eval'`. Report-only policy doesn't block execution (CSP `EnsureCSPDoesNotBlockStringCompilation`).
+- CSP = browser-side only, n/a to server-side runtimes → lint rules remain primary enforcement everywhere.
 
 ### Evil Regex (ReDoS)
 
-Nested quantifiers such as `(a+)+`, and repeated ambiguous alternatives such as `^(a|aa)*$`, can make matching take exponential time on crafted input, consuming CPU and potentially blocking the executing thread or event loop ([CWE-1333](https://cwe.mitre.org/data/definitions/1333.html)). Whether a pattern is actually exploitable depends on the surrounding expression and the failing input, not just the quantified group.
+Nested quantifiers such as `(a+)+`, repeated ambiguous alternatives such as `^(a|aa)*$` can make matching take exponential time on crafted input, consuming CPU, potentially blocking executing thread/event loop (CWE-1333). Exploitability depends on surrounding expression + failing input, not just quantified group.
 
-- Prefer well-tested validators over hand-written patterns for emails, URLs, and similar inputs.
-- Keep patterns linear: avoid nested quantifiers and ambiguous alternation over the same characters.
-- Cap untrusted input length before matching, and reject rather than sanitize when input does not match.
-- For the attack mechanics and detection tooling, see the [OWASP ReDoS guidance](https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS); use linear-time patterns as the primary control and input-length caps as defense in depth.
+- Prefer well-tested validators over hand-written patterns for emails, URLs, similar inputs.
+- Keep patterns linear: avoid nested quantifiers, ambiguous alternation over same characters.
+- Cap untrusted input length before matching; reject rather than sanitize on non-match.
+- Attack mechanics/detection tooling: OWASP ReDoS guidance; linear-time patterns = primary control, input-length caps = defense in depth.
 
 ### Strict Mode
 
-Ship ES modules (strict by default) or declare `'use strict'`, as described in [MDN's strict mode documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode). Strict mode turns silent mistakes into errors: assignment to undeclared variables throws, `this` stays `undefined` in plain functions instead of becoming the global object, and `with` is rejected. It does not fix injection, XSS, or prototype pollution; treat it as hygiene, not a security boundary.
+Ship ES modules (strict by default) or declare `'use strict'` (MDN strict mode docs). Strict mode turns silent mistakes into errors: assignment to undeclared variables throws, `this` stays `undefined` in plain functions (not global object), `with` rejected. Doesn't fix injection, XSS, prototype pollution; hygiene, not security boundary.
 
 ## Object and Property Safety (Including Prototype Pollution)
 
-Prototype pollution ([CWE-1321](https://cwe.mitre.org/data/definitions/1321.html)) occurs when attacker-controlled keys such as `__proto__`, `constructor`, or `prototype` reach a recursive merge or path setter and modify an object's prototype. This can alter the behavior of objects that inherit from that prototype. These are the JavaScript-specific essentials only; the full protection guidance lives in the dedicated [Prototype Pollution Prevention Cheat Sheet](Prototype_Pollution_Prevention.md).
+Prototype pollution (CWE-1321): attacker-controlled keys such as `__proto__`, `constructor`, `prototype` reach recursive merge or path setter, modify object's prototype → alters behavior of objects inheriting from it. JS-specific essentials only; full guidance in [Prototype Pollution Prevention Cheat Sheet](Prototype_Pollution_Prevention.md).
 
-- Never pass untrusted input to a recursive merge or `set-by-path` helper, and reject the key segments `__proto__`, `constructor`, and `prototype` before writing.
-- Use a `Map` with `set`, `get`, and `has` for untrusted dictionary keys, keeping entries separate from object properties ([MDN prototype pollution defenses](https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/Prototype_pollution#use_map_and_set_instead)). If an object is required, create it with `Object.create(null)` so it has no prototype.
-- Validate parsed or copied untrusted data against a schema before use, and drop `__proto__` keys first: `Object.assign` applies them through the prototype setter and mutates the target's prototype, while spread creates a silent own property.
+- Never pass untrusted input to recursive merge or `set-by-path` helper; reject key segments `__proto__`, `constructor`, `prototype` before writing.
+- Use `Map` w/ `set`, `get`, `has` for untrusted dictionary keys, keeping entries separate from object properties (MDN prototype pollution defenses). If object required, create w/ `Object.create(null)` (no prototype).
+- Validate parsed/copied untrusted data against schema before use; drop `__proto__` keys first: `Object.assign` applies them via prototype setter, mutates target's prototype; spread creates silent own property.
 
 ## DOM Sinks and Output Context
 
-Injecting attacker-controlled strings into HTML, script, or URL contexts is cross-site scripting ([CWE-79](https://cwe.mitre.org/data/definitions/79.html)). Follow the [Cross Site Scripting Prevention Cheat Sheet](Cross_Site_Scripting_Prevention.md) for per-context encoding and the [DOM based XSS Prevention Cheat Sheet](DOM_based_XSS_Prevention.md) for client-side sources and sinks.
+Injecting attacker-controlled strings into HTML, script, URL contexts = cross-site scripting (CWE-79). Follow [Cross Site Scripting Prevention Cheat Sheet](Cross_Site_Scripting_Prevention.md) for per-context encoding, [DOM based XSS Prevention Cheat Sheet](DOM_based_XSS_Prevention.md) for client-side sources/sinks.
 
-- Build DOM with `textContent` and `createElement` instead of `innerHTML` or `insertAdjacentHTML`.
-- When HTML must be rendered, sanitize with a maintained allowlist sanitizer and enforce [Trusted Types](https://w3c.github.io/trusted-types/dist/spec/) with no permissive default policy.
-- Framework auto-escaping has explicit bypasses that must never receive untrusted input: React `dangerouslySetInnerHTML`, Vue `v-html`, and Angular `bypassSecurityTrustHtml` and its siblings.
+- Build DOM w/ `textContent`, `createElement`, not `innerHTML`/`insertAdjacentHTML`.
+- HTML must be rendered → sanitize w/ maintained allowlist sanitizer; enforce Trusted Types w/ no permissive default policy.
+- Framework auto-escaping has explicit bypasses; never give them untrusted input: React `dangerouslySetInnerHTML`, Vue `v-html`, Angular `bypassSecurityTrustHtml` + siblings.
 
 ## Async Error Handling, Messaging, and Origin Checks
 
-Not every promise failure is a defect. An *expected* failure is part of a function's contract, such as a lookup that returns `null` for a missing key or a parse that throws on malformed input; handle it where the caller decides what to do, with a `try`/`catch` around `await` or a `.catch` on the terminal link of the chain, and return a typed result or a documented error. An *unhandled* rejection is a promise that rejects with no handler attached, so the failure propagates past the call site and is usually a bug: browsers report it in the console and fire an `unhandledrejection` event, while Node.js behavior depends on its unhandled-rejection mode and may terminate the process ([MDN promise rejection events](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises#promise_rejection_events)). Keep promise chains flat with a terminal error handler so genuinely unexpected rejections stay visible, and do not silence them with an empty `catch`. Server-side specifics live in the [Node.js Security Cheat Sheet](Nodejs_Security.md) and are not repeated here.
+Not every promise failure is a defect. *Expected* failure = part of function's contract (lookup returning `null` for missing key, parse throwing on malformed input): handle where caller decides, via `try`/`catch` around `await` or `.catch` on terminal link of chain; return typed result or documented error. *Unhandled* rejection = promise rejects w/ no handler; failure propagates past call site, usually a bug: browsers report in console + fire `unhandledrejection` event; Node.js behavior depends on unhandled-rejection mode, may terminate process (MDN promise rejection events). Keep chains flat w/ terminal error handler so unexpected rejections stay visible; don't silence w/ empty `catch`. Server-side specifics in [Node.js Security Cheat Sheet](Nodejs_Security.md).
 
-For `postMessage`, the receiver must verify `event.origin` against an explicit allowlist, check `event.source` when a conversation partner is expected, and validate `event.data` against the expected schema before acting on it. The sender must pass an exact `targetOrigin`, never `"*"` for sensitive data ([MDN postMessage](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage)). Prefer narrow `MessageChannel` ports over broadcast messaging where the design allows it.
+`postMessage`: receiver MUST verify `event.origin` against explicit allowlist, check `event.source` when conversation partner expected, validate `event.data` against expected schema before acting. Sender MUST pass exact `targetOrigin`, never `"*"` for sensitive data. Prefer narrow `MessageChannel` ports over broadcast messaging where design allows.
 
 ## TypeScript-Specific Caveats
 
-Types are erased at runtime, so TypeScript alone enforces nothing against a malicious or malformed caller.
+Types erased at runtime → TypeScript alone enforces nothing against malicious/malformed caller.
 
-- Treat `any` as a hole in every check. `unknown` is the safe default for values of unknown type, because it forces you to narrow before use, whereas `any` disables type checking for that value ([TypeScript Handbook: `unknown`](https://www.typescriptlang.org/docs/handbook/2/functions.html#unknown)).
-- Type assertions (`as`) and non-null assertions (`!`) silence the compiler without changing runtime values; do not use them on untrusted data.
-- Enable `strict` in `tsconfig.json` (plus `noUncheckedIndexedAccess` where affordable) to catch accidental unsafety in your own code. It is a code-quality control, not a trust boundary.
-- Validate at every trust boundary (network responses, `postMessage` payloads, storage reads) with a runtime schema validator. The validated type should flow from the schema, not from a parallel hand-written interface.
+- `any` = hole in every check. `unknown` = safe default for values of unknown type: forces narrowing before use; `any` disables type checking for that value.
+- Type assertions (`as`), non-null assertions (`!`) silence compiler w/o changing runtime values; don't use on untrusted data.
+- Enable `strict` in `tsconfig.json` (plus `noUncheckedIndexedAccess` where affordable) to catch accidental unsafety in own code. Code-quality control, not trust boundary.
+- Validate at every trust boundary (network responses, `postMessage` payloads, storage reads) w/ runtime schema validator. Validated type should flow from schema, not parallel hand-written interface.
 
 ## Linting and Dependency Tooling
 
-- Lint with [`typescript-eslint`](https://typescript-eslint.io/) recommended sets plus `no-eval`, `no-implied-eval`, and `no-new-func`. Keep dependencies updated so new rules apply.
-- Pin versions with a lockfile, review dependency changes, and monitor advisories. Frontend dependency-review specifics overlap with the [Node.js Security Cheat Sheet](Nodejs_Security.md).
-- For third-party scripts loaded from a CDN, pin a Subresource Integrity hash with `crossorigin` handling per the [Third Party JavaScript Management Cheat Sheet](Third_Party_Javascript_Management.md).
+- Lint w/ `typescript-eslint` recommended sets plus `no-eval`, `no-implied-eval`, `no-new-func`. Keep dependencies updated so new rules apply.
+- Pin versions w/ lockfile, review dependency changes, monitor advisories. Frontend dependency-review specifics overlap [Node.js Security Cheat Sheet](Nodejs_Security.md).
+- Third-party scripts from CDN: pin Subresource Integrity hash w/ `crossorigin` handling per [Third Party JavaScript Management Cheat Sheet](Third_Party_Javascript_Management.md).
 
 ## References
 
-- [MDN: Window.postMessage](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage)
-- [TypeScript Handbook: unknown](https://www.typescriptlang.org/docs/handbook/2/functions.html#unknown)
-- [W3C Trusted Types](https://w3c.github.io/trusted-types/dist/spec/)
+- MDN: Window.postMessage
+- TypeScript Handbook: unknown
+- W3C Trusted Types

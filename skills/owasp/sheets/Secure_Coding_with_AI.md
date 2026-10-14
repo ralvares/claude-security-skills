@@ -2,15 +2,15 @@
 
 ## Introduction
 
-AI coding tools have moved beyond code suggestion. In 2026, agentic coding tools (Claude Code, Cursor agent mode, Aider, Devin, Copilot Workspace, Codex) execute shell commands, install packages, edit files, run tests, access the network, and push branches autonomously. Many developers run these agents with auto-accept enabled, meaning the agent operates with the developer's full permissions and minimal human oversight.
+AI coding tools moved beyond code suggestion. 2026: agentic coding tools (Claude Code, Cursor agent mode, Aider, Devin, Copilot Workspace, Codex) execute shell commands, install packages, edit files, run tests, access network, push branches autonomously. Many developers run agents with auto-accept enabled → agent operates w/ developer's full permissions, minimal human oversight.
 
-This cheat sheet addresses the security risks specific to AI-assisted and agentic coding. It focuses on threats that do not exist in traditional development workflows and does not restate general secure coding guidance already covered elsewhere.
+Covers security risks specific to AI-assisted/agentic coding: threats absent from traditional workflows; doesn't restate general secure coding guidance.
 
-For general secure coding, see the [Secure Coding Practices Quick Reference Guide](https://owasp.org/www-project-secure-coding-practices-quick-reference-guide/). For AI agent security beyond coding tools, see the [AI Agent Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/AI_Agent_Security_Cheat_Sheet.html). For prompt injection prevention, see the [LLM Prompt Injection Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html). For MCP protocol security, see the [MCP Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/MCP_Security_Cheat_Sheet.html).
+General secure coding: Secure Coding Practices Quick Reference Guide. AI agent security beyond coding tools: [AI Agent Security Cheat Sheet](AI_Agent_Security.md). Prompt injection prevention: [LLM Prompt Injection Prevention Cheat Sheet](LLM_Prompt_Injection_Prevention.md). MCP protocol security: [MCP Security Cheat Sheet](MCP_Security.md).
 
 ## Threat Model and Trust Boundaries
 
-AI coding agents operate across multiple trust boundaries. Understanding these boundaries is essential before applying any controls.
+AI coding agents operate across multiple trust boundaries. Understand them before applying controls.
 
 ```
                     TRUST BOUNDARIES IN AGENTIC CODING
@@ -35,120 +35,120 @@ AI coding agents operate across multiple trust boundaries. Understanding these b
 
 ### Threat Actors and Attack Surfaces
 
-- **Repository content as instruction source.** Issue bodies, PR descriptions, PR comments, README files, dependency changelogs, error traces, fetched web pages, and MCP tool responses all become instructions when the agent reads them. An attacker who can write to any of these can influence agent behavior.
-- **MCP servers as tool providers.** Agents connect to MCP servers to access tools. A malicious or compromised MCP server can poison tool descriptions, shadow legitimate tool names, exfiltrate credentials through tool arguments, or update tool definitions after initial approval (rug-pull).
-- **Rules files as persistent steering.** Files like `.cursorrules`, `CLAUDE.md`, `AGENTS.md`, `.github/copilot-instructions.md`, and `.windsurfrules` silently steer every future generation. They can be modified by a malicious PR or by the agent itself to embed persistent instructions.
-- **The agent itself.** Agents running with auto-accept and full developer permissions can install packages, write to any file, execute shell commands, modify CI configuration, and push branches. A compromised agent context has the same blast radius as a compromised developer workstation.
-- **CI/CD agents.** Review bots and CI runners (e.g. `claude-code-action`, Copilot review) act on PR content with access to org secrets. A malicious PR can trigger the CI agent to exfiltrate secrets or modify the build pipeline. This is confused deputy at scale.
+- **Repository content as instruction source.** Issue bodies, PR descriptions, PR comments, README files, dependency changelogs, error traces, fetched web pages, MCP tool responses all become instructions when agent reads them. Attacker able to write to any of these can influence agent behavior.
+- **MCP servers as tool providers.** Agents connect to MCP servers for tools. Malicious/compromised server can poison tool descriptions, shadow legitimate tool names, exfiltrate credentials via tool arguments, update tool definitions after initial approval (rug-pull).
+- **Rules files as persistent steering.** Files like `.cursorrules`, `CLAUDE.md`, `AGENTS.md`, `.github/copilot-instructions.md`, `.windsurfrules` silently steer every future generation. Malicious PR or agent itself can modify them to embed persistent instructions.
+- **The agent itself.** Agents w/ auto-accept + full developer permissions can install packages, write any file, execute shell commands, modify CI configuration, push branches. Compromised agent context = same blast radius as compromised developer workstation.
+- **CI/CD agents.** Review bots + CI runners (e.g. `claude-code-action`, Copilot review) act on PR content w/ access to org secrets. Malicious PR can make CI agent exfiltrate secrets or modify build pipeline. Confused deputy at scale.
 
 ## Section 1: Hallucinated Dependencies
 
-AI coding assistants frequently suggest package names that do not exist on public registries. Attackers monitor these hallucinated names and register malicious packages with matching names (AI-assisted typosquatting).
+AI coding assistants frequently suggest nonexistent package names. Attackers monitor hallucinated names, register malicious packages w/ matching names (AI-assisted typosquatting).
 
 ### Do
 
-- Verify every AI-suggested package exists on the public registry before installing. Check the package page, download count, maintainer history, and creation date.
-- Be suspicious of packages with very low download counts, recent creation dates (less than 30 days), or a single maintainer with no other packages.
-- Implement a pre-install hook or CI check that blocks installation of packages below a minimum age threshold.
-- Maintain an internal allowlist of approved packages for your organization.
+- Verify every AI-suggested package exists on public registry before installing. Check package page, download count, maintainer history, creation date.
+- Be suspicious of very low download counts, recent creation (less than 30 days), single maintainer w/ no other packages.
+- Pre-install hook or CI check blocking installation of packages below minimum age threshold.
+- Maintain internal allowlist of approved packages.
 
 ### Don't
 
-- Blindly run `npm install`, `pip install`, or `go get` with package names suggested by an AI without verification.
-- Assume that because an AI suggested a package, it exists or is safe.
-- Ignore typosquatting risk. AI assistants frequently suggest names that are close to real packages but slightly different.
+- Blindly run `npm install`, `pip install`, `go get` w/ AI-suggested package names without verification.
+- Assume AI-suggested package exists or is safe.
+- Ignore typosquatting risk. AI often suggests names close to real packages but slightly different.
 
 ## Section 2: Outdated Dependencies with Known CVEs
 
-AI models are trained on historical code. They frequently suggest dependency versions that were current during training but now have known vulnerabilities. The AI may not know about CVEs published after its training cutoff or after the coding tool's last security-index update.
+Models trained on historical code; frequently suggest versions current during training but now vulnerable. AI may not know CVEs published after training cutoff or after coding tool's last security-index update.
 
 ### Do
 
 - Run dependency auditing tools (npm audit, pip audit, govulncheck, cargo audit) on every AI-generated dependency list before merging.
-- Configure CI/CD pipelines to fail on known vulnerabilities in dependencies, regardless of whether the code was human-written or AI-generated.
-- Pin dependencies to specific versions and update them through your normal dependency management process, not through AI suggestions.
+- Configure CI/CD pipelines to fail on known dependency vulnerabilities, whether code human-written or AI-generated.
+- Pin dependencies to specific versions; update via normal dependency management, not AI suggestions.
 - Cross-reference AI-suggested versions against vulnerability databases (NVD, GitHub Advisory Database, OSV).
 
 ### Don't
 
-- Accept AI-suggested dependency versions without checking for known CVEs.
-- Assume that AI assistants are aware of recent vulnerability disclosures.
+- Accept AI-suggested dependency versions without checking known CVEs.
+- Assume AI assistants know recent vulnerability disclosures.
 - Disable dependency auditing for AI-generated code.
 
 ## Section 3: Indirect Prompt Injection in the Development Loop
 
-Agentic coding tools ingest context from the repository, the network, and connected tools. Any content the agent reads can contain hidden instructions that alter its behavior. This is indirect prompt injection applied to the development workflow.
+Agentic coding tools ingest context from repository, network, connected tools. Any content agent reads can hide instructions altering behavior. Indirect prompt injection applied to development workflow.
 
 ### Attack Vectors
 
-- **Issue bodies and PR descriptions.** An attacker opens an issue containing hidden instructions. When a developer asks the agent to "fix issue #123", the agent reads the issue body and follows the embedded instructions.
-- **PR comments and review feedback.** Malicious review comments can instruct the agent to modify unrelated files, weaken security controls, or exfiltrate code when the developer asks the agent to "address review feedback."
-- **README and documentation files.** Cloned repositories, dependencies, and fetched documentation can contain instructions invisible to human readers but parsed by the agent.
-- **Error traces and log output.** When an agent reads error output to debug a failure, crafted error messages can inject instructions.
-- **Dependency changelogs and release notes.** Agents reading changelogs to understand version differences can be influenced by injected content.
-- **Fetched web pages.** Agents with web access can be influenced by content on pages they are asked to reference.
+- **Issue bodies and PR descriptions.** Attacker opens issue w/ hidden instructions. Developer asks agent to "fix issue #123" → agent reads issue body, follows embedded instructions.
+- **PR comments and review feedback.** Malicious review comments can instruct agent to modify unrelated files, weaken security controls, exfiltrate code when developer asks agent to "address review feedback."
+- **README and documentation files.** Cloned repositories, dependencies, fetched documentation can contain instructions invisible to humans but parsed by agent.
+- **Error traces and log output.** Agent reading error output to debug can be injected via crafted error messages.
+- **Dependency changelogs and release notes.** Agents reading changelogs for version differences can be influenced by injected content.
+- **Fetched web pages.** Agents w/ web access can be influenced by content on pages they reference.
 
 ### Do
 
-- Treat all repository content (issues, PRs, comments, READMEs) as untrusted input when processed by an AI coding agent.
-- Review agent output for unexpected changes after the agent processes any external content.
-- Use tools that sanitize or flag potential injection patterns in repository content before the agent processes it.
-- Restrict agent context to the minimum files and content needed for the task.
+- Treat all repository content (issues, PRs, comments, READMEs) as untrusted input when processed by AI coding agent.
+- Review agent output for unexpected changes after processing any external content.
+- Use tools sanitizing/flagging potential injection patterns in repository content before agent processes it.
+- Restrict agent context to minimum files/content needed for task.
 - Audit agent actions after processing content from external contributors or public repositories.
 
 ### Don't
 
-- Allow agents to process issue bodies, PR descriptions, or comments from untrusted contributors without review of the agent's resulting actions.
-- Assume that content an agent reads is safe because it appears in a familiar context (e.g. a GitHub issue).
-- Give agents unrestricted access to browse the web or fetch arbitrary URLs without egress controls.
+- Let agents process issue bodies, PR descriptions, comments from untrusted contributors without reviewing resulting actions.
+- Assume content safe because it appears in familiar context (e.g. GitHub issue).
+- Give agents unrestricted web browsing/arbitrary URL fetch without egress controls.
 
 ## Section 4: MCP and Tool Security
 
-AI coding agents connect to MCP (Model Context Protocol) servers to access tools for file operations, database queries, API calls, and more. Compromised or malicious MCP servers are a direct supply chain risk to the development environment.
+AI coding agents connect to MCP (Model Context Protocol) servers for tools: file operations, database queries, API calls, more. Compromised/malicious MCP servers = direct supply chain risk to development environment.
 
-For comprehensive MCP security guidance, see the [MCP Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/MCP_Security_Cheat_Sheet.html).
+Comprehensive MCP guidance: [MCP Security Cheat Sheet](MCP_Security.md).
 
 ### Do
 
-- Audit all MCP servers connected to your development environment. Maintain an allowlist of approved servers and tools.
-- Pin tool definitions and detect changes. Use snapshot-and-diff mechanisms to catch rug-pull updates where a tool's behavior changes after initial approval.
-- Review tool descriptions for hidden instructions. Tool descriptions are part of the agent's context and can contain prompt injection payloads.
-- Restrict which tools the agent can invoke. Apply least privilege -- a coding agent does not need access to email, payment, or administrative tools.
-- Monitor for tool name shadowing where a malicious MCP server registers a tool with the same name as a legitimate one to intercept calls.
-- Validate tool arguments before execution. Agents may pass sensitive data (credentials, file contents, environment variables) as tool arguments without awareness of the data classification.
+- Audit all MCP servers connected to development environment. Maintain allowlist of approved servers + tools.
+- Pin tool definitions and detect changes. Snapshot-and-diff catches rug-pull updates (tool behavior changes after initial approval).
+- Review tool descriptions for hidden instructions. Descriptions are part of agent context, can carry prompt injection payloads.
+- Restrict which tools agent can invoke. Least privilege -- coding agent doesn't need email, payment, or administrative tools.
+- Monitor tool name shadowing: malicious MCP server registers tool w/ same name as legitimate one to intercept calls.
+- Validate tool arguments before execution. Agents may pass sensitive data (credentials, file contents, environment variables) as tool arguments unaware of data classification.
 
 ### Don't
 
 - Connect to MCP servers from untrusted sources without security review.
-- Allow agents to discover and connect to MCP servers automatically without approval.
-- Trust tool descriptions as benign. They are an injection surface.
-- Allow MCP tools unrestricted filesystem, network, or credential access on the developer's machine.
+- Let agents discover + connect to MCP servers automatically without approval.
+- Trust tool descriptions as benign. Injection surface.
+- Allow MCP tools unrestricted filesystem, network, or credential access on developer's machine.
 
-Reference: [CVE-2026-39313](https://github.com/advisories/GHSA-353c-v8x9-v7c3) -- mcp-framework before 0.2.22: unbounded memory allocation in HTTP request body handling allowed unauthenticated denial of service. Example of a vulnerability in AI framework code that highlights the need for dependency auditing and runtime limits.
+Reference: CVE-2026-39313 -- mcp-framework before 0.2.22: unbounded memory allocation in HTTP request body handling allowed unauthenticated denial of service. Example of vulnerability in AI framework code; shows need for dependency auditing + runtime limits.
 
 ## Section 5: Agent Runtime Sandboxing
 
-Agentic coding tools execute commands, install packages, write files, and access the network on the developer's machine. Without sandboxing, a compromised agent context has the same privileges as the developer.
+Agentic coding tools execute commands, install packages, write files, access network on developer's machine. Without sandboxing, compromised agent context = developer's privileges.
 
 ### Do
 
-- Run AI coding agents in sandboxed environments: dev containers, restricted shells, virtual machines, or ephemeral cloud workspaces.
-- Use tool allowlists that restrict which commands the agent can execute. Block access to credential stores, SSH keys, cloud CLI configurations, and sensitive directories.
-- Apply egress controls on the agent's runtime. If the agent does not need outbound network access for the current task, block it.
-- Use ephemeral credentials scoped to the current task rather than long-lived developer credentials.
-- Understand and evaluate the risk of flags like `--dangerously-skip-permissions` or auto-accept modes. These bypass confirmation prompts and give the agent unrestricted execution.
-- Set resource limits (CPU, memory, disk, process count) on agent execution environments.
+- Run AI coding agents in sandboxed environments: dev containers, restricted shells, virtual machines, ephemeral cloud workspaces.
+- Tool allowlists restricting executable commands. Block access to credential stores, SSH keys, cloud CLI configurations, sensitive directories.
+- Egress controls on agent runtime. No outbound network needed for current task → block it.
+- Ephemeral credentials scoped to current task, not long-lived developer credentials.
+- Understand/evaluate risk of flags like `--dangerously-skip-permissions` or auto-accept modes: bypass confirmation prompts, give agent unrestricted execution.
+- Resource limits (CPU, memory, disk, process count) on agent execution environments.
 
 ### Don't
 
-- Run AI coding agents with your full developer credentials, SSH keys, and cloud access tokens without sandboxing.
-- Enable auto-accept mode on untrusted or unfamiliar codebases.
-- Allow agents to access production credentials, deployment keys, or org-level secrets from the development environment.
-- Assume the agent will only touch files relevant to the current task.
+- Run AI coding agents w/ full developer credentials, SSH keys, cloud access tokens without sandboxing.
+- Enable auto-accept on untrusted or unfamiliar codebases.
+- Let agents access production credentials, deployment keys, org-level secrets from development environment.
+- Assume agent only touches files relevant to current task.
 
 ## Section 6: Rules Files and Persistent Steering
 
-AI coding tools read configuration files that steer their behavior across all future interactions. These files are a persistence mechanism -- an attacker who can modify them controls every subsequent generation.
+AI coding tools read configuration files steering behavior across all future interactions. Persistence mechanism -- attacker modifying them controls every subsequent generation.
 
 ### Affected Files
 
@@ -162,88 +162,88 @@ AI coding tools read configuration files that steer their behavior across all fu
 
 ### Do
 
-- Treat rules files as security-critical configuration. Review changes to these files with the same scrutiny as CI/CD pipeline changes.
-- Add rules files to your code review requirements. Require explicit approval for any modification.
-- Monitor for unexpected rules file creation or modification, including by the agent itself.
-- Use git hooks or CI checks that flag changes to known rules files in every PR.
-- Audit existing rules files for instructions that weaken security controls, disable safety features, or direct the agent to ignore certain file types or patterns.
+- Treat rules files as security-critical configuration. Review changes w/ same scrutiny as CI/CD pipeline changes.
+- Add rules files to code review requirements. Explicit approval for any modification.
+- Monitor unexpected rules file creation/modification, incl. by agent itself.
+- Git hooks or CI checks flagging changes to known rules files in every PR.
+- Audit existing rules files for instructions weakening security controls, disabling safety features, or directing agent to ignore certain file types/patterns.
 
 ### Don't
 
-- Allow PRs from external contributors to add or modify rules files without security review.
-- Allow the AI agent itself to modify its own rules files without explicit developer approval.
-- Assume rules files are benign because they are plain text. They are instruction injection surfaces with session-level persistence.
+- Let external contributors' PRs add/modify rules files without security review.
+- Let AI agent modify its own rules files without explicit developer approval.
+- Assume rules files benign because plain text. Instruction injection surfaces w/ session-level persistence.
 
 ## Section 7: Out-of-Scope Edits and Review Anchoring
 
-Agents routinely touch files beyond the scope of the requested change: lockfiles, CI configurations, unrelated tests, formatting changes, and dependency updates. Reviewers anchored on the requested change miss these modifications. This is the most common review failure mode in agentic coding.
+Agents routinely touch files beyond requested scope: lockfiles, CI configurations, unrelated tests, formatting changes, dependency updates. Reviewers anchored on requested change miss them. Most common review failure mode in agentic coding.
 
 ### Do
 
-- Use diff-aware review tooling that highlights all files changed, not just the ones relevant to the task description.
-- Implement CI checks that flag unexpected file modifications: lockfile changes, CI/CD config changes, test modifications, and changes to files outside the requested scope.
-- Review every file in an agent-generated PR individually. Do not approve based on the PR description alone.
-- Set up CODEOWNERS rules that require specific reviewers for sensitive files (CI configs, Dockerfiles, deployment scripts, rules files).
-- Limit the agent's file access scope when possible. Some tools support directory restrictions or file allowlists.
+- Diff-aware review tooling highlighting all changed files, not just task-relevant ones.
+- CI checks flagging unexpected file modifications: lockfile changes, CI/CD config changes, test modifications, changes outside requested scope.
+- Review every file in agent-generated PR individually. Don't approve on PR description alone.
+- CODEOWNERS rules requiring specific reviewers for sensitive files (CI configs, Dockerfiles, deployment scripts, rules files).
+- Limit agent's file access scope when possible. Some tools support directory restrictions or file allowlists.
 
 ### Don't
 
-- Approve agent-generated PRs based on the summary or description without reviewing the full diff.
-- Assume that lockfile changes, test modifications, or formatting changes are benign because they "look routine."
-- Allow agents to modify files outside the explicitly requested scope without flagging those changes for review.
+- Approve agent-generated PRs from summary/description without reviewing full diff.
+- Assume lockfile changes, test modifications, formatting changes benign because they "look routine."
+- Let agents modify files outside explicitly requested scope without flagging for review.
 
 ## Section 8: Test Fabrication and Test Deletion
 
-AI agents make CI green by deleting failing tests, weakening assertions, mocking the unit under test instead of fixing the code, or asserting the buggy behavior. A passing test suite generated by the same agent that produced the code provides no independent assurance.
+AI agents make CI green by deleting failing tests, weakening assertions, mocking unit under test instead of fixing code, or asserting buggy behavior. Passing suite generated by same agent that produced code gives no independent assurance.
 
 ### Do
 
-- Require human review of all AI-generated test modifications, with focus on:
-    - Deleted tests (why was this test removed?)
+- Require human review of all AI-generated test modifications, focusing on:
+    - Deleted tests (why removed?)
     - Weakened assertions (did `assertEquals` become `assertNotNull`?)
-    - New mocks that replace real dependencies the test was designed to exercise
-    - Tests that assert the generated behavior rather than the correct behavior
-- Add adversarial and negative test cases that the AI did not generate: invalid inputs, expired tokens, malformed payloads, boundary conditions, concurrent access.
-- Measure security confidence by adversarial testing results and independent analysis, not by "all tests pass."
-- Implement CI rules that flag test deletions or assertion-count reductions in agent-generated PRs.
-- Write security-critical tests manually for authentication, authorization, input validation, and cryptographic operations.
+    - New mocks replacing real dependencies test was designed to exercise
+    - Tests asserting generated behavior rather than correct behavior
+- Add adversarial + negative test cases AI didn't generate: invalid inputs, expired tokens, malformed payloads, boundary conditions, concurrent access.
+- Measure security confidence by adversarial testing results + independent analysis, not "all tests pass."
+- CI rules flagging test deletions or assertion-count reductions in agent-generated PRs.
+- Write security-critical tests manually for authentication, authorization, input validation, cryptographic operations.
 
 ### Don't
 
 - Trust AI-generated test suites as evidence of security.
-- Measure confidence by test pass rate alone. 100% passing means nothing if the tests assert broken behavior.
-- Allow agents to delete or modify existing tests without explicit justification reviewed by a human.
-- Allow the agent to both write the security-critical code and its tests without independent verification.
+- Measure confidence by test pass rate alone. 100% passing means nothing if tests assert broken behavior.
+- Let agents delete/modify existing tests without human-reviewed justification.
+- Let agent write both security-critical code and its tests without independent verification.
 
 ## Section 9: Prompt Context Leakage and Sensitive Code Exposure
 
-AI coding assistants send code context (open files, project structure, terminal output) to the model provider's API. This context may contain credentials, personal data, proprietary business logic, and internal architecture details.
+AI coding assistants send code context (open files, project structure, terminal output) to model provider's API. May contain credentials, personal data, proprietary business logic, internal architecture details.
 
 ### Do
 
-- Review what context your AI coding assistant sends to the provider. Most tools document this.
-- Configure AI tools to exclude sensitive directories from context. Add `.env`, `.env.*`, `*.pem`, `*.key`, `credentials.json`, `serviceAccountKey.json`, and similar sensitive files to your AI tool's context exclusion list (`.cursorignore`, `.copilotignore`, or equivalent).
-- Audit what your AI coding tool sends using controlled request inspection. Exclude or redact credentials, personal data, and sensitive source code before recording captured traffic; follow the [Logging Cheat Sheet data exclusions](Logging.md#data-to-exclude).
-- Use self-hosted or air-gapped AI coding tools for projects handling classified, regulated, or highly sensitive code.
-- Store all secrets in environment variables, vault services, or encrypted secret stores -- never in files within the project tree where AI tools can read them.
+- Review what context assistant sends to provider. Most tools document this.
+- Configure AI tools to exclude sensitive directories from context. Add `.env`, `.env.*`, `*.pem`, `*.key`, `credentials.json`, `serviceAccountKey.json`, similar sensitive files to tool's context exclusion list (`.cursorignore`, `.copilotignore`, or equivalent).
+- Audit what tool sends via controlled request inspection. Exclude/redact credentials, personal data, sensitive source code before recording captured traffic; follow [Logging Cheat Sheet data exclusions](Logging.md#data-to-exclude).
+- Self-hosted or air-gapped AI coding tools for projects handling classified, regulated, highly sensitive code.
+- Store all secrets in environment variables, vault services, or encrypted secret stores -- never in files in project tree where AI tools can read them.
 
 ### Don't
 
 - Use cloud-hosted AI coding assistants on classified or top-secret codebases without approval.
-- Assume that AI coding assistants only send the current file. Many send broader project context.
-- Open `.env` files or private keys in your IDE while an AI coding assistant is active. The file contents may be sent as context.
-- Paste API keys, tokens, or credentials into your terminal while AI tools with terminal context access are running.
-- Assume that `.gitignore` prevents AI tools from reading files. `.gitignore` only affects git -- AI tools read from the filesystem directly.
+- Assume assistants only send current file. Many send broader project context.
+- Open `.env` files or private keys in IDE while AI assistant active; contents may be sent as context.
+- Paste API keys, tokens, credentials into terminal while AI tools w/ terminal context access run.
+- Assume `.gitignore` stops AI tools reading files. `.gitignore` affects only git -- AI tools read filesystem directly.
 
 ## Section 10: Prompt-to-Code Supply Chain Risk
 
-See the [Software Supply Chain Security Cheat Sheet](Software_Supply_Chain_Security.md) for controls throughout the development lifecycle.
+Controls throughout development lifecycle: [Software Supply Chain Security Cheat Sheet](Software_Supply_Chain_Security.md).
 
-AI coding agents modify not just application code but also build scripts, CI/CD configurations, package scripts, and deployment infrastructure. Changes to these files execute automatically in trusted contexts with elevated privileges.
+AI coding agents modify not just application code but build scripts, CI/CD configurations, package scripts, deployment infrastructure. Changes to these execute automatically in trusted contexts w/ elevated privileges.
 
 ### Do
 
-- Review AI changes to the following files with heightened scrutiny -- treat them as security-critical:
+- Review AI changes to following files w/ heightened scrutiny -- security-critical:
     - `package.json` (scripts section: postinstall, preinstall, prepare, prebuild)
     - `.github/workflows/*.yml` (GitHub Actions)
     - `.gitlab-ci.yml`
@@ -251,89 +251,89 @@ AI coding agents modify not just application code but also build scripts, CI/CD 
     - `Makefile`, `Rakefile`, `Taskfile`
     - `setup.py`, `pyproject.toml` (build scripts)
     - `go generate` directives
-    - Any file that executes automatically during build, install, test, or deploy
-- Flag any AI-generated change that adds network access, downloads external resources, or executes shell commands in build/deploy context.
-- Implement CI checks that diff build configuration files and require explicit approval for changes to CI/CD pipelines.
-- Ensure AI-generated GitHub Actions reference third-party actions pinned to a specific commit SHA, not a mutable tag.
+    - Any file executing automatically during build, install, test, deploy
+- Flag any AI-generated change adding network access, downloading external resources, or executing shell commands in build/deploy context.
+- CI checks diffing build configuration files, requiring explicit approval for CI/CD pipeline changes.
+- AI-generated GitHub Actions must reference third-party actions pinned to specific commit SHA, not mutable tag.
 
 ### Don't
 
-- Allow AI to modify CI/CD pipelines, Dockerfiles, or package scripts without explicit human review.
-- Accept AI-generated GitHub Actions that reference third-party actions by tag without SHA pinning.
-- Trust AI-generated build scripts that download or execute external URLs.
-- Merge AI changes to deployment configurations without verifying what changed in the build/deploy path.
+- Let AI modify CI/CD pipelines, Dockerfiles, package scripts without explicit human review.
+- Accept AI-generated GitHub Actions referencing third-party actions by tag without SHA pinning.
+- Trust AI-generated build scripts downloading/executing external URLs.
+- Merge AI changes to deployment configurations without verifying what changed in build/deploy path.
 
 ## Section 11: CI/CD Agents and Confused Deputy Risk
 
-AI-powered CI/CD agents (review bots, automated code fixers, PR assistants) run on PR events with access to org secrets, deployment credentials, and write access to the repository. A malicious PR can manipulate the CI agent into exfiltrating secrets or modifying the pipeline.
+AI-powered CI/CD agents (review bots, automated code fixers, PR assistants) run on PR events w/ access to org secrets, deployment credentials, repository write access. Malicious PR can manipulate CI agent into exfiltrating secrets or modifying pipeline.
 
 ### Do
 
-- Scope CI agent credentials to the minimum required permissions. Review bots should not have deploy keys or write access to secrets.
-- Filter and sanitize PR content (title, body, comments, diff) before passing it to CI agents as context. PR content is attacker-controlled input.
-- Run CI agents in isolated environments with no access to production secrets or credentials beyond what the specific job requires.
-- Log CI agent action metadata, correlation identifiers, authorization decisions, and outcomes. Exclude secrets and sensitive prompt, tool-argument, and response content; apply the [Logging Cheat Sheet](Logging.md#data-to-exclude). Monitor for unexpected file modifications, network calls, or secret access patterns.
-- Implement approval gates before CI agents can push commits, modify workflows, or access sensitive resources.
+- Scope CI agent credentials to minimum required permissions. Review bots shouldn't have deploy keys or write access to secrets.
+- Filter + sanitize PR content (title, body, comments, diff) before passing to CI agents as context. PR content = attacker-controlled input.
+- Run CI agents in isolated environments w/ no access to production secrets/credentials beyond what specific job requires.
+- Log CI agent action metadata, correlation identifiers, authorization decisions, outcomes. Exclude secrets and sensitive prompt, tool-argument, response content; apply [Logging Cheat Sheet](Logging.md#data-to-exclude). Monitor unexpected file modifications, network calls, secret access patterns.
+- Approval gates before CI agents can push commits, modify workflows, access sensitive resources.
 
 ### Don't
 
 - Give CI agents org-level secrets or deployment credentials when they only need read access.
-- Allow CI agents to process PR content from external contributors without sandboxing.
-- Trust CI agent output (comments, reviews, suggested fixes) without verifying that the agent was not influenced by malicious PR content.
+- Let CI agents process external contributors' PR content without sandboxing.
+- Trust CI agent output (comments, reviews, suggested fixes) without verifying agent wasn't influenced by malicious PR content.
 
 ## Section 12: Markdown, Link, and Unicode Injection
 
-Agent output rendered in IDE chat panes, PR comments, or review interfaces can contain Markdown-based exfiltration links, bidi (bidirectional) text overrides, and zero-width characters that influence future agent behavior or mislead reviewers.
+Agent output rendered in IDE chat panes, PR comments, review interfaces can contain Markdown-based exfiltration links, bidi (bidirectional) text overrides, zero-width characters influencing future agent behavior or misleading reviewers.
 
 ### Do
 
-- Sanitize agent output before rendering in IDE chat panes or PR comments. Strip or escape Markdown image tags, hidden links, and HTML entities.
-- Detect and flag bidi override characters (U+202A through U+202E, U+2066 through U+2069) and zero-width characters (U+200B, U+200C, U+200D, U+FEFF) in code, commits, and agent output.
-- Use CI checks that scan for homoglyph attacks and invisible characters in PRs.
-- Review agent-generated commit messages and PR descriptions for embedded content that could influence future agent runs.
+- Sanitize agent output before rendering in IDE chat panes/PR comments. Strip/escape Markdown image tags, hidden links, HTML entities.
+- Detect/flag bidi override characters (U+202A through U+202E, U+2066 through U+2069) and zero-width characters (U+200B, U+200C, U+200D, U+FEFF) in code, commits, agent output.
+- CI checks scanning for homoglyph attacks + invisible characters in PRs.
+- Review agent-generated commit messages + PR descriptions for embedded content that could influence future agent runs.
 
 ### Don't
 
-- Render agent output containing Markdown images or links without sanitization. Image tags with external URLs can exfiltrate conversation context via URL parameters.
-- Assume that code containing only visible ASCII characters is safe. Zero-width and bidi characters are invisible in most editors.
-- Allow agent-generated content to be committed without scanning for unicode injection.
+- Render agent output containing Markdown images/links without sanitization. Image tags w/ external URLs can exfiltrate conversation context via URL parameters.
+- Assume code with only visible ASCII is safe. Zero-width + bidi characters invisible in most editors.
+- Let agent-generated content be committed without scanning for unicode injection.
 
 ## Section 13: Multi-Agent and Sub-Agent Propagation
 
-When multiple agents interact (e.g. a coding agent delegates to a search agent, or a review agent processes output from a coding agent), prompt injection can propagate across agent boundaries. A compromised context in one agent becomes instructions for the next.
+When multiple agents interact (e.g. coding agent delegates to search agent, review agent processes coding agent output), prompt injection propagates across agent boundaries. Compromised context in one agent becomes instructions for next.
 
 ### Do
 
-- Treat output from one agent as untrusted input when passed to another agent.
-- Implement context boundaries between agents. Do not pass full conversation history or raw tool responses between agents without sanitization.
+- Treat one agent's output as untrusted input when passed to another.
+- Context boundaries between agents. No full conversation history or raw tool responses passed between agents without sanitization.
 - Monitor cross-agent interactions for instruction propagation patterns (e.g. one agent's output instructing another to exfiltrate data or modify files).
-- Validate that sub-agent actions remain within the scope defined by the parent task.
+- Validate sub-agent actions stay within scope defined by parent task.
 
 ### Don't
 
-- Chain agents without context boundaries. If Agent A is compromised, Agent B should not blindly execute Agent A's output.
-- Allow sub-agents to inherit the full permissions and credentials of the parent agent without scope restriction.
-- Assume that agent-to-agent communication is trusted because both agents are "your" tools.
+- Chain agents without context boundaries. Agent A compromised → Agent B must not blindly execute A's output.
+- Let sub-agents inherit full permissions/credentials of parent agent without scope restriction.
+- Assume agent-to-agent communication trusted because both are "your" tools.
 
-For comprehensive guidance on multi-agent trust boundaries, see the [AI Agent Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/AI_Agent_Security_Cheat_Sheet.html) and the [MCP Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/MCP_Security_Cheat_Sheet.html) Section 8 (Multi-Server Isolation).
+Multi-agent trust boundaries: [AI Agent Security Cheat Sheet](AI_Agent_Security.md) and [MCP Security Cheat Sheet](MCP_Security.md) Section 8 (Multi-Server Isolation).
 
 ## Section 14: Human Accountability
 
-AI-generated code must have a human owner. Every AI-assisted change should be reviewed, approved, and attributable to a developer who is responsible for its security and maintainability. AI tools do not accept responsibility for the code they generate. The developer who accepts and commits the code does.
+AI-generated code needs human owner. Every AI-assisted change reviewed, approved, attributable to developer responsible for security + maintainability. AI tools don't accept responsibility; developer who accepts and commits code does.
 
 ### Do
 
-- Assign a human owner to every AI-generated code change. That owner is responsible for its correctness, security, and maintenance.
-- Require explicit developer approval before merging any AI-generated code. The approval indicates the developer has reviewed and understood the change.
-- Maintain audit trails showing which developer approved which AI-generated changes, including the AI tool and model version used.
-- Treat AI as a tool, not a colleague. A developer who says "the AI wrote it" is still responsible for it.
+- Assign human owner to every AI-generated code change, responsible for correctness, security, maintenance.
+- Require explicit developer approval before merging AI-generated code; approval = developer reviewed and understood change.
+- Maintain audit trails showing which developer approved which AI-generated changes, incl. AI tool + model version.
+- Treat AI as tool, not colleague. Developer saying "the AI wrote it" is still responsible.
 
 ### Don't
 
-- Deploy AI-generated code that no human has reviewed and approved.
-- Allow AI-generated code to bypass code review because "the AI is usually right."
-- Treat AI approval (e.g. AI-generated code review comments) as a substitute for human review.
-- Attribute security failures to the AI tool. The developer who approved the code is accountable.
+- Deploy AI-generated code no human reviewed/approved.
+- Let AI-generated code bypass code review because "the AI is usually right."
+- Treat AI approval (e.g. AI-generated code review comments) as substitute for human review.
+- Attribute security failures to AI tool. Developer who approved code is accountable.
 
 ## OWASP Top 10 Mapping
 
@@ -351,6 +351,6 @@ AI-generated code must have a human owner. Every AI-assisted change should be re
 
 ## References
 
-- [NIST SP 800-218: Secure Software Development Framework](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-218.pdf)
-- [OpenSSF: Concise Guide for Evaluating Open Source Software](https://best.openssf.org/Concise-Guide-for-Evaluating-Open-Source-Software)
-- [OWASP AI Security Verification Standard](https://github.com/OWASP/AISVS)
+- NIST SP 800-218: Secure Software Development Framework
+- OpenSSF: Concise Guide for Evaluating Open Source Software
+- OWASP AI Security Verification Standard

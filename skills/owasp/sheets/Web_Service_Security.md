@@ -2,134 +2,132 @@
 
 ## Introduction
 
-This article is focused on providing guidance for securing web services and preventing web services related attacks.
-
-Please notice that due to the difference in implementation between different frameworks, this cheat sheet is kept at a high level.
+Guidance for securing web services, preventing web-service-related attacks. High level; frameworks implement differently.
 
 ## Transport Confidentiality
 
-Transport confidentiality protects against eavesdropping and man-in-the-middle attacks against web service communications to/from the server.
+Protects web service communications to/from server against eavesdropping and man-in-the-middle.
 
-**Rule**: All communication with and between web services containing sensitive features, an authenticated session, or transfer of sensitive data must be encrypted using well-configured [TLS](https://en.wikipedia.org/wiki/Transport_Layer_Security). This is recommended even if the messages themselves are encrypted because [TLS](https://en.wikipedia.org/wiki/Transport_Layer_Security) provides numerous benefits beyond traffic confidentiality including integrity protection, replay defenses, and server authentication. For more information on how to do this properly see the [Transport Layer Security Cheat Sheet](Transport_Layer_Security.md).
+**Rule**: All communication with/between web services containing sensitive features, authenticated session, or sensitive data transfer MUST be encrypted w/ well-configured TLS. Recommended even if messages themselves encrypted: TLS adds integrity protection, replay defenses, server authentication. See [Transport Layer Security Cheat Sheet](Transport_Layer_Security.md).
 
 ## Server Authentication
 
-**Rule**: TLS must be used to authenticate the service provider to the service consumer. The service consumer should verify the server certificate is issued by a trusted provider, is not expired, is not revoked, matches the domain name of the service, and that the server has proven that it has the private key associated with the public key certificate (by properly signing something or successfully decrypting something encrypted with the associated public key).
+**Rule**: TLS MUST authenticate service provider to service consumer. Consumer SHOULD verify server certificate issued by trusted provider, not expired, not revoked, matches service domain name, and server proved private key ownership for public key certificate (properly signing something or successfully decrypting something encrypted w/ public key).
 
 ## User Authentication
 
-User authentication verifies the identity of the user or the system trying to connect to the service. Such authentication is usually a function of the container of the web service.
+Verifies identity of user/system connecting to service. Usually function of web service container.
 
-**Rule**: If used, Basic Authentication must be conducted over [TLS](https://en.wikipedia.org/wiki/Transport_Layer_Security), but Basic Authentication is not recommended because it discloses secrets in plain text (base64 encoded) in HTTP Headers.
+**Rule**: Basic Authentication, if used, MUST run over TLS; not recommended (discloses secrets in plain text, base64 encoded, in HTTP Headers).
 
-**Rule**: Client Certificate Authentication using [Mutual-TLS](https://en.wikipedia.org/wiki/Transport_Layer_Security) is a common form of authentication that is recommended where appropriate. See: [Authentication Cheat Sheet](Authentication.md).
+**Rule**: Client Certificate Authentication via Mutual-TLS = common form, recommended where appropriate. See [Authentication Cheat Sheet](Authentication.md).
 
 ## Transport Encoding
 
-[SOAP](https://en.wikipedia.org/wiki/SOAP) encoding styles are meant to move data between software objects into XML format and back again.
+SOAP encoding styles move data between software objects and XML.
 
-**Rule**: Enforce the same encoding style between the client and the server.
+**Rule**: Enforce same encoding style between client and server.
 
 ## Message Integrity
 
-This is for data at rest. The integrity of data in transit can easily be provided by [TLS](https://en.wikipedia.org/wiki/Transport_Layer_Security).
+Concerns data at rest. Integrity in transit easily provided by TLS.
 
-When using [public key cryptography](https://en.wikipedia.org/wiki/Public-key_cryptography), encryption does guarantee confidentiality but it does not guarantee integrity since the receiver's public key is public. For the same reason, encryption does not ensure the identity of the sender.
+Public key cryptography: encryption guarantees confidentiality, not integrity (receiver's public key is public). Same reason: encryption doesn't ensure sender identity.
 
-**Rule**: For XML data, use XML digital signatures to provide message integrity using the sender's private key. This signature can be validated by the recipient using the sender's digital certificate (public key).
+**Rule**: XML data: use XML digital signatures for message integrity w/ sender's private key. Recipient validates w/ sender's digital certificate (public key).
 
 ## Message Confidentiality
 
-Data elements meant to be kept confidential must be encrypted using a strong encryption cipher with an adequate key length to deter brute-forcing.
+Confidential data elements MUST be encrypted w/ strong cipher, adequate key length to deter brute-forcing.
 
-**Rule**: Messages containing sensitive data must be encrypted using a strong encryption cipher. This could be transport encryption or message encryption.
+**Rule**: Messages w/ sensitive data MUST be encrypted w/ strong cipher. Transport encryption or message encryption.
 
-**Rule**: Messages containing sensitive data that must remain encrypted at rest after receipt must be encrypted with strong data encryption, not just transport encryption.
+**Rule**: Messages w/ sensitive data that must stay encrypted at rest after receipt MUST use strong data encryption, not just transport encryption.
 
 ## Authorization
 
-Web services need to authorize web service clients the same way web applications authorize users. A web service needs to make sure a web service client is authorized to perform a certain action (coarse-grained) on the requested data (fine-grained).
+Authorize web service clients like web apps authorize users: client authorized for certain action (coarse-grained) on requested data (fine-grained).
 
-**Rule**: A web service should authorize its clients whether they have access to the method in question. Following an authentication challenge, the web service should check the privileges of the requesting entity whether they have access to the requested resource. This should be done on every request, and a challenge-response Authorization mechanism added to sensitive resources like password changes, primary contact details such as email, physical address, payment or delivery instructions.
+**Rule**: Service SHOULD authorize clients for method in question. After authentication challenge, check requesting entity's privileges for requested resource. Do on every request; add challenge-response Authorization mechanism to sensitive resources: password changes, primary contact details such as email, physical address, payment or delivery instructions.
 
-**Rule**: Ensure access to administration and management functions within the Web Service Application is limited to web service administrators. Ideally, any administrative capabilities would be in an application that is completely separate from the web services being managed by these capabilities, thus completely separating normal users from these sensitive functions.
+**Rule**: Limit access to administration/management functions to web service administrators. Ideally admin capabilities in application completely separate from managed web services, separating normal users from sensitive functions.
 
 ## Schema Validation
 
-Schema validation enforces constraints and syntax defined by the schema.
+Enforces constraints and syntax defined by schema.
 
-**Rule**: Web services must validate [SOAP](https://en.wikipedia.org/wiki/SOAP) payloads against their associated XML schema definition ([XSD](https://www.w3schools.com/xml/schema_intro.asp)).
+**Rule**: Web services MUST validate SOAP payloads against associated XML schema definition (XSD).
 
-**Rule**: The [XSD](https://www.w3schools.com/xml/schema_intro.asp) defined for a [SOAP](https://en.wikipedia.org/wiki/SOAP) web service should, at a minimum, define the maximum length and character set of every parameter allowed to pass into and out of the web service.
+**Rule**: XSD for SOAP web service SHOULD at minimum define max length and character set of every parameter passing into/out of service.
 
-**Rule**: The [XSD](https://www.w3schools.com/xml/schema_intro.asp) defined for a [SOAP](https://en.wikipedia.org/wiki/SOAP) web service should define strong (ideally allow-list) validation patterns for all fixed format parameters (e.g., zip codes, phone numbers, list values, etc.).
+**Rule**: XSD for SOAP web service SHOULD define strong (ideally allow-list) validation patterns for all fixed format parameters (e.g., zip codes, phone numbers, list values).
 
 ## Content Validation
 
-**Rule**: Like any web application, web services need to validate input before consuming it. Content validation for XML input should include:
+**Rule**: Validate input before consuming, like any web app. XML input content validation includes:
 
 - Validation against malformed XML entities.
-- Validation against [XML Bomb attacks](https://en.wikipedia.org/wiki/Billion_laughs_attack).
-- Validating inputs using a strong allowlist.
-- Validating against [external entity attacks](https://owasp.org/www-community/vulnerabilities/XML_External_Entity_%28XXE%29_Processing).
+- Validation against XML Bomb attacks.
+- Validating inputs using strong allowlist.
+- Validating against external entity attacks.
 
 ## Output Encoding
 
-Web services need to ensure that the output sent to clients is encoded to be consumed as data and not as scripts. This gets pretty important when web service clients use the output to render HTML pages either directly or indirectly using AJAX objects.
+Encode output sent to clients so it's consumed as data, not scripts. Important when clients render HTML from output, directly or indirectly via AJAX objects.
 
-**Rule**: All the rules of output encoding applies as per [Cross Site Scripting Prevention Cheat Sheet](Cross_Site_Scripting_Prevention.md).
+**Rule**: All output encoding rules per [Cross Site Scripting Prevention Cheat Sheet](Cross_Site_Scripting_Prevention.md) apply.
 
 ## Virus Protection
 
-[SOAP](https://en.wikipedia.org/wiki/SOAP) provides the ability to attach files and documents to [SOAP](https://en.wikipedia.org/wiki/SOAP) messages. This gives the opportunity for hackers to attach viruses and malware to these [SOAP](https://en.wikipedia.org/wiki/SOAP) messages.
+SOAP can attach files/documents to messages → attackers can attach viruses and malware.
 
-**Rule**: Ensure Virus Scanning technology is installed and preferably inline so files and attachments could be checked before being saved on disk.
+**Rule**: Install Virus Scanning technology, preferably inline, so files/attachments checked before saved to disk.
 
-**Rule**: Ensure Virus Scanning technology is regularly updated with the latest virus definitions/rules.
+**Rule**: Regularly update Virus Scanning technology w/ latest virus definitions/rules.
 
 ## Message Size
 
-Web services like web applications could be a target for DOS attacks by automatically sending the web services thousands of large size [SOAP](https://en.wikipedia.org/wiki/SOAP) messages. This either cripples the application making it unable to respond to legitimate messages or it could take it down entirely.
+Web services can be DOS targets: automatically sending thousands of large SOAP messages cripples app (can't respond to legitimate messages) or takes it down.
 
-**Rule**: [SOAP](https://en.wikipedia.org/wiki/SOAP) Messages size should be limited to an appropriate size limit. Larger size limit (or no limit at all) increases the chances of a successful DoS attack.
+**Rule**: Limit SOAP message size to appropriate limit. Larger limit (or none) raises DoS success chance.
 
 ## Availability
 
 ### Resources Limiting
 
-During regular operation, web services require computational power such as CPU cycles and memory. Due to malfunctioning or while under attack, a web service may required too much resources, leaving the host system unstable.
+Normal operation needs CPU cycles and memory. Malfunction or attack → service may require too much, destabilizing host.
 
-**Rule**: Limit the amount of CPU cycles the web service can use based on expected service rate, in order to have a stable system.
+**Rule**: Limit CPU cycles per expected service rate for stable system.
 
-**Rule**: Limit the amount of memory the web service can use to avoid system running out of memory. In some cases the host system may start killing processes to free up memory.
+**Rule**: Limit memory to avoid host running out of memory (host may start killing processes to free memory).
 
-**Rule**: Limit the number of simultaneous open files, network connections and started processes.
+**Rule**: Limit number of simultaneous open files, network connections, started processes.
 
 ### Message Throughput
 
-Throughput represents the number of web service requests served during a specific amount of time.
+Throughput = number of requests served in given time.
 
-**Rule**: Enforce request-rate and execution-time limits based on tested service capacity and the cost of each operation. Tune stricter limits for expensive operations, following [OWASP's resource-consumption guidance](https://api-security.owasp.org/editions/2023/en/0xa4-unrestricted-resource-consumption/#how-to-prevent). Maximizing throughput alone does not prevent resource exhaustion.
+**Rule**: Enforce request-rate and execution-time limits from tested service capacity and per-operation cost. Stricter limits for expensive operations, per OWASP's resource-consumption guidance. Maximizing throughput alone doesn't prevent resource exhaustion.
 
 ### XML Denial of Service Protection
 
-XML Denial of Service is probably the most serious attack against web services. So the web service must provide the following validation:
+XML Denial of Service = probably most serious attack on web services. Service MUST provide validation:
 
 **Rule**: Validation against recursive payloads.
 
 **Rule**: Validation against oversized payloads.
 
-**Rule**: Protection against [XML entity expansion](https://www.ws-attacks.org/XML_Entity_Expansion).
+**Rule**: Protection against XML entity expansion.
 
-**Rule**: Reject XML element names that exceed configured length limits. SOAP action identifiers are separate from XML element names; for example, the [SOAP 1.2 Action feature](https://www.w3.org/TR/soap12-part2/#ActionFeature) uses a URI value that can guide message dispatch or routing.
+**Rule**: Reject XML element names exceeding configured length limits. SOAP action identifiers separate from XML element names; e.g., SOAP 1.2 Action feature uses URI value that can guide message dispatch/routing.
 
-This protection should be provided by your XML parser/schema validator. To verify, build test cases to make sure your parser to resistant to these types of attacks.
+Protection should come from XML parser/schema validator. Verify w/ test cases that parser resists these attacks.
 
 ## Endpoint Security Profile
 
-**Rule**: Treat Web Services Interoperability (WS-I) Basic Profile conformance as an interoperability requirement, not a security baseline. Its [security section](https://docs.oasis-open.org/ws-brsp/BasicProfile/v1.2/BasicProfile-v1.2.html#_Toc392058316) permits conformant services without security countermeasures. Independently enforce the transport security, authentication, authorization, and resource limits described above.
+**Rule**: Treat Web Services Interoperability (WS-I) Basic Profile conformance as interoperability requirement, not security baseline. Its security section permits conformant services without security countermeasures. Independently enforce transport security, authentication, authorization, resource limits above.
 
 ## References
 
-- [NIST SP 800-95: Guide to Secure Web Services](https://csrc.nist.gov/pubs/sp/800/95/final)
-- [W3C XML Encryption Syntax and Processing Version 1.1](https://www.w3.org/TR/xmlenc-core1/)
+- NIST SP 800-95: Guide to Secure Web Services
+- W3C XML Encryption Syntax and Processing Version 1.1

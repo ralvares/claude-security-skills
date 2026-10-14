@@ -2,308 +2,308 @@
 
 ## Introduction
 
-Tags, aka marketing tags, analytics tags etc. are small bits of JavaScript on a web page. They can also be HTML image elements when JavaScript is disabled. The reason for them is to collect data on the web user actions and browsing context for use by the web page owner in marketing.
+Tags (aka marketing tags, analytics tags etc.): small bits of JavaScript on web page; can also be HTML image elements when JavaScript disabled. Purpose: collect web user actions and browsing context for page owner's marketing.
 
-Third party vendor JavaScript tags (hereinafter, **tags**) can be divided into two types:
+Third party vendor JavaScript tags (**tags**) two types:
 
 - User interface tags.
 - Analytic tags.
 
-User interface tags have to execute on the client because they change the DOM; displaying a dialog or image or changing text etc.
+User interface tags must execute on client: change DOM (display dialog/image, change text etc.).
 
-Analytics tags send information back to a marketing information database; information like what user action was just taken, browser metadata, location information, page metadata etc. The rationale for analytics tags is to provide data from the user's browser DOM to the vendor for some form of marketing analysis. This data can be anything available in the DOM. The data is used for user navigation and clickstream analysis, identification of the user to determine further content to display etc., and various marketing analysis functions.
+Analytics tags send info back to marketing information database: user action just taken, browser metadata, location, page metadata etc. Rationale: give vendor data from user's browser DOM for marketing analysis. Data can be anything available in DOM. Used for navigation and clickstream analysis, user identification to decide further content, various marketing analysis functions.
 
-The term **host** refers to the original site the user goes to, such as a shopping or news site, that contains or retrieves and executes third party JavaScript tag for marketing analysis of the user actions.
+**host** = original site user visits (shopping, news site etc.) that contains or retrieves and executes third party JavaScript tag for marketing analysis of user actions.
 
 ## Major risks
 
-The single greatest risk is a compromise of the third party JavaScript server, and the injection of malicious JavaScript into the original tag JavaScript. See [RiskIQ's report of the 2018 Ticketmaster incident](https://www.globenewswire.com/fr/news-release/2018/07/10/1535094/0/en/RiskIQ-Finds-Ticketmaster-Breach-Part-of-Massive-Credit-Card-Skimming-Campaign-Affecting-over-800-e-Commerce-Sites.html).
+Single greatest risk: compromise of third party JavaScript server, injection of malicious JavaScript into original tag JavaScript. See RiskIQ's report of 2018 Ticketmaster incident.
 
-The invocation of third-party JS code in a web application requires consideration for 3 risks in particular:
+Invoking third-party JS requires considering 3 risks:
 
-1. The loss of control over changes to the client application,
-2. The execution of arbitrary code on client systems,
-3. The disclosure or leakage of sensitive information to 3rd parties.
+1. Loss of control over changes to client application,
+2. Execution of arbitrary code on client systems,
+3. Disclosure/leakage of sensitive info to 3rd parties.
 
 ### Risk 1: Loss of control over changes to the client application
 
-This risk arises from the fact that there is usually no guarantee that the code hosted at the third-party will remain the same as seen from the developers and testers: new features may be pushed in the third-party code at any time, thus potentially breaking the interface or data-flows and exposing the availability of your application to its users/customers.
+No guarantee third-party-hosted code stays same as developers/testers saw: new features may be pushed anytime → may break interface or data-flows, expose availability of your app to users/customers.
 
-Typical defenses include, but are not restricted to: in-house script mirroring (to prevent alterations by 3rd parties), sub-resource integrity (to enable browser-level interception) and secure transmission of the third-party code (to prevent modifications while in-transit). See below for more details.
+Typical defenses (not exhaustive): in-house script mirroring (prevent alterations by 3rd parties), sub-resource integrity (browser-level interception), secure transmission of third-party code (prevent in-transit modification). Details below.
 
 ### Risk 2: Execution of arbitrary code on client systems
 
-For original research on vulnerable third-party integrations, see [Randy Westergren's ad-network findings](https://randywestergren.com/widespread-xss-vulnerabilities-ad-network-code-affecting-top-tier-publishers-retailers/).
+Original research on vulnerable third-party integrations: Randy Westergren's ad-network findings.
 
-This risk arises from the fact that third-party JavaScript code is rarely reviewed by the invoking party prior to its integration into a website/application. As the client reaches the hosting website/application, this third-party code gets executed, thus granting the third-party the exact same privileges that were granted to the user (similar to [XSS attacks](https://owasp.org/www-community/attacks/xss/)).
+Third-party JavaScript rarely reviewed by invoking party before integration. When client reaches hosting site, third-party code executes w/ exact same privileges as user (similar to XSS attacks).
 
-Any testing performed prior to entering production loses some of its validity, including `AST testing` ([IAST](https://www.veracode.com/security/interactive-application-security-testing-iast), [RAST](https://www.veracode.com/sites/default/files/pdf/resources/whitepapers/what-is-rasp.pdf), [SAST](https://www.sqreen.com/web-application-security/what-is-sast), [DAST](https://www.sqreen.com/web-application-security/what-is-dast), etc.).
+Pre-production testing loses some validity, incl. `AST testing` (IAST, RAST, SAST, DAST, etc.).
 
-While it is widely accepted that the probability of having rogue code intentionally injected by the third-party is low, there are still cases of malicious injections in third-party code after the organization's servers were compromised (ex: Yahoo, January 2014).
+Probability of intentionally injected rogue code by third-party widely accepted as low, but malicious injections after compromise of third party's servers have occurred (ex: Yahoo, January 2014).
 
-This risk should therefore still be evaluated, in particular when the third-party does not show any documentation that it is enforcing better security measures than the invoking organization itself, or at least equivalent. Another example is that the domain hosting the third-party JavaScript code expires because the company maintaining it is bankrupt or the developers have abandoned the project. A malicious actor can then re-register the domain and publish malicious code.
+Still evaluate this risk, esp. when third-party shows no documentation of enforcing security measures better than or at least equivalent to invoking organization's. Another case: domain hosting third-party JavaScript expires (company bankrupt or developers abandoned project); malicious actor re-registers domain, publishes malicious code.
 
-Typical defenses include, but are not restricted to:
+Typical defenses (not exhaustive):
 
-- In-house script mirroring (to prevent alterations by 3rd parties),
-- [Sub-resource integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) (to enable browser-level interception),
-- Secure transmission of the third-party code (to prevent modifications while in-transit) and various types of sandboxing. See below for more details.
+- In-house script mirroring (prevent alterations by 3rd parties),
+- Sub-resource integrity (browser-level interception),
+- Secure transmission of third-party code (prevent in-transit modification) and various types of sandboxing. Details below.
 - ...
 
 ### Risk 3: Disclosure of sensitive information to 3rd parties
 
-[ClearSky's original Magecart investigation](https://www.clearskysec.com/magecart/) documents payment-data theft through injected JavaScript.
+ClearSky's original Magecart investigation documents payment-data theft through injected JavaScript.
 
-When a third-party script is invoked in a website/application, the browser directly contacts the third-party servers. By default, the request includes all regular HTTP headers. In addition to the originating IP address of the browser, the third-party also obtains other data such as the referrer (in non-https requests) and any cookies previously set by the third-party, for example when visiting another organization's website that also invokes the third-party script.
+Invoking third-party script: browser contacts third-party servers directly. By default request includes all regular HTTP headers. Third-party obtains browser's originating IP address, referrer (non-https requests), any cookies previously set by third-party, e.g., when visiting another organization's site invoking same script.
 
-In many cases, this grants the third-party primary access to information on the organization's users / customers / clients. Additionally, if the third-party is sharing the script with other entities, it also collects secondary data from all the other entities, thus knowing who the organization's visitors are but also what other organizations they interact with.
+Often gives third-party primary access to info on organization's users/customers/clients. If third-party shares script with other entities, it also collects secondary data from all of them → knows who visitors are and what other organizations they interact with.
 
-A typical case is the current situation with major news/press sites that invoke third-party code (typically for ad engines, statistics and JavaScript APIs): any user visiting any of these websites also informs the 3rd parties of the visit. In many cases, the third-party also gets to know what news articles each individual user is clicking specifically (leakage occurs through the HTTP referrer field) and thus can establish deeper personality profiles.
+Typical case: major news/press sites invoking third-party code (ad engines, statistics, JavaScript APIs): any visitor informs 3rd parties of visit. Often third-party also learns which news articles each user clicks (leak via HTTP referrer field) → deeper personality profiles.
 
-Typical defenses include, but are not restricted to: in-house script mirroring (to prevent leakage of HTTP requests to 3rd parties). Users can reduce their profiling by random clicking links on leaking websites/applications (such as press/news websites) to reduce profiling. See below for more details.
+Typical defenses (not exhaustive): in-house script mirroring (prevent HTTP request leakage to 3rd parties). Users can reduce profiling by random clicking links on leaking sites (press/news). Details below.
 
 ## Third-party JavaScript Deployment Architectures
 
-There are three basic deployment mechanisms for **tags**. These mechanisms can be combined with each other.
+Three basic deployment mechanisms for **tags**; combinable.
 
 ### Vendor JavaScript on page
 
-This is where the vendor provides the host with the JavaScript and the host puts it on the host page. To be secure the host company must review the code for any vulnerabilities like [XSS attacks](https://owasp.org/www-community/attacks/xss/) or malicious actions such as sending sensitive data from the DOM to a malicious site. This is often difficult because the JavaScript is commonly obfuscated.
+Vendor provides host JavaScript; host puts it on host page. For security, host must review code for vulnerabilities like XSS attacks or malicious actions such as sending sensitive DOM data to malicious site. Often difficult: JavaScript commonly obfuscated.
 
 ```html
-<!-- Some host, e.g. foobar.com, HTML code here -->
+<!-- Some host, e.g. foobar.com, HTML code here -->
 <html>
 <head></head>
     <body>
         ...
-        <script type="text/javascript">/* 3rd party vendor javascript here */</script>
+        <script type="text/javascript">/* 3rd party vendor javascript here */</script>
     </body>
 </html>
 ```
 
 ### JavaScript Request to Vendor
 
-This is where one or a few lines of code on the host page each request a JavaScript file or URL directly from the vendor site. When the host page is being created, the developer includes the lines of code provided by the vendor that will request the vendor JavaScript. Each time the page is accessed the requests are made to the vendor site for the JavaScript, which then executes on the user browser.
+One or few lines on host page each request JavaScript file/URL directly from vendor site. Developer includes vendor-provided lines when creating host page. Each page access requests vendor JavaScript, which executes in user browser.
 
 ```html
-<!-- Some host, e.g. foobar.com, HTML code here -->`
+<!-- Some host, e.g. foobar.com, HTML code here -->`
 <html>
     <head></head>
     <body>
         ...
-        <!-- 3rd party vendor javascript -->
-        <script src="https://analytics.vendor.com/v1.1/script.js"></script>
-        <!-- /3rd party vendor javascript -->
+        <!-- 3rd party vendor javascript -->
+        <script src="https://analytics.vendor.com/v1.1/script.js"></script>
+        <!-- /3rd party vendor javascript -->
     </body>
 </html>
 ```
 
 ### Indirect request to Vendor through Tag Manager
 
-This is where one or a few lines of code on the host page each request a JavaScript file or URL from a tag aggregator or **tag manager** site; not from the JavaScript vendor site. The tag aggregator or tag manager site returns whatever third party JavaScript files that the host company has configured to be returned. Each file or URL request to the tag manager site can return lots of other JavaScript files from multiple vendors.
+One or few lines on host page each request JavaScript file/URL from tag aggregator or **tag manager** site, not vendor site. Aggregator/manager returns whatever third party JavaScript files host configured. Each request can return many JavaScript files from multiple vendors.
 
-The actual content that is returned from the aggregator or manager (i.e. the specific JavaScript files as well as exactly what they do) can be dynamically changed by host site employees using a graphical user interface for development, hosted on the tag manager site that non-technical users can work with, such as the marketing part of the business.
+Returned content (specific files and what they do) can be changed dynamically by host employees via GUI hosted on tag manager site, usable by non-technical users such as marketing.
 
-The changes can be either:
+Changes either:
 
-1. Get a different JavaScript file from the third-party vendor for the same request.
-2. Change what DOM object data is read, and when, to send to the vendor.
+1. Get different JavaScript file from third-party vendor for same request.
+2. Change what DOM object data is read, and when, to send to vendor.
 
-The tag manager developer user interface will generate code that does what the marketing functionality requires, basically determining what data to get from the browser DOM and when to get it. The tag manager always returns a **container** JavaScript file to the browser which is basically a set of JavaScript functions that are used by the code generated by the user interface to implement the required functionality.
+Tag manager developer UI generates code implementing marketing functionality, basically determining what data to get from browser DOM and when. Tag manager always returns **container** JavaScript file to browser: set of JavaScript functions used by UI-generated code.
 
-Similar to java frameworks that provide functions and global data to the developer, the container JavaScript executes on the browser and lets the business user use the tag manager developer user interface to specify high level functionality without needing to know JavaScript.
+Like java frameworks providing functions and global data, container JavaScript executes in browser; business user specifies high level functionality via tag manager UI w/o knowing JavaScript.
 
 ```html
-<!-- Some host, e.g. foobar.com, HTML code here -->
- <html>
-   <head></head>
-     <body>
-       ...
-       <!-- Tag Manager -->
-       <script>(function(w, d, s, l, i){
-         w[l] = w[l] || [];
-         w[l].push({'tm.start':new Date().getTime(), event:'tm.js'});
-         var f = d.getElementsByTagName(s)[0],
-         j = d.createElement(s),
-         dl = l != 'dataLayer' ? '&l=' + l : '';
-         j.async=true;
-         j.src='https://tagmanager.com/tm.js?id=' + i + dl;
-         f.parentNode.insertBefore(j, f);
-       })(window, document, 'script', 'dataLayer', 'TM-FOOBARID');</script>
-       <!-- /Tag Manager -->
-   </body>
+<!-- Some host, e.g. foobar.com, HTML code here -->
+ <html>
+   <head></head>
+     <body>
+       ...
+       <!-- Tag Manager -->
+       <script>(function(w, d, s, l, i){
+         w[l] = w[l] || [];
+         w[l].push({'tm.start':new Date().getTime(), event:'tm.js'});
+         var f = d.getElementsByTagName(s)[0],
+         j = d.createElement(s),
+         dl = l != 'dataLayer' ? '&l=' + l : '';
+         j.async=true;
+         j.src='https://tagmanager.com/tm.js?id=' + i + dl;
+         f.parentNode.insertBefore(j, f);
+       })(window, document, 'script', 'dataLayer', 'TM-FOOBARID');</script>
+       <!-- /Tag Manager -->
+   </body>
 </html>`
 ```
 
 #### Security Problems with requesting Tags
 
-The previously described mechanisms are difficult to make secure because you can only see the code if you proxy the requests or if you get access to the GUI and see what is configured. The JavaScript is generally obfuscated so even seeing it is usually not useful. It is also instantly deployable because each new page request from a browser executes the requests to the aggregator which gets the JavaScript from the third party vendor. So as soon as any JavaScript files are changed on the vendor, or modified on the aggregator, the next call for them from any browser will get the changed JavaScript. One way to manage this risk is with the *Subresource Integrity* standard described below.
+Mechanisms hard to secure: code visible only by proxying requests or accessing GUI to see configuration. JavaScript generally obfuscated, so seeing it usually useless. Instantly deployable: each new page request executes requests to aggregator, which gets JavaScript from vendor. Once any JavaScript files change at vendor or aggregator, next call from any browser gets changed JavaScript. One management way: *Subresource Integrity* standard, below.
 
 ### Server Direct Data Layer
 
-The tag manager developer user interface can be used to create JavaScript that can get data from anywhere in the browser DOM and store it anywhere on the page. This can allow vulnerabilities because the interface can be used to generate code to get unvalidated data from the DOM (e.g. URL parameters) and store it in some page location that would execute JavaScript.
+Tag manager developer UI can create JavaScript getting data from anywhere in browser DOM and storing it anywhere on page. Vulnerability: interface can generate code reading unvalidated DOM data (e.g. URL parameters) into page location that executes JavaScript.
 
-Use a host-defined data layer to limit the data intended for collection. This agreement does not restrict the privileges of JavaScript executing in the page.
+Use host-defined data layer to limit data intended for collection. This agreement doesn't restrict privileges of JavaScript executing in page.
 
-The data layer is either:
+Data layer is either:
 
-1. a DIV object with attribute values that have the marketing or user behavior data that the third-party wants
-2. a set of JSON objects with the same data. Each variable or attribute contains the value of some DOM element or the description of a user action. The data layer is the complete set of values that all vendors need for that page. The data layer is created by the host developers.
+1. DIV object w/ attribute values holding marketing/user behavior data third-party wants
+2. Set of JSON objects w/ same data. Each variable/attribute holds value of some DOM element or description of user action. Data layer = complete set of values all vendors need for page. Created by host developers.
 
-When specific events happen that the business has defined, a JavaScript handler for that event sends values from the data layer directly to the tag manager server. The tag manager server then sends the data to whatever third party or parties is supposed to get it. The event handler code is created by the host developers using the tag manager developer user interface. The event handler code is loaded from the tag manager servers on every page load.
+On business-defined events, JavaScript handler sends data layer values directly to tag manager server, which forwards to intended third party/parties. Event handler code created by host developers via tag manager developer UI; loaded from tag manager servers on every page load.
 
-A data layer is not a sandbox. [Web tag-manager containers can execute custom JavaScript and HTML tags in the browser](https://developers.google.com/tag-platform/learn/sst-fundamentals/2-what-is-sst), so remotely managed event handlers remain part of the page's code trust boundary. Restrict tag-manager publishing access and review changes as application code.
+Data layer is not a sandbox. Web tag-manager containers can execute custom JavaScript and HTML tags in browser, so remotely managed event handlers remain part of page's code trust boundary. Restrict tag-manager publishing access; review changes as application code.
 
-This requires cooperation between the host, the aggregator or tag manager and the vendors.
+Requires cooperation among host, aggregator/tag manager, vendors.
 
-The host developers have to work with the vendor in order to know what type of data the vendor needs to do their analysis. Then the host programmer determines what DOM element will have that data.
+Host developers work with vendor to learn what data vendor needs for analysis; host programmer determines which DOM element holds it.
 
-The host developers have to work with the tag manager or aggregator to agree on the protocol to send the data to the aggregator: what URL, parameters, format etc.
+Host developers work with tag manager/aggregator to agree protocol for sending data to aggregator: URL, parameters, format etc.
 
-The tag manager or aggregator has to work with the vendor to agree on the protocol to send the data to the vendor: what URL, parameters, format etc. Does the vendor have an API?
+Tag manager/aggregator works with vendor to agree protocol for sending data to vendor: URL, parameters, format etc. Does vendor have API?
 
 ## Security Defense Considerations
 
 ### Server Direct Data Layer
 
-A server-side collector can filter the data sent to vendors and move eligible tags out of the browser. It does not isolate any scripts that still run in the page.
+Server-side collector can filter data sent to vendors, move eligible tags out of browser. Doesn't isolate scripts still running in page.
 
-The data layer can perform any validation of the values, especially values from DOM objects exposed to the user like URL parameters and input fields, if these are required for the marketing analysis.
+Data layer can validate values, esp. from user-exposed DOM objects like URL parameters and input fields, if needed for marketing analysis.
 
-An example statement for a corporate standard document is 'The tag JavaScript can only access values in the host data layer. The tag JavaScript can never access a URL parameter.
+Example corporate standard statement: 'The tag JavaScript can only access values in the host data layer. The tag JavaScript can never access a URL parameter.
 
-You the host page developer have to agree with the third-party vendors or the tag manager what attribute in the data layer will have what value so they can create the JavaScript to read that value.
+Host page developer must agree with third-party vendors or tag manager which data layer attribute holds what value so they can write JavaScript reading it.
 
-User interface tags cannot be made secure using the data layer architecture because their function (or one of their functions) is to change the user interface on the client, not to send data about the user actions.
+User interface tags can't be secured using data layer architecture: their function (or one of them) is to change client UI, not send data about user actions.
 
-For analytics that do not need browser execution, send a fixed event schema through a collector you control and run vendor integrations server-side. [Server-side tagging complements rather than replaces client-side collection](https://developers.google.com/tag-platform/learn/sst-fundamentals/2-what-is-sst). Audit the scripts actually loaded before claiming that only first-party code executes.
+For analytics not needing browser execution, send fixed event schema through collector you control, run vendor integrations server-side. Server-side tagging complements, doesn't replace, client-side collection. Audit scripts actually loaded before claiming only first-party code executes.
 
-This is also a very scalable solution. Large ecommerce sites can easily have hundreds of thousands of URL and parameter combinations, with different sets of URLs and parameters being included in different marketing analysis campaigns. The marketing logic could have 30 or 40 different vendor tags on a single page.
+Also very scalable. Large ecommerce sites can have hundreds of thousands of URL/parameter combinations, different sets in different marketing campaigns. Marketing logic could have 30 or 40 different vendor tags on single page.
 
-For example user actions in pages about specified cities, from specified locations on specified days should send data layer elements 1, 2 and 3. User actions in pages about other cities should send data layer elements 2 and 3 only. Since the event handler code to send data layer data on each page is controlled by the host developers or marketing technologists using the tag manager developer interface, the business logic about when and what data layer elements are sent to the tag manager server, can be changed and deployed in minutes. No interaction is needed with the third parties; they continue getting the data they expect but now it comes from different contexts that the host marketing technologists have chosen.
+Example: user actions in pages about specified cities, from specified locations on specified days send data layer elements 1, 2 and 3. Pages about other cities send elements 2 and 3 only. Event handler code sending data layer data per page is controlled by host developers/marketing technologists via tag manager developer interface → logic about when/what data layer elements go to tag manager server changeable and deployable in minutes. No third-party interaction needed; they keep getting expected data, now from different contexts chosen by host marketing technologists.
 
-Changing third party vendors just means changing the data dissemination rules at the tag manager server, no changes are needed in the host code. The data also goes directly only to the tag manager so the execution is fast. The event handler JavaScript does not have to connect to multiple third party sites.
+Changing third party vendors = changing data dissemination rules at tag manager server; no host code changes. Data goes directly only to tag manager → fast execution. Event handler JavaScript needn't connect to multiple third party sites.
 
 ### Indirect Requests
 
-For indirect requests to tag manager/aggregator sites that offer the GUI to configure the JavaScript, they may also implement:
+Tag manager/aggregator sites offering GUI to configure JavaScript may also implement:
 
-- Technical controls such as only allowing the JavaScript to access the data layer values, no other DOM element
-- Restricting the tag types deployed on a host site, e.g. disabling of custom HTML tags and JavaScript code
+- Technical controls, e.g., JavaScript can access only data layer values, no other DOM element
+- Restricting tag types deployed on host site, e.g. disabling custom HTML tags and JavaScript code
 
-The host company should also verify the security practices of the tag manager site such as access controls to the tag configuration for the host company. It also can be two-factor authentication.
+Host company should verify tag manager site's security practices, e.g., access controls to host's tag configuration; can include two-factor authentication.
 
-Letting the marketing folks decide where to get the data they want can result in XSS because they may get it from a URL parameter and put it into a variable that is in a scriptable location on the page.
+Letting marketing decide data sources can cause XSS: they may take data from URL parameter into variable in scriptable page location.
 
 ### Sandboxing Content
 
-Both of these tools be used by sites to sandbox/clean DOM data.
+Both tools sandbox/clean DOM data:
 
-- [DOMPurify](https://github.com/cure53/DOMPurify) is a fast, tolerant XSS sanitizer for HTML, MathML and SVG. DOMPurify works with a secure default, but offers a lot of configurability and hooks.
-- [MentalJS](https://github.com/hackvertor/MentalJS) is a JavaScript parser and sandbox. It allow-lists JavaScript code by adding a "$" suffix to variables and accessors.
+- DOMPurify: fast, tolerant XSS sanitizer for HTML, MathML, SVG. Secure default, highly configurable, hooks.
+- MentalJS: JavaScript parser and sandbox. Allow-lists JavaScript code by adding "$" suffix to variables and accessors.
 
 ### Subresource Integrity
 
-[Subresource Integrity](https://www.w3.org/TR/SRI/) will ensure that only the code that has been reviewed is executed. The developer generates integrity metadata for the vendor JavaScript, and adds it to the script element like this:
+Subresource Integrity ensures only reviewed code executes. Developer generates integrity metadata for vendor JavaScript, adds to script element:
 
 ```javascript
-<script src="https://analytics.vendor.com/v1.1/script.js"
-   integrity="sha384-MBO5IDfYaE6c6Aao94oZrIOiC7CGiSNE64QUbHNPhzk8Xhm0djE6QqTpL0HzTUxk"
-   crossorigin="anonymous">
+<script src="https://analytics.vendor.com/v1.1/script.js"
+   integrity="sha384-MBO5IDfYaE6c6Aao94oZrIOiC7CGiSNE64QUbHNPhzk8Xhm0djE6QqTpL0HzTUxk"
+   crossorigin="anonymous">
 </script>
 ```
 
-It is important to know that in order for SRI to work, the vendor host needs [CORS](https://www.w3.org/TR/cors/) enabled. Also it is good idea to monitor vendor JavaScript for changes in regular way. Because sometimes you can get **secure** but **not working** third-party code when the vendor decides to update it.
+SRI needs vendor host w/ CORS enabled. Also monitor vendor JavaScript for changes regularly: may get **secure** but **not working** third-party code when vendor updates it.
 
 ### Keeping JavaScript libraries updated
 
-[OWASP Top 10:2025 A03 Software Supply Chain Failures](https://owasp.org/Top10/2025/A03_2025-Software_Supply_Chain_Failures/) describes the problem of using components with known vulnerabilities. This includes JavaScript libraries. JavaScript libraries must be kept up to date, as previous versions can have known vulnerabilities which can lead to the site typically being vulnerable to [Cross Site Scripting](https://owasp.org/www-community/attacks/xss/). There are several tools out there that can help identify such libraries. One such tool is the free open source tool [RetireJS](https://retirejs.github.io)
+OWASP Top 10:2025 A03 Software Supply Chain Failures covers using components w/ known vulnerabilities, incl. JavaScript libraries. Keep libraries up to date: previous versions can have known vulnerabilities, typically leaving site vulnerable to Cross Site Scripting. Tools identify such libraries, e.g., free open source RetireJS.
 
 ### Sandboxing with iframe
 
-You can also put vendor JavaScript into an iframe from different domain (e.g. static data host). It will work as a "jail" and vendor JavaScript will not have direct access to the host page DOM and cookies.
+Put vendor JavaScript into iframe from different domain (e.g. static data host): works as "jail"; vendor JavaScript has no direct access to host page DOM and cookies.
 
-The host main page and sandbox iframe can communicate between each other via the [postMessage mechanism](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage).
+Host main page and sandbox iframe communicate via postMessage mechanism.
 
-Also, iframes can be secured with the iframe [sandbox attribute](http://www.html5rocks.com/en/tutorials/security/sandboxed-iframes/).
+Secure iframes also with iframe sandbox attribute.
 
-For high risk applications, consider the use of [Content Security Policy (CSP)](https://www.w3.org/TR/CSP2/) in addition to iframe sandboxing. CSP makes hardening against XSS even stronger.
+High risk applications: consider Content Security Policy (CSP) in addition to iframe sandboxing; stronger XSS hardening.
 
 ```html
-<!-- Some host, e.g. somehost.com, HTML code here -->
- <html>
-   <head></head>
-     <body>
-       ...
-       <!-- Include iframe with 3rd party vendor javascript -->
-       <iframe
+<!-- Some host, e.g. somehost.com, HTML code here -->
+ <html>
+   <head></head>
+     <body>
+       ...
+       <!-- Include iframe with 3rd party vendor javascript -->
+       <iframe
        src="https://somehost-static.net/analytics.html"
-       sandbox="allow-same-origin allow-scripts">
+       sandbox="allow-same-origin allow-scripts">
        </iframe>
-   </body>
- </html>
+   </body>
+ </html>
 
-<!-- somehost-static.net/analytics.html -->
- <html>
-   <head></head>
-     <body>
-       ...
-       <script>
-       window.addEventListener("message", receiveMessage, false);
-       function receiveMessage(event) {
-         if (event.origin !== "https://somehost.com:443") {
-           return;
-         } else {
-         // Make some DOM here and initialize other
-        //data required for 3rd party code
-         }
-       }
-       </script>
-       <!-- 3rd party vendor javascript -->
-       <script src="https://analytics.vendor.com/v1.1/script.js"></script>
-       <!-- /3rd party vendor javascript -->
-   </body>
- </html>
+<!-- somehost-static.net/analytics.html -->
+ <html>
+   <head></head>
+     <body>
+       ...
+       <script>
+       window.addEventListener("message", receiveMessage, false);
+       function receiveMessage(event) {
+         if (event.origin !== "https://somehost.com:443") {
+           return;
+         } else {
+         // Make some DOM here and initialize other
+        //data required for 3rd party code
+         }
+       }
+       </script>
+       <!-- 3rd party vendor javascript -->
+       <script src="https://analytics.vendor.com/v1.1/script.js"></script>
+       <!-- /3rd party vendor javascript -->
+   </body>
+ </html>
 ```
 
 ### Virtual iframe Containment
 
-This technique creates iFrames that run asynchronously in relation to the main page. It also provides its own containment JavaScript that automates the dynamic implementation of the protected iFrames based on the marketing tag requirements.
+Creates iFrames running asynchronously relative to main page. Provides own containment JavaScript automating dynamic implementation of protected iFrames per marketing tag requirements.
 
 ### Vendor Agreements
 
-You can have the agreement or request for proposal with the 3rd parties require evidence that they have implemented secure coding and general corporate server access security. But in particular you need to determine the monitoring and control of their source code in order to prevent and detect malicious changes to that JavaScript.
+Agreement/RFP with 3rd parties should require evidence of secure coding and general corporate server access security. Esp. determine monitoring and control of their source code to prevent/detect malicious JavaScript changes.
 
 ## MarTechSec
 
 Marketing Technology Security
 
-This refers to all aspects of reducing the risk from marketing JavaScript. Controls include
+All aspects of reducing risk from marketing JavaScript. Controls:
 
-1. Contractual controls for risk reduction; the contracts with any MarTech company should include a requirement to show evidence of code security and code integrity monitoring.
-2. Contractual controls for risk transference: the contracts with any MarTech company could include a penalty for serving malicious JavaScript
+1. Contractual controls for risk reduction; contracts w/ any MarTech company should require evidence of code security and code integrity monitoring.
+2. Contractual controls for risk transference: contracts w/ any MarTech company could include penalty for serving malicious JavaScript
 3. Technical controls for malicious JavaScript execution prevention; Virtual Iframes,
-4. Technical controls for malicious JavaScript identification; [Subresource Integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity).
+4. Technical controls for malicious JavaScript identification; Subresource Integrity.
 5. Technical controls including client side JavaScript malicious behavior in penetration testing requirements.
 
 ## MarSecOps
 
 Marketing Security Operations
 
-This refers to the operational requirements to maintain some of the technical controls. This involves possible cooperation and information exchange between the marketing team, the martech provider and the run or operations team to update the information in the page controls (SRI hash change, changes in pages with SRI), the policies in the Virtual iFrames, tag manager configuration, data layer changes etc.
+Operational requirements maintaining some technical controls. Involves cooperation/information exchange among marketing team, martech provider, run/operations team to update page controls info (SRI hash change, changes in pages with SRI), Virtual iFrames policies, tag manager configuration, data layer changes etc.
 
-The most complete and preventive controls for any site containing non-trivial marketing tags are -
+Most complete preventive controls for any site w/ non-trivial marketing tags -
 
-1. A controlled collector and server-side vendor integrations to reduce third-party browser code; a data layer alone does not enforce code isolation.
+1. Controlled collector + server-side vendor integrations to reduce third-party browser code; data layer alone doesn't enforce code isolation.
 
-2. [Subresource Integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity).
+2. Subresource Integrity.
 
 3. Virtual frame Containment.
 
-The MarSecOps requirements to implement technical controls at the speed of change that marketing wants or without a significant number of dedicated resources, can make data layer and Subresource Integrity controls impractical.
+MarSecOps requirements to implement technical controls at marketing's speed of change, or w/o significant dedicated resources, can make data layer and Subresource Integrity controls impractical.
 
 ## References
 
-- [W3C: Subresource Integrity](https://www.w3.org/TR/sri/)
-- [W3C: Content Security Policy Level 3](https://www.w3.org/TR/CSP3/)
-- [MDN: Window.postMessage()](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage)
+- W3C: Subresource Integrity
+- W3C: Content Security Policy Level 3
+- MDN: Window.postMessage()

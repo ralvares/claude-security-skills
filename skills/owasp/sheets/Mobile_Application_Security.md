@@ -1,421 +1,302 @@
 # Mobile Application Security Cheat Sheet
 
-Mobile application development presents certain security challenges that are
-unique compared to web applications and other forms of software. This cheat
-sheet provides guidance on security considerations for mobile app development.
-It is not a comprehensive guide by any means, but rather a starting point for
-developers to consider security in their mobile app development.
+Mobile dev has security challenges unique vs web/other software. Starting point for devs, not comprehensive.
 
 ## Architecture & Design
 
 ### 1. Secure by Design
 
-- Opt for a secure design at the beginning of development, not as an
-  afterthought.
-- Keep in mind security principles like least privilege, defense in depth, and
-  separation of concerns.
-- Follow industry standards and best practices, such as:
+- Secure design from start of development, not afterthought.
+- Apply least privilege, defense in depth, separation of concerns.
+- Follow industry standards/best practices, e.g.:
     - National Institute of Standards and Technology (NIST)
     - Internet Engineering Task Force (IETF)
 
-For more information, see the
-[Secure Product Design Cheat Sheet](Secure_Product_Design.md).
+See [Secure Product Design Cheat Sheet](Secure_Product_Design.md).
 
 ### 2. Secure APIs
 
-- Ensure that your mobile app communicates securely with backend services.
-- Use OAuth2, JWT, or similar for secure authentication.
-- Regularly update and rotate any used API keys or tokens.
+- App must communicate securely w/ backend services.
+- Use OAuth2, JWT, or similar for authentication.
+- Regularly update + rotate API keys/tokens.
 
 ### 3. Principle of Least Privilege
 
-- Request only the permissions your app needs.
-- This applies not only to device permissions granted by the user, but also to
-  permissions granted to the app by backend services.
-- Avoid storing application files with overly permissive permissions.
-- Secure by default: applications should have the most secure settings by default.
+- Request only needed permissions.
+- Applies to device permissions granted by user + permissions granted to app by backend services.
+- Avoid storing app files w/ overly permissive permissions.
+- Secure by default: most secure settings by default.
 
 ### 4. Supply Chain
 
-Developing with third-party libraries and components introduces the possibility
-of security unknowns.
+Third-party libraries/components add security unknowns.
 
 - Ensure app signing.
-- Use only trusted and validated third-party libraries and components.
-- Establish security controls for app updates, patches, and releases.
-- Monitor and detect security incidents of used third-party products.
+- Use only trusted, validated third-party libraries/components.
+- Establish security controls for app updates, patches, releases.
+- Monitor + detect security incidents of used third-party products.
 
-See the [Vulnerable Dependency Management Cheat Sheet](Vulnerable_Dependency_Management.md) for recommendations on managing third-party dependencies when vulnerabilities are discovered.
+See [Vulnerable Dependency Management Cheat Sheet](Vulnerable_Dependency_Management.md) for managing third-party deps when vulnerabilities found.
 
 ## Authentication & Authorization
 
-Authentication is a complex topic and there are many pitfalls. Authentication
-logic must be written and tested with extreme care. The tips here are only a
-starting point and barely scratch the surface. For more information, see the
-[Authentication Cheat Sheet](Authentication.md) and
-[M1: Insecure Authentication/Authorization](
-https://owasp.org/www-project-mobile-top-10/2023-risks/m1-insecure-authentication-authorization.html)
-from the OWASP Mobile Top 10.
+Authentication complex, many pitfalls. Write + test auth logic w/ extreme care. Tips here barely scratch surface. See [Authentication Cheat Sheet](Authentication.md) and OWASP Mobile Top 10 M1: Insecure Authentication/Authorization.
 
 ### 1. Don't Trust the Client
 
-- Perform authentication/authorization server-side and only load data on
-the device after successful authentication.
-- For sensitive local data, encrypt it and protect encryption keys using
-[platform key storage](https://mas.owasp.org/MASWE/MASVS-STORAGE/MASWE-0003/).
-If the design requires password-derived keys, use a
-[dedicated password-based key derivation function](https://mas.owasp.org/MASWE/MASVS-CRYPTO/MASWE-0014/)
-with a unique random salt and an appropriate work factor; a password or a fast
-hash of it is not a suitable encryption key.
-- Do not store user passwords on the device; use device-specific tokens
-that can be revoked.
-- Avoid using spoofable values like device identifiers for authentication.
-- Assume all client-side controls can be bypassed and perform them
-server-side as well.
-- Include client side code to detect code/binary tampering.
+- Authenticate/authorize server-side; load data on device only after successful authentication.
+- Sensitive local data: encrypt, protect keys using platform key storage (MASWE-0003). If design needs password-derived keys, use dedicated password-based key derivation function (MASWE-0014) w/ unique random salt + appropriate work factor; password or fast hash of it = unsuitable encryption key.
+- Never store user passwords on device; use device-specific revocable tokens.
+- Avoid spoofable values (e.g., device identifiers) for authentication.
+- Assume all client-side controls bypassable; also perform server-side.
+- Include client-side code to detect code/binary tampering.
 
 ### 2. Credential Handling
 
-- Do not hardcode credentials in the mobile app.
+- Never hardcode credentials in app.
 - Encrypt credentials in transmission.
-- Do not store user credentials on the device. Consider using
-secure, revocable access tokens.
+- Never store user credentials on device. Consider secure, revocable access tokens.
 
 ### 3. Passwords and PIN Policy
 
-- For account passwords, allow long passphrases without character-composition
-requirements and block common or compromised passwords, following
-[NIST's password guidance](https://pages.nist.gov/800-63-4/sp800-63b/authenticators/).
-See [password strength controls](Authentication.md#implement-proper-password-strength-controls)
-for length and other policy requirements.
-- Do not allow short PINs such as 4 digits.
-- Use platform specific secure storage mechanisms, such as
-Keychain (iOS) or Keystore (Android).
+- Account passwords: allow long passphrases w/o character-composition requirements; block common/compromised passwords, per NIST password guidance (SP 800-63B). See [password strength controls](Authentication.md#implement-proper-password-strength-controls) for length + other policy.
+- Never allow short PINs such as 4 digits.
+- Use platform secure storage: Keychain (iOS) or Keystore (Android).
 
 ### 4. Biometric Authentication
 
-- Use platform-supported methods for biometric authentication.
-- Always provide a fallback, such as a PIN.
+- Use platform-supported biometric methods.
+- Always provide fallback, e.g., PIN.
 
 ### 5. Session Management
 
-- Sessions should timeout after inactivity.
-- Offer a remote logout feature.
+- Session timeout after inactivity.
+- Offer remote logout.
 - Use randomly generated session tokens.
-- Secure session data, both client and server side.
+- Secure session data, client + server side.
 
 ### 6. Token Storage
 
-- Store authentication tokens securely.
+- Store auth tokens securely.
 - Handle token expiration gracefully.
 
 ### 7. Sensitive Operations
 
-- Require users to re-authenticate for sensitive operations like changing
-  passwords or updating payment information.
-- Consider requiring re-authentication before displaying highly sensitive
-  information as well.
+- Require re-authentication for sensitive operations (e.g., changing passwords, updating payment info).
+- Consider re-authentication before displaying highly sensitive info.
 - Require authorization checks on any backend functionality.
 
 ## Data Storage & Privacy
 
 ### 1. Data Encryption
 
-- Encrypt sensitive data both at rest and in transit.
-- Store private data on the device's internal storage.
-- Use platform APIs for encryption. Do not attempt to implement your own
-  encryption algorithms.
-- Leverage hardware-based security features when available (e.g., Secure Enclave on iOS,
-  Strongbox on Android) for key storage and cryptographic operations
-  whenever available.
+- Encrypt sensitive data at rest + in transit.
+- Store private data in device internal storage.
+- Use platform APIs for encryption; never implement own algorithms.
+- Use hardware-based security where available (e.g., Secure Enclave on iOS, Strongbox on Android) for key storage + crypto operations.
 
 ### 2. Data Leakage
 
-- Beware of caching, logging, and background snapshots. Ensure that sensitive
-  data is not leaked through these mechanisms.
+- Beware caching, logging, background snapshots; ensure sensitive data not leaked via them.
 
-See the [Logging Cheat Sheet](Logging.md#data-to-exclude) for
-examples of data that should not be logged.
+See [Logging Cheat Sheet](Logging.md#data-to-exclude) for data not to log.
 
 ### 3. Use HTTPS
 
-- Always use HTTPS for network communications.
+- Always HTTPS for network communications.
 
 ### 4. Third-Party Libraries
 
-- Ensure all third-party libraries are secure and up to date.
+- Ensure all third-party libraries secure + up to date.
 
 ### 5. Personally Identifiable Information (PII)
 
-- Minimize any PII to necessity.
-- Attempt to replace PII with less critical information if possible.
-- Reduce PII, e.g. less frequent location updates.
-- Implement automatic expiration and deletion of PII to minimize retention.
-- Ask for user consent before collecting or using PII.
+- Minimize PII to necessity.
+- Replace PII w/ less critical info if possible.
+- Reduce PII, e.g., less frequent location updates.
+- Implement automatic expiration + deletion of PII to minimize retention.
+- Ask user consent before collecting/using PII.
 
 ## Network Communication
 
 ### 1. Don't Trust the Network
 
-- Assume that all network communication is insecure and can be intercepted.
+- Assume all network communication insecure + interceptable.
 
 ### 2. Use Secure Protocols
 
-- Use HTTPS for all network communication.
-- Do not override SSL certificate validation to allow self-signed or invalid
-  certificates.
+- HTTPS for all network communication.
+- Never override SSL certificate validation to allow self-signed/invalid certificates.
 - Avoid mixed version SSL sessions.
-- Encrypt data even if sent over SSL, in case of future SSL vulnerabilities.
-- Use strong, industry standard cipher suites, with appropriate key lengths.
-- Use certificates signed by a trusted CA provider
+- Encrypt data even over SSL, in case of future SSL vulnerabilities.
+- Use strong, industry-standard cipher suites w/ appropriate key lengths.
+- Use certificates signed by trusted CA.
 - Avoid sending sensitive data via SMS.
 
 ### 3. Certificate Pinning
 
-- Consider certificate pinning. See the [Pinning Cheat Sheet](Pinning.md)
-  for pros and cons of this approach.
+- Consider certificate pinning. See [Pinning Cheat Sheet](Pinning.md) for pros/cons.
 
 ## User Interface
 
 ### 1. UI Data Masking
 
-- Mask sensitive information on UI fields to prevent shoulder surfing.
+- Mask sensitive info in UI fields to prevent shoulder surfing.
 
 ### 2. User Notifications
 
-- Inform the user about security-related activities, such as logins from new
-  devices.
+- Inform user of security-related activities, e.g., logins from new devices.
 
 ### 3. Input Validation
 
-- Validate and sanitize user input. See the
-  [Input Validation Cheat Sheet](Input_Validation.md) for more
-  information.
+- Validate + sanitize user input. See [Input Validation Cheat Sheet](Input_Validation.md).
 
 ### 4. Output Validation
 
-- Validate and sanitize output to prevent injection and execution attacks.
+- Validate + sanitize output to prevent injection/execution attacks.
 
 ## Code Quality
 
 ### 1. Static Analysis
 
-- Use static analysis tools to identify vulnerabilities.
+- Use static analysis tools to find vulnerabilities.
 
 ### 2. Code Reviews
 
-- Make security a focal point during code reviews.
+- Make security focal point of code reviews.
 
 ### 3. Update Libraries
 
-- Keep all your libraries up to date to patch known vulnerabilities.
+- Keep all libraries updated to patch known vulnerabilities.
 
 ## Application Integrity
 
 - Disable debugging.
-- Include code to validate integrity of application code.
-- Obfuscate the app binary.
+- Include code to validate app code integrity.
+- Obfuscate app binary.
 - Implement runtime anti-tampering controls:
-    - Check for signs of debugging, hooking, or code injection.
-    - Detect if the app is running in an emulator or rooted/jailbroken device.
+    - Check for debugging, hooking, code injection.
+    - Detect emulator or rooted/jailbroken device.
     - Verify app signatures at runtime.
-    - Apply appropriate responses to detected tampering (e.g., limiting functionality).
+    - Apply appropriate responses to detected tampering (e.g., limit functionality).
 
 ## Testing
 
 ### 1. Penetration Testing
 
-- Perform ethical hacking to identify vulnerabilities.
+- Ethical hacking to find vulnerabilities.
 - Example tests:
     - Cryptographic vulnerability assessment.
-    - Attempt to execute backend server functionality anonymously by removing any
-      session tokens from POST/GET requests.
+    - Attempt backend server functionality anonymously by removing session tokens from POST/GET requests.
 
 ### 2. Automated Tests
 
-- Leverage automated tests to ensure that security features are working as
-  expected and that access controls are enforced.
+- Automated tests to ensure security features work + access controls enforced.
 
 ### 3. Usability Testing
 
-- Ensure that security features do not harm usability, which could cause users
-  to bypass security features.
+- Security features must not harm usability; else users bypass them.
 
 ## Post-Deployment
 
 ### 1. Incident Response
 
-- Have a clear incident response plan in place.
+- Have clear incident response plan.
 
 ### 2. Updates
 
-- Plan for regular updates and patches. In the case of mobile apps, this is
-  especially important due to the delay between when a patch is released and
-  when users actually receive the updated version due to app store review
-  processes and the time it takes for users to update their apps.
+- Plan regular updates/patches. Esp. important for mobile: delay between patch release + users receiving it (app store review, user update time).
 
-- Use a mechanism to force users to update their app version when necessary.
+- Mechanism to force users to update app version when necessary.
 
 ### 3. Monitoring and Analytics
 
-- Use real-time monitoring to detect and respond to threats.
+- Real-time monitoring to detect + respond to threats.
 
 ## Platform-Specific Guidance
 
 ### Android
 
 - Use Android's ProGuard for code obfuscation.
-- Avoid storing sensitive data in SharedPreferences. See the
-  [Android docs](https://developer.android.com/topic/security/data)
-  on working with data securely for more details.
-- Disable backup mode to prevent sensitive data being stored in backups.
+- Avoid storing sensitive data in SharedPreferences. See Android docs on working with data securely.
+- Disable backup mode to prevent sensitive data in backups.
 
-- Use Android Keystore with hardware backing (TEE or StrongBox) to securely store
-  cryptographic keys.
-    - **How**: Generate keys with hardware backing by specifying
-      `.setIsStrongBoxBacked(true)` in `KeyGenParameterSpec.Builder` when available (Android 9+).
+- Use Android Keystore w/ hardware backing (TEE or StrongBox) to store cryptographic keys.
+    - **How**: Generate hardware-backed keys by specifying `.setIsStrongBoxBacked(true)` in `KeyGenParameterSpec.Builder` when available (Android 9+).
     - Verify hardware-backed storage via `KeyInfo.isInsideSecureHardware()`.
-    - Fall back to regular hardware-backed keystore if Strongbox isn't available.
-    - Configure key usage restrictions with `.setUserAuthenticationRequired(true)`
-      for sensitive operations.
-    - See [Hardware-backed Keystore documentation](https://developer.android.com/training/articles/keystore).
+    - Fall back to regular hardware-backed keystore if Strongbox unavailable.
+    - Configure key usage restrictions w/ `.setUserAuthenticationRequired(true)` for sensitive operations.
+    - See Hardware-backed Keystore documentation.
 
-- Implement Google's [Play Integrity API](https://developer.android.com/google/play/integrity) for device and app integrity checks.
-    - **How**: Obtain an integrity verdict from the device, validate server-side,
-      and take action if integrity checks fail.
-    - The SafetyNet Attestation API was fully turned down in January 2025. All
-      developers must migrate to Play Integrity API.
-    - See [Play Integrity API documentation](https://developer.android.com/google/play/integrity/overview).
+- Implement Google's Play Integrity API for device + app integrity checks.
+    - **How**: Obtain integrity verdict from device, validate server-side, act if integrity checks fail.
+    - SafetyNet Attestation API fully turned down January 2025. All developers must migrate to Play Integrity API.
+    - See Play Integrity API documentation.
 
 ### iOS and iPadOS
 
 #### Shortcuts Permissions
 
-- iOS/iPadOS Shortcuts allow for automation of app functions, which may
-enable sensitive actions even when the device is locked.
+- iOS/iPadOS Shortcuts automate app functions; may enable sensitive actions even when device locked.
 
-- There are several scenarios in which a user can execute a Shortcut
-while the device is locked:
+- Scenarios where user can execute Shortcut while device locked:
 
-  1. If a Shortcut is added as a widget to Today View, it can be accessed
-and executed while the device is locked.
-  2. If a Shortcut is assigned to the Action Button (on iPhone 15 Pro and
-iPhone 16 Pro models), it can be executed by pressing the Action Button
-while the device is locked.
-  3. If a Shortcut is assigned to the Control Center (on iOS/iPadOS 18+),
-it can be executed by pulling up the Control Center and pressing the
-Shortcut button while the device is locked.
-  4. A Shortcut can be invoked via Siri while the device is locked.
-  5. If a Shortcut is added to the user's Home Screen (on iOS/iPadOS 18+),
-it can be directly executed by tapping the Shortcut button on the user's
-lock screen while the device is locked.
-  6. If a Shortcut is set to run at a specific interval or a specific time,
-it can execute even if the device is locked.
+  1. Shortcut added as widget to Today View.
+  2. Shortcut assigned to Action Button (iPhone 15 Pro and iPhone 16 Pro models): press while locked.
+  3. Shortcut assigned to Control Center (iOS/iPadOS 18+): pull up Control Center, press Shortcut button while locked.
+  4. Shortcut invoked via Siri while locked.
+  5. Shortcut added to Home Screen (iOS/iPadOS 18+): tap Shortcut button on lock screen while locked.
+  6. Shortcut set to run at specific interval/time: executes even if locked.
 
-- Sensitive app functionalities triggered via Shortcuts should always
-require device unlock before execution.
+- Sensitive app functionality triggered via Shortcuts must always require device unlock before execution.
 
-- **How**: For sensitive App Intents (iOS/iPadOS 16+), set
-[`authenticationPolicy`](https://developer.apple.com/documentation/appintents/appintent/authenticationpolicy)
-to [`.requiresLocalDeviceAuthentication`](https://developer.apple.com/documentation/appintents/intentauthenticationpolicy/requireslocaldeviceauthentication).
-This requires unlocking the device running the intent if it is locked; it does
-not require fresh authentication when that device is already unlocked. Continue
-to enforce the app's session and authorization checks.
-[`isProtectedDataAvailable`](https://developer.apple.com/documentation/uikit/uiapplication/isprotecteddataavailable)
-reports protected-file availability and can be true when content protection is
-disabled; do not use it as an authentication check.
+- **How**: Sensitive App Intents (iOS/iPadOS 16+): set `authenticationPolicy` to `.requiresLocalDeviceAuthentication`. Requires unlocking device running intent if locked; does not require fresh authentication when device already unlocked. Keep enforcing app's session + authorization checks. `isProtectedDataAvailable` reports protected-file availability, can be true when content protection disabled; never use as authentication check.
 
 #### Siri Permissions
 
-- Siri can access app functionalities through voice or [Type to Siri](
-  https://support.apple.com/guide/iphone/change-siri-accessibility-settings-iphaff1d606/ios.)
-  commands, which is by default accessible even when the device is locked
-  potentially enabling unauthorized actions.
-- **How**: Apply the App Intent authentication policy above to sensitive Siri
-actions. For explicit approval before destructive work, call
-[`requestConfirmation()`](https://developer.apple.com/documentation/appintents/appintent/requestconfirmation())
-and stop if the user cancels; confirmation does not replace authentication or
-authorization. For legacy SiriKit intents handled by the app, set the supported
-intent's Authentication level to **Restricted While Locked** in Xcode, which
-configures [`INIntentsRestrictedWhileLocked`](https://developer.apple.com/documentation/bundleresources/information-property-list/inintentsrestrictedwhilelocked).
+- Siri accesses app functionality via voice or Type to Siri commands; by default available when device locked → potentially unauthorized actions.
+- **How**: Apply App Intent authentication policy above to sensitive Siri actions. For explicit approval before destructive work, call `requestConfirmation()`, stop if user cancels; confirmation does not replace authentication/authorization. Legacy SiriKit intents handled by app: set supported intent's Authentication level to **Restricted While Locked** in Xcode, configures `INIntentsRestrictedWhileLocked`.
 
 #### Deep Link Security
 
-- Deep links offer direct access to specific app screens, which could
-potentially bypass authentication if not secured, allowing unauthorized
-users access to secure sections of the app.
-- An example of this on Microsoft Authenticator for iOS (which was
-remediated in July 2024) allowed users to bypass App Lock by simply
-navigating to `msauth://microsoft.aad.brokerplugin/?`, which would
-open Authenticator and dismiss the Face ID/Touch ID/passcode prompt.
-- **How**: Implement authentication checks on any view controllers
-or endpoints accessed via deep links. Configure and validate Universal
-Links using apple-app-site-association files for secure deep linking.
-Sanitize and validate all parameters received through deep links to
-prevent injection attacks. Ensure unauthorized users are redirected
-to the login screen, preventing direct access to sensitive parts of
-the app without proper authentication. (See Apple Developer's
-[Supporting universal links in your app](
-https://developer.apple.com/documentation/xcode/supporting-universal-links-in-your-app)
-documentation for more information.)
+- Deep links give direct access to specific app screens; if unsecured can bypass authentication → unauthorized access to secure sections.
+- Example: Microsoft Authenticator for iOS (remediated July 2024) let users bypass App Lock by navigating to `msauth://microsoft.aad.brokerplugin/?`, which opened Authenticator and dismissed Face ID/Touch ID/passcode prompt.
+- **How**: Authentication checks on any view controllers/endpoints reached via deep links. Configure + validate Universal Links using apple-app-site-association files. Sanitize + validate all deep link params to prevent injection. Redirect unauthorized users to login screen; no direct access to sensitive parts w/o authentication. (See Apple Developer: Supporting universal links in your app.)
 
 #### WidgetKit Security
 
-- Widgets on the lock screen may display sensitive data, potentially
-exposing it without the device being unlocked.
-- **How**: Mark sensitive views with `privacySensitive(_:)` and provide redacted
-placeholders so WidgetKit can honor the user's privacy settings. If the widget
-must hide its content while the device is locked, enable the Data Protection
-capability for the widget extension and select `NSFileProtectionComplete`.
-Follow Apple's [widget privacy guidance](https://developer.apple.com/documentation/widgetkit/creating-a-widget-extension).
+- Lock screen widgets may display sensitive data, exposing it w/o device unlock.
+- **How**: Mark sensitive views with `privacySensitive(_:)`, provide redacted placeholders so WidgetKit honors user privacy settings. If widget must hide content while locked, enable Data Protection capability for widget extension, select `NSFileProtectionComplete`. Follow Apple's widget privacy guidance.
 
 #### Additional Security Considerations
 
-- Configure appropriate background refresh policies to prevent sensitive data
-updates while the device is locked.
-- Implement proper privacy-related configurations in `Info.plist` for
-features requiring user permissions.
-- Use App Groups with appropriate security configurations when sharing data
-between app and widgets.
-- Use ATS (App Transport Security) to enforce strong security policies for
-network communication.
-- Do not store sensitive data in `plist` files.
+- Configure background refresh policies to prevent sensitive data updates while device locked.
+- Configure privacy-related entries in `Info.plist` for features needing user permissions.
+- Use App Groups w/ appropriate security config when sharing data between app + widgets.
+- Use ATS (App Transport Security) to enforce strong network security policies.
+- Never store sensitive data in `plist` files.
 
-- Use Apple's Secure Enclave for secure cryptographic key storage and
-  sensitive operations.
-    - **How**: Create keys using `SecKeyCreateRandomKey` with `kSecAttrTokenID`
-      set to `kSecAttrTokenIDSecureEnclave`.
-    - Keys created in the Secure Enclave never leave the secure hardware -
-      only the operations using those keys are performed there.
-    - For biometric operations, use `LAContext` with `evaluatePolicy` to
-      perform authentication directly through the Secure Enclave without
-      exposing biometric data to your application.
-    - Consider access control options like `kSecAccessControlBiometryAny` or
-      `kSecAccessControlUserPresence` to require user authentication before
-      key usage.
-    - See [Secure Enclave documentation](https://support.apple.com/guide/security/secure-enclave-sec59b0b31ff/web).
+- Use Apple's Secure Enclave for cryptographic key storage + sensitive operations.
+    - **How**: Create keys using `SecKeyCreateRandomKey` w/ `kSecAttrTokenID` set to `kSecAttrTokenIDSecureEnclave`.
+    - Secure Enclave keys never leave secure hardware; only operations using them run there.
+    - Biometric operations: use `LAContext` w/ `evaluatePolicy` to authenticate directly via Secure Enclave w/o exposing biometric data to app.
+    - Consider access control options like `kSecAccessControlBiometryAny` or `kSecAccessControlUserPresence` to require user authentication before key use.
+    - See Secure Enclave documentation.
 
-- Use Apple's [App Attest API](https://developer.apple.com/documentation/devicecheck/establishing_your_app_s_integrity) (iOS 14+) to validate app integrity.
-    - **How**: Generate attestation keys and assertions with `DCAppAttestService`
-      and verify assertions server-side.
-    - Complement with Apple's [DeviceCheck API](https://developer.apple.com/documentation/devicecheck) for persistent device state tracking.
-    - See [App Attest documentation](https://developer.apple.com/documentation/devicecheck/dcappattestservice).
+- Use Apple's App Attest API (iOS 14+) to validate app integrity.
+    - **How**: Generate attestation keys + assertions w/ `DCAppAttestService`; verify assertions server-side.
+    - Complement w/ Apple's DeviceCheck API for persistent device state tracking.
+    - See App Attest documentation.
 
 ## Advanced Hardware Security & Monitoring
 
-- Modern devices typically provide Trusted Execution Environments (TEE) or
-  secure hardware modules. Leverage these through standard OS APIs.
-- Consider additional runtime security measures (behavioral anomaly
-  detection, runtime monitoring) to complement built-in OS protections
-  in higher-risk scenarios.
+- Modern devices typically provide Trusted Execution Environments (TEE) or secure hardware modules. Use via standard OS APIs.
+- Higher-risk scenarios: consider extra runtime security (behavioral anomaly detection, runtime monitoring) complementing built-in OS protections.
 
-For further reading, visit the
-[OWASP Mobile Top 10 Project](https://owasp.org/www-project-mobile-top-10/).
-For a more detailed framework for mobile security, see the
-[OWASP Mobile Application Security Project](https://mas.owasp.org/).
+Further reading: OWASP Mobile Top 10 Project; OWASP Mobile Application Security Project (detailed framework).
 
 ## References
 
-- [OWASP MASVS-STORAGE-1: Secure Storage of Sensitive Data](https://mas.owasp.org/MASVS/controls/MASVS-STORAGE-1/)
-- [Android Keystore System](https://developer.android.com/privacy-and-security/keystore)
-- [Apple Platform Security: The Secure Enclave](https://support.apple.com/guide/security/the-secure-enclave-sec59b0b31ff/web)
+- OWASP MASVS-STORAGE-1: Secure Storage of Sensitive Data
+- Android Keystore System
+- Apple Platform Security: The Secure Enclave

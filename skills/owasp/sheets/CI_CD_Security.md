@@ -2,19 +2,19 @@
 
 ## Introduction
 
-CI/CD pipelines and processes facilitate efficient, repeatable software builds and deployments; as such, they occupy an important role in the modern SDLC. However, given their importance and popularity, CI/CD pipelines are also an appealing target for malicious hackers, and their security cannot be ignored. The goal of this cheat sheet is to provide developers practical guidelines for reducing risk associated with these critical components. This cheat sheet will focus on securing the pipeline itself. It will begin by providing some brief background information before proceeding with specific CI/CD security best practices.
+CI/CD pipelines enable efficient, repeatable builds and deployments; important in modern SDLC. Also appealing targets for malicious hackers; security can't be ignored. Goal: practical guidelines for reducing risk of these components. Focus: securing pipeline itself. Brief background, then CI/CD security best practices.
 
 ### Definition and Background
 
-CI/CD refers to a set of largely automated processes used to build and deliver software; it is often portrayed as a pipeline consisting of a series of sequential, discrete steps. The pipeline generally begins when code under development is pushed to a repository and, if all steps complete successfully, ends with the software solution built, tested, and deployed to a production environment. CI/CD may be decomposed into two distinct parts: continuous integration (CI) and continuous delivery and/or continuous deployment (CD).  CI focuses on build and testing automation; continuous delivery focuses on promoting this built code to a staging or higher environment and, generally, performing additional automated testing. Continuous delivery and continuous deployment may not always be distinguished in definitions of CI/CD; however, according to [NIST](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-204C.pdf), continuous delivery requires code to be manually pushed to production whereas continuous deployment automates even this step.
+CI/CD = largely automated processes to build and deliver software; often portrayed as pipeline of sequential, discrete steps. Starts when code pushed to repository; if all steps succeed, ends w/ software built, tested, deployed to production. Two parts: continuous integration (CI) and continuous delivery and/or continuous deployment (CD). CI: build and test automation; continuous delivery: promote built code to staging or higher environment, generally more automated testing. Delivery and deployment not always distinguished; per NIST, continuous delivery requires code manually pushed to production, continuous deployment automates even this step.
 
-The exact steps in a CI/CD pipeline may vary from organization to organization and from project to project; however, automation, and the repeatability and agility it brings, should be a core focus of any CI/CD implementation.
+Exact steps vary by organization and project; automation, plus repeatability and agility it brings, should be core focus of any CI/CD implementation.
 
 ### Understanding CI/CD Risk
 
-Although CI/CD brings many benefits, it also increases an organization's attack surface. People, processes, and technology are all required for CI/CD and all can be avenues of attack; code repositories, automation servers such as Jenkins, deployment procedures, and the nodes responsible for running CI/CD pipelines are just a few examples of CI/CD components which can be exploited by malicious entities.  Furthermore, since CI/CD steps are frequently executed using high-privileged identities, successful attacks against CI/CD often have high damage potential. If an organization chooses to leverage the many benefits of CI/CD, it must also ensure it invests the resources required to properly secure it; the [Codecov](https://blog.gitguardian.com/codecov-supply-chain-breach/) and [SolarWinds](https://www.cyberark.com/resources/blog/the-anatomy-of-the-solarwinds-attack-chain) breaches are just two sobering examples of the potential impact of CI/CD compromise.
+CI/CD increases attack surface. People, processes, technology all required and all attack avenues: code repositories, automation servers such as Jenkins, deployment procedures, nodes running pipelines. CI/CD steps frequently run w/ high-privileged identities → successful attacks have high damage potential. Adopting CI/CD → invest resources to secure it; Codecov and SolarWinds breaches show impact of CI/CD compromise.
 
-The specific methods attackers use to exploit CI/CD environments are diverse; however, certain risks are more prominent than others. Although one should not restrict themselves to knowledge of them, understanding the most prominent risks to CI/CD environments can help organizations allocate security resources more efficiently. [OWASP's Top 10 CI/CD Security Risks](https://owasp.org/www-project-top-10-ci-cd-security-risks/) is a valuable resource for this purpose; the project identifies the following as the top 10 CI/CD risks:
+Attacker methods diverse; certain risks more prominent. Knowing them helps allocate security resources. OWASP's Top 10 CI/CD Security Risks identifies top 10:
 
 - CICD-SEC-1: Insufficient Flow Control Mechanisms
 - CICD-SEC-2: Inadequate Identity and Access Management
@@ -27,120 +27,120 @@ The specific methods attackers use to exploit CI/CD environments are diverse; ho
 - CICD-SEC-9: Improper Artifact Integrity Validation
 - CICD-SEC-10: Insufficient Logging and Visibility
 
-The remainder of this cheat sheet will focus on providing guidance for mitigating against these top 10 and other CI/CD risks.
+Rest of sheet: mitigating these top 10 and other CI/CD risks.
 
 ## Secure Configuration
 
-Time and effort must be invested into properly securing the components, such as SCM systems and automation servers (Jenkins, TeamCity, etc), that enable CI/CD processes. Regardless of the specific tools in use, one should never blindly rely on default vendor settings. At the same time, one must not adjust settings without fully understanding the implications, nor perform any needed configuration updates in an uncontrolled, entirely ad-hoc way. Change management and appropriate governance must be in place. Additionally, education is key; before leveraging a tool to perform critical, security sensitive operations such as code deployment, it is imperative one take time to understand the underlying technology. Secure configuration does not happen automatically; it requires education and planning.
+Invest time and effort securing components enabling CI/CD, e.g. SCM systems and automation servers (Jenkins, TeamCity, etc). Never blindly rely on default vendor settings. Don't adjust settings w/o fully understanding implications, nor do configuration updates uncontrolled/ad-hoc. Need change management and governance. Education key: before using tool for critical, security-sensitive operations such as code deployment, understand underlying technology. Secure configuration not automatic; requires education and planning.
 
-Furthermore, one must also take steps to ensure the security of the operating systems, container images, web servers, or other infrastructure used to run or support the CI/CD components identified above.  These systems must be kept appropriately patched, and an inventory of these assets, including software versions, should also be maintained. These technologies should be hardened according to standards such as [CIS Benchmarks](https://www.cisecurity.org/cis-benchmarks) or [STIGs](https://public.cyber.mil/stigs/downloads/) where appropriate.
+Also secure operating systems, container images, web servers, other infrastructure running or supporting CI/CD components. Keep patched; maintain asset inventory incl. software versions. Harden per standards such as CIS Benchmarks or STIGs where appropriate.
 
-Beyond these general principles, some specific guidelines relevant to CI/CD configuration will be explored below.
+Specific CI/CD configuration guidelines below.
 
 ### Secure SCM Configuration
 
-CI/CD environments allow for code to be pushed to a repository and then deployed to a production environment with little to no manual intervention. However, this benefit can quickly become an attack vector if it allows untrusted, potentially malicious code to be deployed directly to a production system. Proper configuration of the SCM system can help mitigate this risk. Best practices include:
+CI/CD allows code pushed to repository then deployed to production w/ little to no manual intervention. Becomes attack vector if untrusted, potentially malicious code deploys directly to production. Proper SCM configuration mitigates. Best practices:
 
-- Avoid the use of auto-merge rules in platforms such as [GitLab](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html), [GitHub](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/automatically-merging-a-pull-request), or Bitbucket.
-- Require pull requests to be reviewed before merging and ensure this review step cannot be bypassed.
-- Leverage [protected branches](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches).
-- Require commits to be signed
-- Carefully weigh the risk against the benefits of allowing ephemeral contributors. Limit the number and permissions of external contributions when possible.
+- Avoid auto-merge rules in platforms such as GitLab, GitHub, Bitbucket.
+- Require pull requests reviewed before merging; ensure review can't be bypassed.
+- Use protected branches.
+- Require signed commits
+- Weigh risk vs benefits of ephemeral contributors. Limit number and permissions of external contributions when possible.
 - Enable MFA where available
-- Avoid assigning default permissions for users and roles with access to your SCM assets. Carefully manage your permissions.
-- Restrict the ability to fork private or internal repositories.
-- Limit the option to change repository visibility to public.
-You can find a wide variety of additional policies in this [documentation](https://policies.legitify.dev/).
+- Avoid default permissions for users and roles with access to SCM assets. Manage permissions carefully.
+- Restrict ability to fork private or internal repositories.
+- Limit option to change repository visibility to public.
+Many more policies: Legitify policies documentation.
 
-To help navigate SCM configuration challenges, there are tools available, such as [Legitify](https://github.com/Legit-Labs/legitify), an open-source tool by [Legit security](https://www.legitsecurity.com/). Legitify scans SCM assets and identifies misconfigurations and security issues, including policies for all the above best practices (available for GitHub and GitLab).
+Tools help: Legitify, open-source tool by Legit security. Scans SCM assets, identifies misconfigurations and security issues, incl. policies for all above best practices (GitHub and GitLab).
 
 ### Pipeline and Execution Environment
 
-In addition to SCM systems, it is imperative that the automation servers responsible for running the pipelines are also configured securely. Examples of these technologies include Travis, TeamCity, Jenkins, and CircleCI. While the exact hardening process will vary according to the specific platform used, some general best practices include:
+Also securely configure automation servers running pipelines, e.g. Travis, TeamCity, Jenkins, CircleCI. Hardening varies by platform; general best practices:
 
-- Perform builds in appropriately isolated nodes (see Jenkins example [here](https://www.jenkins.io/doc/book/security/controller-isolation/))
-- Ensure communication between the SCM and CI/CD platform is secured using widely accepted protocols such as TLS 1.2 or greater.
+- Build in appropriately isolated nodes (see Jenkins controller isolation example)
+- Secure SCM-to-CI/CD communication w/ widely accepted protocols such as TLS 1.2 or greater.
 - Restrict access to CI/CD environments by IP if possible.
-- If feasible, store the CI config file outside the repository that is hosting the code being built. If the file is stored alongside the code, it is imperative that the file is reviewed before any merge request is approved.
-- Enable an appropriate level of logging (discussed more under [Visibility and Monitoring](#visibility-and-monitoring) below)
-- Incorporate language appropriate SAST, DAST, IaC vulnerability scanning and related tools into the pipeline.
+- If feasible, store CI config file outside repository hosting code being built. If stored alongside code, review file before any merge request approved.
+- Enable appropriate logging (see [Visibility and Monitoring](#visibility-and-monitoring) below)
+- Incorporate language-appropriate SAST, DAST, IaC vulnerability scanning and related tools into pipeline.
 - Require manual approval and review before triggering production deployment.
-- If pipeline steps are executed in  Docker image, avoid using the `--privileged` flag [ref](https://research.nccgroup.com/2022/01/13/10-real-world-stories-of-how-weve-compromised-ci-cd-pipelines/)
-- Ensure the pipeline configuration code is version controlled ([ref](https://www.cisa.gov/sites/default/files/publications/ESF_SECURING_THE_SOFTWARE_SUPPLY_CHAIN_DEVELOPERS.PDF))
+- Pipeline steps in Docker image: avoid `--privileged` flag (NCC Group research)
+- Version control pipeline configuration code (CISA)
 - Enforce MFA where possible
 
 ## IAM
 
-Identity and Access Management (IAM) is the process of managing digital identities and controlling their access to digital resources. Examples of identities include system accounts, roles, groups, or individual user accounts. IAM has wide applications well beyond CI/CD, but mismanagement of identities and their underlying credentials are among the most prominent risks impacting CI/CD environments. The following subsections will highlight some IAM related security best practices that are especially relevant to CI/CD environments.
+Identity and Access Management (IAM) = managing digital identities and controlling their access to digital resources. Identities: system accounts, roles, groups, individual user accounts. IAM wide beyond CI/CD, but identity and credential mismanagement among most prominent CI/CD risks. Subsections: IAM best practices esp. relevant to CI/CD.
 
 ### Secrets Management
 
-Secrets, such as API keys or passwords, are often required for a CI/CD pipeline to execute successfully. Secrets in CI/CD environments are often numerous, with at least some providing substantial access to sensitive systems or operations. This combination introduces a challenge: how does one securely manage secrets while also allowing automated CI/CD processes to access them as needed? Following some simple guidelines can help substantially mitigate, though certainly not eliminate, risk.
+Secrets (API keys, passwords) often required for pipeline execution. Often numerous, some giving substantial access to sensitive systems/operations. Challenge: secure secret management while letting automated CI/CD processes access them. Simple guidelines substantially mitigate, not eliminate, risk.
 
-First, one should take steps to reduce the likelihood that secrets can be stolen in a usable format. Secrets should **never** be hardcoded in code repositories or CI/CD configuration files. Employ tools such as [git-leaks](https://github.com/gitleaks/gitleaks) or [git-secrets](https://github.com/awslabs/git-secrets) to detect such secrets. Strive to prevent secrets from ever being committed in the first place and perform ongoing monitoring to detect any deviations. Secrets must also be removed from other artifacts such as Docker images and compiled binaries. Secrets must always be encrypted using industry accepted standards. Encryption must be applied while secrets are at-rest in a file-system, vault, or similar store; however, one must also ensure these secrets are not disclosed or persisted in cleartext as a consequence of use in the CI/CD pipeline. For example, secrets must not be printed out to the console, logged, or stored in a system's command history files (such as `~/.bash-history`). A third-party solution such as [HashiCorp Vault](https://www.hashicorp.com/products/vault), [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/), [AKeyless](https://www.akeyless.io/), or [CyberArk](https://www.cyberark.com/) may be used for this purpose.
+First, reduce likelihood secrets stolen in usable format. Secrets **never** hardcoded in code repositories or CI/CD configuration files. Use tools such as git-leaks or git-secrets to detect. Prevent secrets ever being committed; ongoing monitoring to detect deviations. Remove secrets from other artifacts such as Docker images and compiled binaries. Always encrypt secrets using industry accepted standards. Encrypt at-rest in file-system, vault, similar store; also ensure secrets not disclosed or persisted in cleartext through CI/CD pipeline use. E.g., secrets must not be printed to console, logged, or stored in system command history files (such as `~/.bash-history`). Third-party solution such as HashiCorp Vault, AWS Secrets Manager, AKeyless, or CyberArk may be used.
 
-Second, one must take steps to reduce impact in the event that secrets are stolen in a format that is usable by an attacker. Using temporary credentials or OTPs is one method for reducing impact. Furthermore, one may impose IP based or other restrictions that prevent even valid credentials from accessing resources if these further requirements are not met. The [Least Privilege](#least-privilege) and [Identity Lifecycle Management](#identity-lifecycle-management) sections below provide further guidance on techniques to mitigate risk related to secrets theft.
+Second, reduce impact if secrets stolen in attacker-usable format. Temporary credentials or OTPs reduce impact. Impose IP-based or other restrictions so even valid credentials can't access resources unless further requirements met. [Least Privilege](#least-privilege) and [Identity Lifecycle Management](#identity-lifecycle-management) sections: more techniques vs secrets theft.
 
-For additional guidance on securely managing secrets, please reference the [Secrets Management Cheat Sheet](Secrets_Management.md).
+More: [Secrets Management Cheat Sheet](Secrets_Management.md).
 
 ### Least Privilege
 
-Least privilege, defined by [NIST](https://csrc.nist.gov/glossary/term/least_privilege) as:
+Least privilege, per NIST:
 
 > The principle that a security architecture is designed so that each entity is granted the minimum system resources and authorizations that the entity needs to perform its function".
 
-In the context of CI/CD environments, this principle should be applied to at least three main areas: the secrets used within pipeline steps to access external resources, the access one pipeline or step has to other resources configured in the CI/CD platform ([OWASP pipeline-based access controls](https://owasp.github.io/www-project-top-10-ci-cd-security-risks/CICD-SEC-05-Insufficient-PBAC)), and the permissions of the OS user executing the pipeline.
+In CI/CD, apply to at least three areas: secrets used in pipeline steps to access external resources; access one pipeline or step has to other resources configured in CI/CD platform (OWASP pipeline-based access controls); permissions of OS user executing pipeline.
 
-Regardless of the specific application, the general guidance remains the same: access must be justified, not assumed. One should adopt a "deny by default" mindset. Any identities used within the pipeline must be assigned only the minimum permissions necessary to do its job. For example, if a pipeline must access an AWS service in order to complete its task, the AWS credentials used in that pipeline must only be able to perform the specific operations on the  specific services and resources it requires to perform its task. Similarly, credential sharing across pipelines should be kept to a minimum; in particular, such sharing should not occur across pipelines having different levels of sensitivity or value. If pipeline A does not require access to the same secrets pipeline B requires, they should ideally not be shared. Finally, the OS accounts responsible for running the pipeline should not have root or comparable privileges; this will help mitigate impact in case of compromise.
+General guidance: access justified, not assumed. "Deny by default" mindset. Identities used in pipeline get only minimum permissions needed. E.g., pipeline accessing AWS service: AWS credentials can perform only specific operations on specific services and resources required. Minimize credential sharing across pipelines; never across pipelines of different sensitivity or value. If pipeline A doesn't need secrets pipeline B needs, ideally don't share. OS accounts running pipeline must not have root or comparable privileges; mitigates compromise impact.
 
 ### Identity Lifecycle Management
 
-Although proper secrets management and application of the principle of least privilege are necessary for secure IAM, they are not sufficient. The lifecycle of identities, from creation to deprovisioning, must be carefully managed to reduce risk for CI/CD and other environments.
+Secrets management and least privilege necessary for secure IAM, not sufficient. Carefully manage identity lifecycle, creation to deprovisioning, for CI/CD and other environments.
 
-In the initial or "Joiner" phase of Identity Management (as defined in the [ILM Playbook](https://www.idmanagement.gov/playbooks/ilm/)), considerations include using a centralized IdP rather than allowing local accounts, disallowing shared accounts, disallowing self-provisioning of identities, and only allowing email accounts with domains controlled by the organization responsible for the CI/CD environment ([OWASP CI/CD identity and access management](https://owasp.org/www-project-top-10-ci-cd-security-risks/CICD-SEC-02-Inadequate-Identity-And-Access-Management)). Once provisioned, identities must be tracked, maintained, and, when necessary, deprovisioned. Of particular concern in complex, distributed CI/CD environments is ensuring that an accurate, comprehensive, and up-to-date inventory of identities is maintained. The format of this inventory can vary by organizational needs, but, in addition to the identity itself, suggested fields include identity owner or responsible party, identity provider, last used, last updated, granted permissions, and permissions actually used by the identity. Such an inventory will help one readily identify identities which may be over-privileged or which may be candidates for deprovisioning. Proper identity maintenance must not be overlooked; the "forgotten" identity can be the vector an attacker uses to compromise a CI/CD system.
+Initial "Joiner" phase of Identity Management (per ILM Playbook): use centralized IdP rather than local accounts, disallow shared accounts, disallow self-provisioning of identities, allow only email accounts with domains controlled by organization responsible for CI/CD environment (OWASP CI/CD identity and access management). Once provisioned, track, maintain, and when necessary deprovision identities. Complex, distributed CI/CD environments: keep accurate, comprehensive, up-to-date identity inventory. Format varies; besides identity itself, suggested fields: identity owner or responsible party, identity provider, last used, last updated, granted permissions, permissions actually used. Inventory exposes over-privileged identities and deprovisioning candidates. Don't overlook identity maintenance; "forgotten" identity can be attacker's vector into CI/CD system.
 
 ## Managing Third-Party Code
 
-Due, in part, to high-profile breaches such as SolarWinds, the concept of software supply chain security has received increasing attention in recent years. This issue is especially pressing in the context of CI/CD as such environments interact with third-party code in multiple ways. Two such areas of interaction, the dependencies used by projects running within the pipeline and the third-party integrations and plug-ins with the CI/CD system itself will be discussed below.
+High-profile breaches such as SolarWinds raised software supply chain security attention. Especially pressing for CI/CD: interacts with third-party code multiple ways. Two areas below: dependencies used by projects in pipeline; third-party integrations and plug-ins of CI/CD system itself.
 
 ### Dependency Management
 
-Using third-party packages with known vulnerabilities is a well-known problem in software engineering, and many tools have been developed to address this. In the context of CI/CD, automated use of SCA and comparable tools can actually assist in improving security in this area. However, the CI/CD environment itself is susceptible to a different, but related, risk: dependency chain abuse.
+Third-party packages with known vulnerabilities: well-known problem, many tools. In CI/CD, automated SCA and comparable tools can improve security. But CI/CD environment faces related risk: dependency chain abuse.
 
-Dependency chain abuse involves the exploitation of flaws within a system's dependency chain and dependency resolution processes; a successful attack can result in the execution of malicious code from an attacker controlled package. The dependency chain itself refers to the set of packages, including internal, direct third-party, and transitive dependencies, that a software solution requires to function. An attacker can take advantage of this dependency chain through methods such as [dependency confusion](https://fossa.com/blog/dependency-confusion-understanding-preventing-attacks/), [typosquatting](https://blog.gitguardian.com/protecting-your-software-supply-chain-understanding-typosquatting-and-dependency-confusion-attacks/), or takeover of a valid package maintainer's account. Dependency chain abuse attacks can be quite complex and comprehensive defense is correspondingly so; however, basic mitigations are quite straightforward.
+Dependency chain abuse = exploiting flaws in system's dependency chain and dependency resolution; success → execution of malicious code from attacker-controlled package. Dependency chain = set of packages (internal, direct third-party, transitive) software needs to function. Attack methods: dependency confusion, typosquatting, takeover of valid package maintainer's account. Attacks can be complex, comprehensive defense correspondingly so; basic mitigations straightforward.
 
-Mitigation techniques begin early on in the SDLC, well before the CI/CD pipeline begins execution. The project's package management technology (such as npm) should be configured in such a way as to ensure dependency references are immutable (CISA et al. 2022). Version pinning should be performed, the version chosen for pinning must be one that is known to be valid and secure, and the integrity of any package the system downloads should be validated by comparing its hash or checksum to a known good hash of the pinned package. The exact procedures to achieve this will vary depending on the project's underlying technology, but, in general, both version pinning and hash verification can be performed via a platform's "lock" or similar file (i.e. [package-lock.json](https://docs.npmjs.com/cli/v7/configuring-npm/package-lock-json) or  [Pipfile.lock](https://pipenv.pypa.io/en/latest/pipfile.html)). Remember to [enforce the lockfile](https://cheatsheetseries.owasp.org/cheatsheets/NPM_Security_Cheat_Sheet.html#2-enforce-the-lockfile). Prefer using private repositories where possible, and configure the package manager to use only a single private feed ([Microsoft's feed configuration guidance](https://github.com/MicrosoftDocs/azure-devops-docs/blob/main/docs/artifacts/concepts/best-practices.md)). For private packages, leverage [scoped NPM packages](https://docs.npmjs.com/cli/v10/using-npm/scope),  [ID prefixes for NuGet packages](https://learn.microsoft.com/en-us/nuget/nuget-org/id-prefix-reservation), or a comparable feature to reduce the risk of dependency confusion. Finally, regardless of the platform used, ensure the file(s) responsible for controlling these settings (such as `.npmrc` in node environments), is committed to source control and accessible in the CI/CD environment.
+Mitigations begin early in SDLC, before pipeline runs. Configure project's package management technology (such as npm) so dependency references immutable (CISA et al. 2022). Pin versions; pinned version must be known valid and secure; validate integrity of any downloaded package by comparing hash or checksum to known good hash of pinned package. Procedures vary by project technology, but generally version pinning and hash verification via platform "lock" or similar file (i.e. package-lock.json or Pipfile.lock). [Enforce the lockfile](NPM_Security.md). Prefer private repositories where possible; configure package manager to use only single private feed (Microsoft's feed configuration guidance). For private packages use scoped NPM packages, ID prefixes for NuGet packages, or comparable feature to reduce dependency confusion risk. Regardless of platform, commit file(s) controlling these settings (such as `.npmrc` in node environments) to source control and make accessible in CI/CD environment.
 
 ### Plug-In and Integration Management
 
-Most CI/CD platforms are extensible through means of plug-ins or other third-party integrations. While these extensions can introduce many benefits, including potentially improving the security capabilities of the system, they also increase the attack surface. This is not to say that plug-ins should necessarily be disallowed; rather, the risk must simply be considered and reduced to an acceptable level.
+Most CI/CD platforms extensible via plug-ins or third-party integrations. Benefits incl. potentially improved security capabilities, but increase attack surface. Plug-ins not necessarily disallowed; consider and reduce risk to acceptable level.
 
-Installation of plug-ins or integration with third-party services should be treated like the acquisition of any software. These tools are often easy to install and set up, but this does not mean their installation and usage should go ungoverned. Least privileges must be enforced to ensure only a small subset of users even have the permissions required to extend CI/CD platforms. Additionally, such extensions must be vetted before installation. Questions to consider are comparable to those that should be asked before any software acquisition:
+Treat plug-in installation or third-party service integration like any software acquisition. Easy to install doesn't mean ungoverned. Enforce least privileges so only small subset of users can extend CI/CD platforms. Vet extensions before installation. Questions, as before any software acquisition:
 
-- Is the vendor a recognized and respected developer or company?
-- Does the vendor have a strong or weak history in regards to application security?
-- How popular is the specific plug-in or integration endpoint?
-- Is the plugin or integration actively maintained?
-- Will the extension require configuration changes that could reduce security (such as exposing additional ports)?
-- Does the organization have the experience and resources to properly configure and maintain the offering?
+- Is vendor recognized and respected developer or company?
+- Does vendor have strong or weak application security history?
+- How popular is specific plug-in or integration endpoint?
+- Is plugin or integration actively maintained?
+- Will extension require configuration changes that could reduce security (such as exposing additional ports)?
+- Does organization have experience and resources to properly configure and maintain offering?
 
-After a plug-in or other integration has been approved, it must be incorporated into the organization's configuration management processes. The software must be kept up-to-date, especially with any security patches that become available. The extension must also be continually reviewed for value; if it is no longer needed, the extension should be removed.
+After approval, incorporate into configuration management processes. Keep up-to-date, esp. security patches. Continually review value; remove if no longer needed.
 
 ## Integrity Assurance
 
-CI/CD exploits often require attackers to insert themselves into the normal flow of the pipeline and modify the inputs and/or outputs of one or more steps. As such, integrity verification is an important method of reducing risk in CI/CD environments.
+CI/CD exploits often require attackers inserting themselves into pipeline flow and modifying inputs and/or outputs of steps. Integrity verification important risk reducer.
 
-As with many other defensive actions, implementation of integrity related controls begins early in the SDLC. As noted earlier, the SCM should require commits to be signed before the code can be merged. Also, as discussed in [Dependency Management](#dependency-management), the package management platform should be configured to use hashes or comparable to verify the integrity of a package. Code signing should also be employed; technologies such as [Sigstore](https://www.sigstore.dev/) or [Signserver](https://www.signserver.org/) may be used for this purpose. However, it is important to note that code signing and related technologies are not absolute guarantors of security; the code signing processes itself can be exploited. Please see [NIST's Security Considerations for Code Signing](https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.01262018.pdf) for additional guidance on securing the code signing processes. Finally, integration of the [in-toto.to](https://in-toto.io/) framework or similar can further assist in improving integrity within the CI/CD environment.
+Integrity controls begin early in SDLC. As noted, SCM should require signed commits before merge. Per [Dependency Management](#dependency-management), package management platform should use hashes or comparable to verify package integrity. Also employ code signing; technologies such as Sigstore or Signserver. Code signing and related technologies ≠ absolute guarantors; code signing processes themselves can be exploited. See NIST's Security Considerations for Code Signing for securing code signing processes. Integrating in-toto framework or similar further improves integrity in CI/CD.
 
 ## Visibility and Monitoring
 
-CI/CD environments can be complex and may often seem like a opaque-box to developers. However, visibility into these systems is critical for detecting potential attacks, better understand one's risk posture, and detecting and remediating vulnerabilities. Though their value is often underestimated, logging and log analysis are vital for providing visibility into CI/CD systems.
+CI/CD environments complex, often opaque-box to developers. Visibility critical for detecting potential attacks, understanding risk posture, detecting and remediating vulnerabilities. Logging and log analysis vital though value often underestimated.
 
-The first step in increasing CI/CD visibility is ensuring that the logging configuration within the CI/CD environment is compliant with your organization's log management policy. Beyond adherence to internal policies, configure the system to log data in a readily parsable format such as JSON or syslog. Carefully consider what content needs to be logged and at what verbosity. Although proper logging should allow for end-to-end visibility of the pipeline, more logging is not inherently better. One must not only consider the storage costs associated with logs, but also take care to avoid logging any sensitive data. For example, most authentication related events likely should be logged. However, one should never log plaintext passwords, authentication tokens, API keys, or similar secrets.
+First: logging configuration in CI/CD environment compliant w/ organization's log management policy. Also log in readily parsable format such as JSON or syslog. Carefully consider content and verbosity. Proper logging allows end-to-end pipeline visibility, but more logging not inherently better: consider storage costs, avoid logging sensitive data. E.g., most authentication-related events likely logged; never log plaintext passwords, authentication tokens, API keys, or similar secrets.
 
-Once an appropriate logging strategy has been defined and necessary configuration has been performed, one is ready to start utilizing these logs to reduce risk. Sending aggregate logs to a centralized log management system or, preferably, a SIEM is a first step for realizing the value of logs. If a SIEM is used, alerts should be carefully configured, and regularly refined, in order to provide timely alerts of anomalies and potential attacks. The exact configuration will vary significantly depending on the CI/CD environment, SIEM platform, and other factors. For an overview of CI/CD observability within the context of the ELK Stack (a popular SIEM platform) refer to this [article](https://www.elastic.co/guide/en/observability/current/ci-cd-observability.html#ci-cd-developers) or reference [this article](https://dzone.com/articles/jenkins-log-monitoring-with-elk) for an alternative approach which can be readily adapted to a variety of CI/CD environments. It is important to keep in mind that SIEM alerts will never be 100% accurate in detecting CI/CD attacks. Both false positives and false negatives will occur. Such platforms should not be relied on unquestioningly, but they do provide important visibility into CI/CD environments and can act as important alert systems when thoughtfully configured.
+After logging strategy and configuration: use logs to reduce risk. First step: send aggregate logs to centralized log management system or, preferably, SIEM. With SIEM, carefully configure and regularly refine alerts for timely anomaly and attack alerts. Configuration varies by CI/CD environment, SIEM platform, other factors. ELK Stack (popular SIEM platform) CI/CD observability overview: Elastic observability docs; alternative readily adaptable approach: DZone Jenkins log monitoring with ELK. SIEM alerts never 100% accurate detecting CI/CD attacks; false positives and false negatives occur. Don't rely unquestioningly, but they give important visibility and act as important alert systems when thoughtfully configured.
 
 ## References
 
-- [CISA, NSA, and ODNI: Securing the Software Supply Chain - Recommended Practices for Developers](https://www.cisa.gov/sites/default/files/publications/ESF_SECURING_THE_SOFTWARE_SUPPLY_CHAIN_DEVELOPERS.PDF)
-- [NIST: Security Considerations for Code Signing](https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.01262018.pdf)
+- CISA, NSA, and ODNI: Securing the Software Supply Chain - Recommended Practices for Developers
+- NIST: Security Considerations for Code Signing

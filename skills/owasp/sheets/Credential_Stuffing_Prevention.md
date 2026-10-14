@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This cheatsheet covers defenses against two common types of authentication-related attacks: credential stuffing and password spraying. Although these are separate, distinct attacks, in many cases the defenses that would be implemented to protect against them are the same, and they would also be effective at protecting against brute-force attacks.  A summary of these different attacks is listed below:
+Defenses vs two common authentication attacks: credential stuffing and password spraying. Distinct attacks, but defenses often same, also effective vs brute-force. Summary:
 
 | Attack Type | Description |
 |-------------|-------------|
@@ -12,127 +12,127 @@ This cheatsheet covers defenses against two common types of authentication-relat
 
 ## Multi-Factor Authentication
 
-[Multi-factor authentication (MFA)](Multifactor_Authentication.md) is by far the best defense against the majority of password-related attacks, including credential stuffing and password spraying, with analysis by Microsoft suggesting that it would have stopped [99.9% of account compromises](https://techcommunity.microsoft.com/t5/Azure-Active-Directory-Identity/Your-Pa-word-doesn-t-matter/ba-p/731984). As such, it should be implemented wherever possible. Historically, depending on the audience of the application, it may not have been practical or feasible to enforce the use of MFA, however with modern browsers and mobile devices now supporting FIDO2 Passkeys and other forms of MFA, it is attainable for most use cases.
+[Multi-factor authentication (MFA)](Multifactor_Authentication.md) = by far best defense vs majority of password attacks, incl. credential stuffing and password spraying; Microsoft analysis suggests would have stopped 99.9% of account compromises. Implement wherever possible. Historically, enforcing MFA sometimes impractical depending on audience, but modern browsers and mobile devices support FIDO2 Passkeys and other MFA forms → attainable for most use cases.
 
-In order to balance security and usability, multi-factor authentication can be combined with other techniques to require the 2nd factor only in specific circumstances where there is reason to suspect that the login attempt may not be legitimate, such as a login from:
+Balance security and usability: require 2nd factor only where reason to suspect illegitimate login, e.g. login from:
 
-- A new browser/device or IP address.
-- An unusual country or location.
-- Specific countries that are considered untrusted or typically do not contain users of a service.
-- An IP address that appears on known denylists or is associated with anonymization services, such as proxy or VPN services.
-- An IP address that has tried to login to multiple accounts.
-- A login attempt that appears to be scripted or from a bot rather than a human (i.e. large login volume sourced from a single IP or subnet).
+- New browser/device or IP address.
+- Unusual country or location.
+- Specific countries considered untrusted or typically w/o users of service.
+- IP address on known denylists or associated w/ anonymization services, e.g. proxy or VPN.
+- IP address that tried logging into multiple accounts.
+- Login attempt appearing scripted or bot rather than human (i.e. large login volume from single IP or subnet).
 
-Or an organization may choose to require MFA in the form of a "step-up" authentication for the above scenarios during a session combined with a request for a high risk activity such as:
+Or "step-up" authentication for above scenarios during session combined w/ high risk activity request such as:
 
 - Large currency transactions
 - Privileged or Administrative configuration changes
 
-Additionally, for enterprise applications, known trusted IP ranges could be added to an allowlist so that MFA is not required when users connect from these ranges.
+Enterprise applications: known trusted IP ranges can be allowlisted so MFA not required from these ranges.
 
 ## Alternative Defenses
 
-Where it is not possible to implement MFA, there are many alternative defenses that can be used to protect against credential stuffing and password spraying. In isolation none of these are as effective as MFA, however multiple, layered defenses can provide a reasonable degree of protection. In many cases, these mechanisms will also protect against brute-force or password spraying attacks.
+Where MFA impossible, many alternative defenses protect vs credential stuffing and password spraying. None alone as effective as MFA, but multiple layered defenses give reasonable protection. Often also protect vs brute-force or password spraying.
 
-Where an application has multiple user roles, it may be appropriate to implement different defenses for different roles. For example, it may not be feasible to enforce MFA for all users, but it should be possible to require that all administrators use it.
+Multiple user roles: may implement different defenses per role. E.g., MFA may not be feasible for all users, but should be required for all administrators.
 
 ## Defense in Depth & Metrics
 
-While not a specific technique, it is important to implement defenses that consider the impact of individual defenses being defeated or otherwise failing.  As an example, client-side defenses, such as device fingerprinting or JavaScript challenges, may be spoofed or bypassed and other layers of defense should be implemented to account for this.
+Implement defenses considering impact of individual defenses being defeated or failing. E.g., client-side defenses (device fingerprinting, JavaScript challenges) may be spoofed or bypassed; other layers must account for this.
 
-Additionally, each defense should generate volume metrics for use as a detective mechanism. Ideally the metrics will include both detected and mitigated attack volume and allow for filtering on fields such as IP address. Monitoring and reporting on these metrics may identify defense failures or the presence of unidentified attacks, as well as the impact of new or improved defenses.
+Each defense should generate volume metrics as detective mechanism. Ideally include detected and mitigated attack volume, filterable by fields such as IP address. Monitoring and reporting metrics may identify defense failures, unidentified attacks, impact of new or improved defenses.
 
-Finally, when administration of different defenses is performed by multiple teams, care should be taken to ensure there is communication and coordination when separate teams are performing maintenance, deployment or otherwise modifying individual defenses.
+When multiple teams administer different defenses, ensure communication and coordination during maintenance, deployment, or modification of individual defenses.
 
 ### Secondary Passwords, PINs and Security Questions
 
-Do not use security questions as an additional authentication challenge. [OWASP ASVS 5.0 requirement 6.4.2](https://github.com/OWASP/ASVS/blob/v5.0.0_release/5.0/en/0x15-V6-Authentication.md#v64-authentication-factor-lifecycle-and-recovery) excludes knowledge-based security questions. The [Security Questions Cheat Sheet](Choosing_and_Using_Security_Questions.md) discusses limitations in legacy systems.
+Don't use security questions as additional authentication challenge. OWASP ASVS 5.0 requirement 6.4.2 excludes knowledge-based security questions. [Security Questions Cheat Sheet](Choosing_and_Using_Security_Questions.md) covers limitations in legacy systems.
 
-If a secondary password, PIN, or memorable word is used, request and verify the entire secret rather than selected characters, as required by [NIST SP 800-63B-4](https://pages.nist.gov/800-63-4/sp800-63b.html#passwordver). Adding another knowledge factor does not constitute [MFA](Multifactor_Authentication.md); prefer an independent factor instead.
+Secondary password, PIN, or memorable word: request and verify entire secret, not selected characters, as required by NIST SP 800-63B-4. Another knowledge factor ≠ [MFA](Multifactor_Authentication.md); prefer independent factor.
 
 ### CAPTCHA
 
-Requiring a user to solve a "Completely Automated Public Turing test to tell Computers and Humans Apart" (CAPTCHA) or similar puzzle for each login attempt can help to identify automated/bot attacks and help prevent automated login attempts, and may slow down credential stuffing or password spraying attacks.  However, CAPTCHAs are not perfect, and in many cases tools or services exist that can be used to break them with a reasonably high success rate.  Monitoring CAPTCHA solve rates may help identify impact to good users, as well as automated CAPTCHA breaking technology, possibly indicated by abnormally high solve rates.
+Requiring "Completely Automated Public Turing test to tell Computers and Humans Apart" (CAPTCHA) or similar puzzle per login attempt can identify automated/bot attacks, prevent automated logins, may slow credential stuffing or password spraying. CAPTCHAs imperfect: tools or services often break them w/ reasonably high success rate. Monitor CAPTCHA solve rates: may show impact on good users, and automated CAPTCHA breaking (abnormally high solve rates).
 
-To improve usability, it may be desirable to only require the user solve a CAPTCHA when the login request is considered suspicious or high risk, using the same criteria discussed in the MFA section.
+Usability: require CAPTCHA only when login request suspicious or high risk, using same criteria as MFA section.
 
 ### IP Mitigation and Intelligence
 
-Blocking IP addresses may be sufficient to stop less sophisticated attacks, but should not be used as the sole or primary defense due to the ease in circumvention.  It is more effective to have a graduated response to abuse that leverages multiple defensive measures depending on different factors of the attack.
+Blocking IP addresses may stop less sophisticated attacks, but not sole or primary defense: easily circumvented. Better: graduated response using multiple defensive measures depending on attack factors.
 
-Any process or decision to mitigate (including blocking and CAPTCHA) credential stuffing traffic from an IP address should consider a multitude of abuse scenarios, and not rely on a single predictable volume limit.  Short (i.e. burst) and long time periods should be considered, as well as high request volume and instances where one IP address, likely in concert with _many_ other IP addresses, generates low but consistent volumes of traffic.  Additionally, mitigation decisions should consider factors such as IP address classification (ex: residential vs hosting) and geolocation.  These factors may be leveraged to raise or lower mitigation thresholds in order to reduce potential impact on legitimate users or more aggressively mitigate abuse originating from abnormal sources.  Mitigations, especially blocking an IP address, should be temporary and processes should be in place to remove an IP address from a mitigated state as abuse declines or stops.
+Any decision to mitigate (incl. blocking and CAPTCHA) credential stuffing traffic from IP address should consider multitude of abuse scenarios, not single predictable volume limit. Consider short (i.e. burst) and long time periods, high request volume, and one IP address, likely w/ _many_ other IPs, generating low but consistent traffic. Consider IP address classification (ex: residential vs hosting) and geolocation. Use these to raise or lower mitigation thresholds: reduce impact on legitimate users or mitigate abnormal sources more aggressively. Mitigations, esp. IP blocking, should be temporary; processes should remove IP from mitigated state as abuse declines or stops.
 
-Many credential stuffing toolkits, such as [Sentry MBA](https://federalnewsnetwork.com/wp-content/uploads/2020/06/Shape-Threat-Research-Automating-Cybercrime-with-SentryMBA.pdf), offer built-in use of proxy networks to distribute requests across a large volume of unique IP addresses.  This may defeat both IP block-lists and rate limiting, as per IP request volume may remain relatively low, even on high volume attacks.  Correlating authentication traffic with proxy and similar IP address intelligence, as well as hosting provider IP address ranges can help identify highly distributed credential stuffing attacks, as well as serve as a mitigation trigger.  For example, every request originating from a hosting provider could be required to solve CAPTCHA.
+Many credential stuffing toolkits, e.g. Sentry MBA, have built-in proxy networks distributing requests across large volume of unique IPs. May defeat IP block-lists and rate limiting: per-IP volume stays low even in high volume attacks. Correlating authentication traffic w/ proxy and similar IP intelligence, and hosting provider IP ranges, helps identify highly distributed attacks, serves as mitigation trigger. E.g., require CAPTCHA on every request from hosting provider.
 
-There are both public and commercial sources of IP address intelligence and classification that may be leveraged as data sources for this purpose.  Additionally, some hosting providers publish their own IP address space, such as [AWS](https://docs.aws.amazon.com/vpc/latest/userguide/aws-ip-ranges.html).
+Public and commercial IP intelligence/classification sources exist. Some hosting providers publish own IP space, such as AWS.
 
-Separate from blocking network connections, consider storing an account's IP address authentication history.  In case a recent IP address is added to a block or mitigation list, it may be appropriate to lock the account and notify the user.
+Separate from blocking: consider storing account's IP authentication history. Recent IP added to block or mitigation list → may lock account and notify user.
 
 ### Device Fingerprinting
 
-Aside from the IP address, there are a number of different factors that can be used to attempt to fingerprint a device. Some of these can be obtained passively by the server from the HTTP headers (particularly the "User-Agent" header), including:
+Beyond IP, many factors fingerprint device. Some passive from HTTP headers (esp. "User-Agent"):
 
 - Operating system & version
 - Browser & version
 - Language
 
-Using JavaScript it is possible to access far more information, such as:
+JavaScript accesses far more:
 
 - Screen resolution
 - Installed fonts
 - Installed browser plugins
 
-Using these various attributes, it is possible to create a fingerprint of the device. This fingerprint can then be matched against any browser attempting to login to the account, and if it doesn't match then the user can be prompted for additional authentication. Many users will have multiple devices or browsers that they use, so it is not practical to simply block attempts that do not match the existing fingerprints, however it is common to define a process for users or customers to view their device history and manage their remembered devices.  Also these attributes can be used to detect anomalous activity such as a device appearing to be running an older version of OS or Browser.
+Create device fingerprint; match against any browser attempting login; mismatch → prompt additional authentication. Users have multiple devices/browsers, so don't simply block non-matching attempts; common to let users/customers view device history and manage remembered devices. Attributes also detect anomalous activity, e.g. device running older OS or Browser version.
 
-The [fingerprintjs2](https://github.com/Valve/fingerprintjs2) JavaScript library can be used to carry out client-side fingerprinting.
+fingerprintjs2 JavaScript library does client-side fingerprinting.
 
-It should be noted that as all this information is provided by the client, it can potentially be spoofed by an attacker. In some cases spoofing these attributes is trivial (such as the "User-Agent") header, but in other cases it may be more difficult to modify these attributes.
+All info client-provided → attacker can spoof. Spoofing trivial for some (such as "User-Agent" header), harder for others.
 
 ### Connection Fingerprinting
 
-Similar to device fingerprinting, there are numerous fingerprinting techniques available for network connections.  Some examples include [JA3](https://github.com/salesforce/ja3), HTTP/2 fingerprinting and HTTP header order.  As these techniques typically focus on how a connection is made, connection fingerprinting may provide more accurate results than other defenses that rely on an indicator, such as an IP address, or request data, such as user agent string.
+Like device fingerprinting, numerous techniques for network connections: JA3, HTTP/2 fingerprinting, HTTP header order. Focus on how connection made → may be more accurate than defenses relying on indicator (e.g. IP address) or request data (e.g. user agent string).
 
-Connection fingerprinting may also be used in conjunction with other defenses to ascertain the truthfulness of an authentication request.  For example, if the user agent header and device fingerprint indicates a mobile device, but the connection fingerprint indicates a Python script, the request is likely suspect.
+Combine w/ other defenses to ascertain authentication request truthfulness. E.g., user agent header and device fingerprint indicate mobile device but connection fingerprint indicates Python script → likely suspect.
 
 ### Require Unpredictable Usernames
 
-Credential stuffing attacks rely on not just the re-use of passwords between multiple sites, but also the re-use of usernames. A significant number of websites use the email address as the username, and as most users will have a single email address they use for all their accounts, this makes the combination of an email address and password very effective for credential stuffing attacks.
+Credential stuffing relies on re-use of passwords and usernames across sites. Many sites use email as username; users mostly have single email for all accounts → email+password combination very effective.
 
-Requiring users to create their own username when registering on the website makes it harder for an attacker to obtain valid username and password pairs for credential stuffing, as many of the available credential lists only include email addresses. Providing the user with a generated username can provide a higher degree of protection (as users are likely to choose the same username on most websites), but is user unfriendly. Additionally, care needs to be taken to ensure that the generated username is not predictable (such as being based on the user's full name, or sequential numeric IDs), as this could make enumerating valid usernames for a password spraying attack easier.
+Requiring user-created username at registration makes obtaining valid pairs harder: many credential lists only include email addresses. Generated username gives higher protection (users likely choose same username across sites) but user unfriendly. Generated username must not be predictable (e.g. based on full name, or sequential numeric IDs): makes enumerating valid usernames for password spraying easier.
 
 ### Multi-Step Login Processes
 
-The majority of off-the-shelf tools are designed for a single step login process, where the credentials are POSTed to the server, and the response indicates whether or not the login attempt was successful. By adding additional steps to this process, such as requiring the username and password to be entered sequentially, or requiring that the user first obtains a random [CSRF Token](Cross-Site_Request_Forgery_Prevention.md) before they can login, this makes the attack slightly more difficult to perform, and doubles the number of requests that the attacker must make.
+Most off-the-shelf tools target single step login: credentials POSTed, response indicates success. Additional steps (sequential username then password entry, or first obtaining random [CSRF Token](Cross-Site_Request_Forgery_Prevention.md)) make attack slightly harder, double attacker's request count.
 
-Multi-step login processes, however, should be mindful that they do not facilitate [user enumeration](Authentication.md).  Enumerating users prior to a credential stuffing attack may result in a harder to identify, lower request volume attack.
+Multi-step login must not facilitate [user enumeration](Authentication.md). Enumerating users before credential stuffing may yield harder to identify, lower request volume attack.
 
 ### Require JavaScript and Block Headless Browsers
 
-Most tools used for these types of attacks will make direct POST requests to the server and read the responses, but will not download or execute JavaScript that was contained in them. By requiring the attacker to evaluate JavaScript in the response (for example to generate a valid token that must be submitted with the request), this forces the attacker to either use a real browser with an automation framework like Selenium or Headless Chrome, or to implement JavaScript parsing with another tool such as PhantomJS. Additionally, there are a number of techniques that can be used to identify [Headless Chrome](https://antoinevastel.com/bot%20detection/2018/01/17/detect-chrome-headless-v2.html) or [PhantomJS](https://blog.shapesecurity.com/2015/01/22/detecting-phantomjs-based-visitors/).
+Most tools POST directly and read responses, don't download or execute JavaScript. Requiring JavaScript evaluation in response (e.g. generate valid token submitted with request) forces attacker to use real browser w/ automation framework like Selenium or Headless Chrome, or implement JavaScript parsing w/ another tool such as PhantomJS. Techniques exist to identify Headless Chrome or PhantomJS.
 
-Please note that blocking visitors who have JavaScript disabled will reduce the accessibility of the website, especially to visitors who use screen readers. In certain jurisdictions this may be in breach of equalities legislation.
+Blocking visitors w/ JavaScript disabled reduces accessibility, esp. for screen reader users. In certain jurisdictions may breach equalities legislation.
 
 ### Degradation
 
-A more aggressive defense against credential stuffing is to implement measures that increase the amount of time the attack takes to complete. This may include incrementally increasing the complexity of the JavaScript that must be evaluated, requiring users to solve a cryptographic or Proof-of-Work computational puzzle, introducing long wait periods before responding to requests, returning overly large HTML assets or returning randomized error messages.
+More aggressive defense: increase time attack takes. May include incrementally increasing complexity of JavaScript to evaluate, requiring cryptographic or Proof-of-Work computational puzzle, long wait periods before responding, overly large HTML assets, randomized error messages.
 
-These techniques provide some level of security without resorting to user tracking or profiling. They typically do not require a human in the loop, but rather constrain the minimum latency and/or the maximum request rate of a particular client implementation and the attacker's budget and sophistication, and requires a context-dependent risk assessment to gauge their efficacy, resistance to countermeasures and user experience impact.
+Some security w/o user tracking or profiling. Typically no human in loop; constrain minimum latency and/or maximum request rate of client implementation and attacker's budget and sophistication. Needs context-dependent risk assessment for efficacy, resistance to countermeasures, user experience impact.
 
 ### Identifying Leaked Passwords
 
-[ASVS v4.0 Password Security Requirements](https://github.com/OWASP/ASVS/blob/master/4.0/en/0x11-V2-Authentication.md#v21-password-security-requirements) provision (2.1.7) on verifying new passwords presence in breached password datasets should be implemented.
+Implement ASVS v4.0 Password Security Requirements provision (2.1.7): verify new passwords' presence in breached password datasets.
 
-There are both commercial and free services that may be of use for validating passwords presence in prior breaches.  A well known free service for this is [Pwned Passwords](https://haveibeenpwned.com/Passwords). You can host a copy of the application yourself, or use the [API](https://haveibeenpwned.com/API/v3#PwnedPasswords).
+Commercial and free services validate passwords vs prior breaches. Well known free: Pwned Passwords. Host own copy, or use the API.
 
 ### Notify users about unusual security events
 
-When suspicious or unusual activity is detected, it may be appropriate to notify or warn the user. However, care should be taken that the user does not get overwhelmed with a large number of notifications that are not important to them, or they will just start to ignore or delete them.  Additionally, due to frequent reuse of passwords across multiple sites, the possibility that the users email account has also been compromised should be considered.
+Suspicious or unusual activity detected → may notify or warn user. Avoid overwhelming with unimportant notifications, or they ignore/delete them. Frequent password reuse across sites → consider user's email account may also be compromised.
 
-For example, it would generally not be appropriate to notify a user that there had been an attempt to login to their account with an incorrect password. However, if there had been a login with the correct password, but which had then failed the subsequent MFA check, the user should be notified so that they can change their password.  Subsequently, should the user request multiple password resets from different devices or IP addresses, it may be appropriate to prevent further access to the account pending further user verification processes.
+E.g., generally don't notify of failed login attempt with incorrect password. But login w/ correct password that then failed subsequent MFA check → notify user to change password. Then if user requests multiple password resets from different devices or IPs, may prevent further access pending further user verification.
 
-Details related to current or recent logins should also be made visible to the user. For example, when they login to the application, the date, time and location of their previous login attempt could be displayed to them. Additionally, if the application supports concurrent sessions, the user should be able to view a list of all active sessions, and to terminate any other sessions that are not legitimate.
+Show user details of current or recent logins. E.g., at login display date, time, location of previous login attempt. If app supports concurrent sessions, user should view list of all active sessions and terminate illegitimate ones.
 
 ## References
 
-- [OWASP: Credential Stuffing](https://community.owasp.org/attacks/Credential_stuffing)
-- [NIST SP 800-63B-4: Password Verifiers](https://pages.nist.gov/800-63-4/sp800-63b.html#passwordver)
+- OWASP: Credential Stuffing
+- NIST SP 800-63B-4: Password Verifiers

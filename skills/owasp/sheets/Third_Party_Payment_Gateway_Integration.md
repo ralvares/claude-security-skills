@@ -2,30 +2,28 @@
 
 ## Introduction
 
-Integrating third-party payment gateways allows businesses to securely outsource payment processing. These gateways handle sensitive data like cardholder information and offer reduced PCI DSS scope if integrated correctly.
+Third-party gateways outsource payment processing, handle cardholder data, reduce PCI DSS scope if integrated correctly.
 
-However, insecure integration can lead to severe vulnerabilities—ranging from payment spoofing and order manipulation to fraud and business logic flaws. This cheat sheet outlines secure practices for integrating any third-party payment gateway, focusing on a general flow. It identifies potential failure points at each step and provides practical recommendations to prevent common mistakes.
+Insecure integration → payment spoofing, order manipulation, fraud, business logic flaws. Sheet covers general flow, failure points per step, mitigations.
 
 ## Understanding the Payment Flow
 
-A typical third-party payment flow consists of five core steps:
+Typical flow, five steps:
 
 1. **Cart Preparation**  
-   The user selects items and initiates checkout.
+   User selects items, starts checkout.
 
 2. **Order Initialization (Merchant Backend → Payment Gateway)**  
-   The merchant backend creates a transaction or order via API and receives an `order_id` or `payment_url`.
+   Backend creates transaction/order via API, receives `order_id` or `payment_url`.
 
 3. **User Redirection to Payment Gateway**  
-   The user is redirected to the gateway-hosted payment page.
+   User redirected to gateway-hosted payment page.
 
 4. **Payment Execution (User → Gateway)**  
-   The user completes or fails the payment.
+   User completes or fails payment.
 
 5. **Return and Verification (Payment Gateway → Merchant)**  
-   The user is redirected to the merchant site (callback/return URL), and optionally, the gateway sends a server-to-server notification. The merchant verifies the result and proceeds with order fulfillment.
-
-The following sequence diagram explains the steps above.
+   User redirected to merchant (callback/return URL); gateway optionally sends server-to-server notification. Merchant verifies result, then fulfills order.
 
 ![Payment integration sequence flow](../assets/third_party_integration_workflow.png)
 
@@ -37,13 +35,13 @@ The following sequence diagram explains the steps above.
 
 **Risks:**
 
-- Price tampering or product substitution via client-side manipulation.
+- Price tampering/product substitution via client-side manipulation.
 - Missing server-side cart validation.
 
 **Mitigations:**
 
-- Validate all cart details (product IDs, prices, discounts) on the backend.
-- Recalculate totals server-side using trusted data before order creation.
+- Validate all cart details (product IDs, prices, discounts) on backend.
+- Recalculate totals server-side from trusted data before order creation.
 
 ---
 
@@ -51,43 +49,43 @@ The following sequence diagram explains the steps above.
 
 **Risks:**
 
-- Trusting unauthenticated or spoofed callbacks.
+- Trusting unauthenticated/spoofed callbacks.
 - Processing orders before verifying payment status.
 - Race conditions from multiple callbacks.
-- Replaying callbacks to trigger repeated fulfillment (e.g., multiple shipments, account credits).
-- Assuming user redirection parameters are trustworthy (these are untrusted and can be manipulated).
+- Callback replay → repeated fulfillment (e.g., multiple shipments, account credits).
+- Trusting user redirection parameters (untrusted, manipulable).
 
 **Mitigations:**
 
-- Validate all cart details (product IDs, prices, discounts) on the backend.
-- Always verify the payment status server-side with the gateway’s API before fulfilling the order.
-- Match the expected amount, currency, and order ID.
-- Validate the authenticity of callbacks (e.g., HMAC signatures, secret tokens).
-- Implement idempotency: only process an order once regardless of how many times the callback is received.
-- Treat checkout expiry separately from webhook signature freshness. Gateways can [retry delivery](https://docs.stripe.com/webhooks#automatic-retries) or [send events out of order](https://docs.stripe.com/webhooks#event-ordering); verify late notifications and reconcile the current payment state instead of discarding them solely because the checkout expired. Use persistent duplicate-event records and idempotent fulfillment as described in the [Webhook Security Cheat Sheet](Webhook_Security.md#idempotency-and-duplicate-events).
-- Only server-to-server callbacks should be trusted for payment verification and order fulfillment.
-- Log all callback attempts for forensic analysis.
+- Validate all cart details (product IDs, prices, discounts) on backend.
+- Always verify payment status server-side via gateway API before fulfilling.
+- Match expected amount, currency, order ID.
+- Validate callback authenticity (e.g., HMAC signatures, secret tokens).
+- Idempotency: process order once regardless of callback count.
+- Treat checkout expiry separately from webhook signature freshness. Gateways can retry delivery or send events out of order; verify late notifications, reconcile current payment state, don't discard solely because checkout expired. Use persistent duplicate-event records + idempotent fulfillment per [Webhook Security Cheat Sheet](Webhook_Security.md#idempotency-and-duplicate-events).
+- Trust only server-to-server callbacks for payment verification and fulfillment.
+- Log all callback attempts for forensics.
 
 ## Logging and Monitoring
 
 **Why it matters:**
-Even with proper validation and logic, monitoring is crucial for detecting abuse, fraud attempts, or system misbehavior.
+Monitoring detects abuse, fraud attempts, misbehavior even when validation/logic are correct.
 
 **Recommendations:**
 
-- Log all payment attempts (initiation, redirects, callbacks) with timestamps and IPs.
+- Log all payment attempts (initiation, redirects, callbacks) w/ timestamps, IPs.
 - Alert on:
-    - Unexpected order statuses (e.g., "Paid" without any gateway confirmation).
-    - Excessive callback attempts for the same order.
-    - Payment failures followed by repeated attempts with identical data.
-- Log callback identifiers, validation outcomes, and order correlation data instead of raw headers and bodies. Exclude credentials and unnecessary personal or payment data; apply the [Logging Cheat Sheet's data-exclusion guidance](Logging.md#data-to-exclude).
-- Do not retain sensitive authentication data, such as card verification codes or PIN data, after authorization, [even if encrypted](https://www.pcisecuritystandards.org/faqs/1154/). Restrict access to permitted investigation records and define their retention period.
-- Incorporate fraud and risk scoring mechanisms to detect carding attacks and other suspicious activities during payment execution.
+    - Unexpected order statuses (e.g., "Paid" w/o gateway confirmation).
+    - Excessive callback attempts for same order.
+    - Payment failures followed by repeated attempts w/ identical data.
+- Log callback identifiers, validation outcomes, order correlation data, not raw headers/bodies. Exclude credentials, unnecessary personal/payment data; apply [Logging Cheat Sheet's data-exclusion guidance](Logging.md#data-to-exclude).
+- Don't retain sensitive authentication data (card verification codes, PIN data) after authorization, even if encrypted (PCI). Restrict access to permitted investigation records; define retention period.
+- Add fraud/risk scoring to detect carding attacks, other suspicious activity during payment execution.
 
 ---
 
 ## References
 
-- [OWASP WSTG: Payment Functionality](https://wstg.owasp.org/latest/4-Web_Application_Security_Testing/10-Business_Logic/10-Payment_Functionality/)
-- [Adyen: API idempotency](https://docs.adyen.com/development-resources/api-idempotency)
-- [Adyen: Verify HMAC signatures](https://docs.adyen.com/development-resources/webhooks/secure-webhooks/verify-hmac-signatures)
+- OWASP WSTG: Payment Functionality
+- Adyen: API idempotency
+- Adyen: Verify HMAC signatures

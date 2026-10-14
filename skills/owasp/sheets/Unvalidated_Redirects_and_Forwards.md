@@ -2,13 +2,13 @@
 
 ## Introduction
 
-Unvalidated redirects and forwards are possible when a web application accepts untrusted input that could cause the web application to redirect the request to a URL contained within untrusted input. By modifying untrusted URL input to a malicious site, an attacker may successfully launch a phishing scam and steal user credentials.
+Unvalidated redirects/forwards: app accepts untrusted input that redirects request to URL contained in that input. Attacker swaps URL for malicious site → phishing, credential theft.
 
-Because the server name in the modified link is identical to the original site, phishing attempts may have a more trustworthy appearance. Unvalidated redirect and forward attacks can also be used to maliciously craft a URL that would pass the application's access control check and then forward the attacker to privileged functions that they would normally not be able to access.
+Server name in modified link identical to original → phishing looks trustworthy. Also usable to craft URL that passes access control check, then forwards attacker to privileged functions normally inaccessible.
 
 ## Safe URL Redirects
 
-When we want to redirect a user automatically to another page (without an action of the visitor such as clicking on a hyperlink) you might implement a code such as the following:
+Automatic redirect (no visitor action like clicking link), typical code:
 
 Java
 
@@ -20,8 +20,8 @@ PHP
 
 ```php
 <?php
-/* Redirect browser */
-header("Location: http://www.mysite.com");
+/* Redirect browser */
+header("Location: http://www.mysite.com");
 /* Exit to prevent the rest of the code from executing */
 exit;
 ?>
@@ -36,7 +36,7 @@ Response.Redirect("~/folder/Login.aspx")
 Rails
 
 ```ruby
-redirect_to login_path
+redirect_to login_path
 ```
 
 Rust actix web
@@ -47,38 +47,38 @@ Rust actix web
         .finish())
 ```
 
-In the examples above, the URL is being explicitly declared in the code and cannot be manipulated by an attacker.
+Above: URL declared explicitly in code, attacker can't manipulate.
 
 ## Dangerous URL Redirects
 
-The following examples demonstrate unsafe redirect and forward code.
+Unsafe redirect/forward code follows.
 
 ### Dangerous URL Redirect Example 1
 
-The following Java code receives the URL from the parameter named `url` ([GET or POST](https://docs.oracle.com/javaee/7/api/javax/servlet/ServletRequest.html#getParameter-java.lang.String-)) and redirects to that URL:
+Java takes URL from parameter `url` (GET or POST), redirects to it:
 
 ```java
 response.sendRedirect(request.getParameter("url"));
 ```
 
-The following PHP code obtains a URL from the query string (via the parameter named `url`) and then redirects the user to that URL. Additionally, the PHP code after this `header()` function will continue to execute, so if the user configures their browser to ignore the redirect, they may be able to access the rest of the page.
+PHP takes URL from query string (parameter `url`), redirects. Code after this `header()` call keeps executing → user who configures browser to ignore redirect may access rest of page.
 
 ```php
-$redirect_url = $_GET['url'];
-header("Location: " . $redirect_url);
+$redirect_url = $_GET['url'];
+header("Location: " . $redirect_url);
 ```
 
-A similar example of C\# .NET Vulnerable Code:
+Similar C\# .NET vulnerable code:
 
 ```csharp
-string url = request.QueryString["url"];
+string url = request.QueryString["url"];
 Response.Redirect(url);
 ```
 
-And in Rails:
+Rails:
 
 ```ruby
-redirect_to params[:url]
+redirect_to params[:url]
 ```
 
 Rust actix web
@@ -89,23 +89,23 @@ Rust actix web
         .finish())
 ```
 
-The above code is vulnerable to an attack if no validation or extra method controls are applied to verify the certainty of the URL. This vulnerability could be used as part of a phishing scam by redirecting users to a malicious site.
+Code vulnerable if no validation/extra method controls verify URL. Usable in phishing by redirecting users to malicious site.
 
-If no validation is applied, a malicious user could create a hyperlink to redirect your users to an unvalidated malicious website, for example:
+W/o validation, attacker creates hyperlink redirecting users to unvalidated malicious site, e.g.:
 
 ```text
  http://example.com/example.php?url=http://malicious.example.com
 ```
 
-The user sees the link directing to the original trusted site (`example.com`) and does not realize the redirection that could take place
+User sees link to original trusted site (`example.com`), unaware of redirection.
 
 ### Dangerous URL Redirect Example 2
 
-[ASP .NET MVC 1 & 2 websites](https://docs.microsoft.com/en-us/aspnet/mvc/overview/security/preventing-open-redirection-attacks) are particularly vulnerable to open redirection attacks. In order to avoid this vulnerability, you need to apply MVC 3.
+ASP .NET MVC 1 & 2 sites esp. vulnerable to open redirection. Fix: apply MVC 3.
 
-The code for the LogOn action in an ASP.NET MVC 2 application is shown below. After a successful login, the controller returns a redirect to the returnUrl. You can see that no validation is being performed against the returnUrl parameter.
+LogOn action in ASP.NET MVC 2 app: after successful login, controller redirects to returnUrl; no validation on returnUrl.
 
-ASP.NET MVC 2 LogOn action in `AccountController.cs` (see Microsoft Docs link provided above for the context):
+ASP.NET MVC 2 LogOn action in `AccountController.cs` (see Microsoft Docs for context):
 
 ```csharp
 [HttpPost]
@@ -138,9 +138,9 @@ ASP.NET MVC 2 LogOn action in `AccountController.cs` (see Microsoft Docs link pr
 
 ### Dangerous Forward Example
 
-When applications allow user input to forward requests between different parts of the site, the application must check that the user is authorized to access the URL, perform the functions it provides, and it is an appropriate URL request.
+When user input forwards requests between site parts, app must check user is authorized for URL, for functions it provides, and that it is an appropriate URL request.
 
-If the application fails to perform these checks, an attacker crafted URL may pass the application's access control check and then forward the attacker to an administrative function that is not normally permitted.
+W/o checks, crafted URL may pass access control check, then forward attacker to admin function normally not permitted.
 
 Example:
 
@@ -148,7 +148,7 @@ Example:
 http://www.example.com/function.jsp?fwd=admin.jsp
 ```
 
-The following code is a Java servlet that will receive a `GET` request with a URL parameter named `fwd` in the request to forward to the address specified in the URL parameter. The servlet will retrieve the URL parameter value [from the request](https://docs.oracle.com/javaee/7/api/javax/servlet/ServletRequest.html#getParameter-java.lang.String-) and complete the server-side forward processing before responding to the browser.
+Java servlet receives `GET` w/ URL parameter `fwd`, forwards to that address. Retrieves parameter value from request, completes server-side forward before responding to browser.
 
 ```java
 public class ForwardServlet extends HttpServlet
@@ -174,23 +174,21 @@ public class ForwardServlet extends HttpServlet
 
 ## Preventing Unvalidated Redirects and Forwards
 
-Safe use of redirects and forwards can be done in a number of ways:
-
-- Simply avoid using redirects and forwards.
-- If used, do not allow the URL as user input for the destination.
-- Where possible, have the user provide short name, ID or token which is mapped server-side to a full target URL.
-    - This provides the highest degree of protection against the attack tampering with the URL.
-    - Be careful that this doesn't introduce an enumeration vulnerability where a user could cycle through IDs to find all possible redirect targets
-- If user input can’t be avoided, ensure that the supplied **value** is valid, appropriate for the application, and is **authorized** for the user.
-- For local return URLs, use a framework helper that rejects non-local destinations, such as [ASP.NET Core LocalRedirect or IsLocalUrl](https://learn.microsoft.com/en-us/aspnet/core/security/preventing-open-redirects?view=aspnetcore-10.0).
-- If external destinations are required, allow-list explicitly approved destinations using the parsed URL components, as described below.
-- Force all redirects to first go through a page notifying users that they are going off of your site, with the destination clearly displayed, and have them click a link to confirm.
+- Avoid redirects/forwards.
+- If used, don't allow URL as user input for destination.
+- Where possible, user supplies short name, ID or token mapped server-side to full target URL.
+    - Highest protection against URL tampering.
+    - Beware enumeration vulnerability: user cycling IDs to find all redirect targets.
+- If user input unavoidable, ensure supplied **value** is valid, appropriate for app, **authorized** for user.
+- Local return URLs: use framework helper rejecting non-local destinations, e.g., ASP.NET Core LocalRedirect or IsLocalUrl.
+- External destinations required: allow-list explicitly approved destinations using parsed URL components, see below.
+- Force all redirects through interstitial page notifying users they leave your site, destination clearly displayed, user clicks link to confirm.
 
 ### Validating URLs
 
-Use a maintained URL parser compatible with the redirect API and browser URL interpretation. Compare the parsed scheme, canonical host, and effective port against an explicit allowlist; constrain the path when only specific endpoints are permitted. Reject userinfo and ambiguous input, and redirect using the validated URL rather than transforming it afterward. Do not use raw prefix or suffix matching: [GitLab demonstrates how userinfo and misleading hostnames bypass such checks](https://docs.gitlab.com/development/secure_coding_guidelines/ruby/#feature-specific-mitigations). A server-side mapping from an approved destination ID remains preferable to accepting arbitrary URLs.
+Use maintained URL parser compatible with redirect API and browser URL interpretation. Compare parsed scheme, canonical host, effective port against explicit allowlist; constrain path when only specific endpoints permitted. Reject userinfo and ambiguous input; redirect using validated URL, don't transform afterward. No raw prefix/suffix matching: userinfo and misleading hostnames bypass such checks (GitLab demonstrates). Server-side mapping from approved destination ID remains preferable to accepting arbitrary URLs.
 
 ## References
 
-- [CWE Entry 601 on Open Redirects](https://cwe.mitre.org/data/definitions/601.html)
-- [Microsoft: Prevent Open Redirect Attacks in ASP.NET Core](https://learn.microsoft.com/en-us/aspnet/core/security/preventing-open-redirects?view=aspnetcore-10.0)
+- CWE Entry 601 on Open Redirects
+- Microsoft: Prevent Open Redirect Attacks in ASP.NET Core

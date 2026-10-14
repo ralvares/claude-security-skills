@@ -2,11 +2,9 @@
 
 ## Introduction
 
-This article is focused on providing clear, simple, actionable guidance for providing Java Bean Validation security functionality in your applications.
+Actionable guidance for Java Bean Validation security functionality.
 
-Bean validation (aka [Jakarta Validation](https://beanvalidation.org/)) is one of the most common ways to perform [input validation](https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html) in Java. It is an application layer agnostic validation spec which provides the developer with the means to define a set of validation constraints on a domain model and then perform validation of those constraints through out the various application tiers.
-
-One advantage of this approach is that the validation constraints and the corresponding validators are only written once, thus reducing duplication of effort and ensuring uniformity:
+Bean validation (aka Jakarta Validation) = common way to do [input validation](Input_Validation.md) in Java. App-layer-agnostic spec: define validation constraints on domain model once, validate across app tiers. Constraints + validators written once → less duplication, uniform behavior.
 
 ### Typical Validation
 
@@ -18,9 +16,9 @@ One advantage of this approach is that the validation constraints and the corres
 
 ## Setup
 
-The illustrative examples below use the legacy `javax.validation` API, including its [built-in constraint package](https://docs.hibernate.org/beanvalidation/spec/1.1/api/javax/validation/constraints/package-summary.html), with Hibernate Validator. [Jakarta Validation 3.0](https://jakarta.ee/specifications/bean-validation/3.0/jakarta-bean-validation-spec-3.0.html) uses `jakarta.validation`; use API and provider versions compatible with your application.
+Examples use legacy `javax.validation` API (built-in constraint package) w/ Hibernate Validator. Jakarta Validation 3.0 uses `jakarta.validation`; use API and provider versions compatible w/ app.
 
-Add Hibernate Validator to your **pom.xml**:
+Add Hibernate Validator to **pom.xml**:
 
 ```xml
 <dependency>
@@ -30,7 +28,7 @@ Add Hibernate Validator to your **pom.xml**:
 </dependency>
 ```
 
-Enable bean validation support in Spring's **context.xml**:
+Enable bean validation in Spring **context.xml**:
 
 ```xml
 <beans:beans ...
@@ -40,27 +38,27 @@ Enable bean validation support in Spring's **context.xml**:
 </beans:beans>
 ```
 
-For more info, please see the [setup guide](https://hibernate.org/validator/documentation/getting-started/)
+See Hibernate Validator setup guide.
 
 ## Basics
 
-In order to get started using Bean Validation, you must add validation constraints (`@Pattern`, `@Digits`, `@Min`, `@Max`, `@Size`, `@Past`, `@Future`, `@CreditCardNumber`, `@Email`, `@URL`, etc.) to your model and then utilize the `@Valid` annotation when passing your model around in various application layers.
+Add validation constraints (`@Pattern`, `@Digits`, `@Min`, `@Max`, `@Size`, `@Past`, `@Future`, `@CreditCardNumber`, `@Email`, `@URL`, etc.) to model, use `@Valid` when passing model between app layers.
 
-Constraints can be applied in several places:
+Constraints apply to:
 
 - Fields
 - Properties
 - Classes
 
-For Bean Validation 1.1 also on:
+Bean Validation 1.1 also:
 
 - Parameters
 - Return values
 - Constructors
 
-For the sake of simplicity all the examples below feature field constraints and all validation is triggered by the controller. Refer to the Bean Validation documentation for a full list of examples.
+Examples use field constraints, validation triggered by controller. See Bean Validation docs for full list.
 
-When it comes to error handling, the Hibernate Validator returns a `BindingResult` object which contains a `List<ObjectError>`. The examples below feature simplistic error handling, while a production ready application would have a more elaborate design that takes care of logging and error page redirection.
+Hibernate Validator returns `BindingResult` containing `List<ObjectError>`. Examples use simplistic error handling; production app needs fuller design: logging, error page redirection.
 
 ## Predefined Constraints
 
@@ -76,11 +74,11 @@ When it comes to error handling, the Hibernate Validator returns a `BindingResul
 
 **Use**:
 
-Checks if the annotated string matches the regular expression regex considering the given flag match. Please visit [OWASP Validation Regex Repository](https://owasp.org/www-community/OWASP_Validation_Regex_Repository) for other useful regex's.
+Checks annotated string matches regex given flag match. See OWASP Validation Regex Repository for useful regexes.
 
 **Reference**:
 
-[Documentation](https://docs.jboss.org/hibernate/validator/5.2/reference/en-US/html/ch02.html#section-builtin-constraints)
+Documentation
 
 **Model**:
 
@@ -140,15 +138,15 @@ public class ArticleController  {
 
 **Data Type**:
 
-`BigDecimal`, `BigInteger`, `CharSequence`, `byte`, `short`, `int`, `long` and the respective wrappers of the primitive types; Additionally supported by HV: any sub-type of Number
+`BigDecimal`, `BigInteger`, `CharSequence`, `byte`, `short`, `int`, `long` + wrappers of primitive types; HV also: any sub-type of Number
 
 **Use**:
 
-Checks whether the annotated value is a number having up to integer digits and fraction fractional digits
+Checks value is number w/ up to integer digits and fraction fractional digits
 
 **Reference**:
 
-[Documentation](https://docs.jboss.org/hibernate/validator/5.2/reference/en-US/html/ch02.html#section-builtin-constraints)
+Documentation
 
 **Model**:
 
@@ -215,11 +213,11 @@ public class CustomerController  {
 
 **Use**:
 
-Checks if the annotated element's size is between min and max (inclusive)
+Checks element size between min and max (inclusive)
 
 **Reference**:
 
-[Documentation](https://docs.jboss.org/hibernate/validator/5.2/reference/en-US/html/ch02.html#section-builtin-constraints)
+Documentation
 
 **Model**:
 
@@ -287,11 +285,11 @@ HttpServletResponse response){
 
 **Use**:
 
-Checks whether the annotated date is in the past / future. Use a supported date type, such as `java.util.Date`; [`@Future` does not validate date strings](https://docs.hibernate.org/beanvalidation/spec/1.1/api/javax/validation/constraints/Future.html).
+Checks date in past / future. Use supported date type e.g. `java.util.Date`; `@Future` does not validate date strings.
 
 **Reference**:
 
-[Documentation](https://docs.jboss.org/hibernate/validator/5.2/reference/en-US/html/ch02.html#section-builtin-constraints)
+Documentation
 
 **Model**:
 
@@ -363,7 +361,7 @@ public class DoctorVisitController {
 
 ### Combining Constraints
 
-Validation annotations can be combined in any suitable way. For instance, to specify a valid reviewRating value between 1 and 5, specify the validation like this :
+Annotations combine freely. E.g. valid reviewRating between 1 and 5:
 
 **Annotation**:
 
@@ -371,15 +369,15 @@ Validation annotations can be combined in any suitable way. For instance, to spe
 
 **Data Type**:
 
-`BigDecimal`, `BigInteger`, `byte`, `short`, `int`, `long` and the respective wrappers of the primitive types; Additionally supported by HV: any sub-type of `CharSequence` (the numeric value represented by the character sequence is evaluated), any sub-type of Number
+`BigDecimal`, `BigInteger`, `byte`, `short`, `int`, `long` + wrappers of primitive types; HV also: any sub-type of `CharSequence` (numeric value of char sequence evaluated), any sub-type of Number
 
 **Use**:
 
-Checks whether the annotated value is higher/lower than or equal to the specified minimum
+Checks value ≥/≤ specified minimum/maximum
 
 **Reference:**
 
-[Documentation](https://docs.jboss.org/hibernate/validator/9.0/reference/en-US/html_single/#section-builtin-constraints)
+Documentation
 
 **Model**:
 
@@ -438,11 +436,11 @@ public class ReviewController {
 
 ### Cascading Constraints
 
-Validating one bean is a good start, but often, beans are nested or in a complete graph of beans. To validate that graph in one go, apply cascading validation with [@Valid](https://docs.jboss.org/hibernate/validator/9.0/reference/en-US/html_single/#_cascaded_validation)
+Beans often nested or in graph. Validate whole graph w/ cascading validation: `@Valid`.
 
 ### Additional Constraints
 
-In addition to providing the complete set of JSR303 constraints, Hibernate Validator also defines some additional constraints for convenience:
+Hibernate Validator adds convenience constraints beyond JSR303:
 
 - `@CreditCardNumber`
 - `@EAN`
@@ -452,28 +450,26 @@ In addition to providing the complete set of JSR303 constraints, Hibernate Valid
 - `@ScriptAssert`
 - `@URL`
 
-Take a look at this [list](https://docs.jboss.org/hibernate/validator/9.0/reference/en-US/html_single/#validator-defineconstraints-hv-constraints) for the complete list.
+See HV docs for complete list.
 
-Note that `@SafeHtml`, a previously valid constraint, has been deprecated according to the [Hibernate Validator 6.1.0.Final and 6.0.18.Final release blogpost](https://in.relation.to/2019/11/20/hibernate-validator-610-6018-released/). Please refrain from using the `@SafeHtml` constraint.
+`@SafeHtml` deprecated (Hibernate Validator 6.1.0.Final and 6.0.18.Final release). Do not use.
 
 ## Custom Constraints
 
-One of the most powerful features of bean validation is the ability to define your own constraints that go beyond the simple validation offered by built-in constraints.
-
-Creating custom constraints is beyond the scope of this guide. Please see this [documentation](https://docs.jboss.org/hibernate/validator/).
+Define own constraints beyond built-ins; powerful. Out of scope here; see Hibernate Validator docs.
 
 ## Error Messages
 
-It is possible to specify a message ID with the validation annotation, so that error messages are customized :
+Specify message ID in annotation to customize error messages:
 
 ```java
 @Pattern(regexp = "[a-zA-Z0-9 ]+", message="article.title.error")
 private String articleTitle;
 ```
 
-Spring MVC will then look up a message with ID *article.title.error* in a defined MessageSource. More on this [documentation](https://www.silverbaytech.com/2013/04/16/custom-messages-in-spring-validation/).
+Spring MVC looks up message ID *article.title.error* in defined MessageSource.
 
 ## References
 
-- [Jakarta Bean Validation 3.0 Specification](https://jakarta.ee/specifications/bean-validation/3.0/jakarta-bean-validation-spec-3.0.html)
-- [Hibernate Validator 9.0: Interpolating Constraint Error Messages](https://docs.hibernate.org/validator/9.0/reference/en-US/html_single/#chapter-message-interpolation)
+- Jakarta Bean Validation 3.0 Specification
+- Hibernate Validator 9.0: Interpolating Constraint Error Messages

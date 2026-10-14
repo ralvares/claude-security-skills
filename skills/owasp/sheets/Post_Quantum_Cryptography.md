@@ -2,78 +2,78 @@
 
 ## Introduction
 
-Post-quantum cryptography (PQC) uses algorithms designed to resist attacks from both classical and quantum computers. A sufficiently powerful quantum computer could break [RSA, Diffie-Hellman, and elliptic curve cryptography](https://www.rfc-editor.org/rfc/rfc9794.html#section-1), affecting public-key encryption, key exchange, and digital signatures. This cheat sheet turns [PQC migration planning](https://www.ncsc.gov.uk/guidance/pqc-migration-timelines) into stages for application developers: inventory dependencies, prioritize work, adopt supported implementations, test, and roll out. Start the preparation stages even when a dependency cannot yet migrate.
+Post-quantum cryptography (PQC): algorithms resisting classical and quantum attacks. Sufficiently powerful quantum computer could break RSA, Diffie-Hellman, elliptic curve crypto (RFC 9794 section 1) → public-key encryption, key exchange, digital signatures affected. Sheet turns NCSC PQC migration planning into stages for app developers: inventory dependencies, prioritize, adopt supported implementations, test, roll out. Start preparation stages even if dependency cannot yet migrate.
 
 ## Stage 1: Inventory cryptographic dependencies
 
-Create a [cryptographic inventory](https://pages.nist.gov/nccoe-migration-post-quantum-cryptography/FAQ/index.html#what-is-a-cryptographic-inventory) with one entry per use of cryptography. Include dependencies managed by your platform or service provider, not just direct calls in application code.
+Create cryptographic inventory (NIST NCCoE): one entry per crypto use. Include platform/service-provider-managed dependencies, not just direct app code calls.
 
 | Record | Include |
 | --- | --- |
-| Purpose and lifetime | Transport, stored data, key protection, or signatures; how long confidentiality or trust must last. |
-| Implementation | Protocol, algorithms and parameters, library or service version, key and certificate identifiers. Store metadata, never secret key material. |
-| Dependencies | Clients, servers, proxies, signing and verification services, key management services, hardware security modules, and backups. |
-| Ownership | Responsible team or supplier, supported upgrade path, and components that cannot be updated. |
+| Purpose and lifetime | Transport, stored data, key protection, signatures; how long confidentiality/trust must last. |
+| Implementation | Protocol, algorithms + parameters, library/service version, key + certificate identifiers. Store metadata, never secret key material. |
+| Dependencies | Clients, servers, proxies, signing + verification services, key management services, HSMs, backups. |
+| Ownership | Responsible team/supplier, supported upgrade path, components that cannot be updated. |
 
-Map each transport connection separately, including connections from a gateway to the application. Trace how stored data's encryption keys are protected and recovered. Inventory signature verifiers as well as signers.
+- Map each transport connection separately, incl. gateway → application.
+- Trace how stored-data encryption keys are protected and recovered.
+- Inventory signature verifiers as well as signers.
 
-**Complete when:** each dependency has an owner and an identified migration path or a recorded blocker.
+**Complete when:** each dependency has owner + identified migration path or recorded blocker.
 
 ## Stage 2: Prioritize migration work
 
-Prioritize data that must stay confidential for years and systems that will be difficult to update later, following the [NCSC migration planning guidance](https://www.ncsc.gov.uk/guidance/pqc-migration-timelines). Assign an owner and target date to each migration item.
+Prioritize data needing confidentiality for years and systems hard to update later (NCSC migration planning guidance). Assign owner + target date per migration item.
 
-- **Long-lived confidentiality:** prioritize exposed connections and stored data whose keys depend on RSA or elliptic curve cryptography. Updating encryption later cannot protect copies an adversary has already collected.
-- **Long-lived trust:** plan early for software and firmware verification, trust anchors, and signed records that must remain trustworthy for years. Include the time needed to update every verifier.
-- **Blocked dependencies:** request a supported release and migration plan from the supplier. Record the remaining exposure, a review date, and whether replacement is necessary.
+- **Long-lived confidentiality:** prioritize exposed connections and stored data whose keys depend on RSA or elliptic curve crypto. Later encryption updates cannot protect copies adversary already collected.
+- **Long-lived trust:** plan early for software/firmware verification, trust anchors, signed records trustworthy for years. Include time to update every verifier.
+- **Blocked dependencies:** request supported release + migration plan from supplier. Record remaining exposure, review date, whether replacement necessary.
 
-Prefer AES-256 for additional quantum security margin, consistent with the [Cryptographic Storage Cheat Sheet](Cryptographic_Storage.md#algorithms). Use a secure encryption mode. AES-128 remains permitted: [NIST's PQC FAQ](https://csrc.nist.gov/Projects/post-quantum-cryptography/faqs) allows continued use of AES-128, AES-192, and AES-256. Check the public-key protection of encryption keys even when the data itself uses AES.
+Prefer AES-256 for extra quantum security margin, per [Cryptographic Storage Cheat Sheet](Cryptographic_Storage.md#algorithms). Use secure encryption mode. AES-128 remains permitted: NIST PQC FAQ allows AES-128, AES-192, AES-256. Check public-key protection of encryption keys even when data uses AES.
 
-**Complete when:** the backlog separates confidentiality and signature work, with explicit decisions for dependencies that cannot yet migrate.
+**Complete when:** backlog separates confidentiality and signature work; explicit decisions for dependencies that cannot yet migrate.
 
 ## Stage 3: Adopt supported implementations
 
-Upgrade maintained libraries and platform services to implementations of standardized algorithms. Select parameters through the supported protocol and your security requirements. Algorithm support alone does not establish protocol interoperability.
+Upgrade maintained libraries/platform services to standardized-algorithm implementations. Select parameters via supported protocol + security requirements. Algorithm support alone ≠ protocol interoperability.
 
 | Use case | Developer action |
 | --- | --- |
-| Key establishment | Use a supported integration of the Module-Lattice-Based Key-Encapsulation Mechanism, [ML-KEM (FIPS 203)](https://csrc.nist.gov/pubs/fips/203/final). It establishes a shared secret for symmetric cryptography; it does not directly encrypt application data or authenticate the peer. |
-| Transport | Pilot a supported classical + PQC hybrid exchange, such as [X25519MLKEM768](https://www.rfc-editor.org/rfc/rfc10024.html), following the [Transport Layer Security (TLS) Cheat Sheet](Transport_Layer_Security.md#set-the-appropriate-diffie-hellman-groups). Keep certificate and hostname validation enabled. |
-| Signatures | Plan a separate migration using a supported signature format and verifier, such as an integration of the Module-Lattice-Based Digital Signature Algorithm, [ML-DSA (FIPS 204)](https://csrc.nist.gov/pubs/fips/204/final). Coordinate signer and verifier upgrades; follow the [JSON Web Token (JWT) guidance](JSON_Web_Token.md#public-key-signatures) for tokens. |
-| Stored data | Use your provider's supported migration process for public-key protection of data keys, including existing wrapped keys. Follow the [key rotation and existing-data guidance](Key_Management.md#cryptoperiods-and-rotation) and retain recovery access during migration. |
+| Key establishment | Use supported integration of Module-Lattice-Based Key-Encapsulation Mechanism, [ML-KEM (FIPS 203)](https://csrc.nist.gov/pubs/fips/203/final). Establishes shared secret for symmetric crypto; does not directly encrypt app data or authenticate peer. |
+| Transport | Pilot supported classical + PQC hybrid exchange, e.g. [X25519MLKEM768](https://www.rfc-editor.org/rfc/rfc10024.html), per [Transport Layer Security (TLS) Cheat Sheet](Transport_Layer_Security.md#set-the-appropriate-diffie-hellman-groups). Keep certificate + hostname validation enabled. |
+| Signatures | Plan separate migration w/ supported signature format + verifier, e.g. Module-Lattice-Based Digital Signature Algorithm, [ML-DSA (FIPS 204)](https://csrc.nist.gov/pubs/fips/204/final). Coordinate signer + verifier upgrades; follow [JSON Web Token (JWT) guidance](JSON_Web_Token.md#public-key-signatures) for tokens. |
+| Stored data | Use provider's supported migration process for public-key protection of data keys, incl. existing wrapped keys. Follow [key rotation and existing-data guidance](Key_Management.md#cryptoperiods-and-rotation); retain recovery access during migration. |
 
-A hybrid construction combines classical and post-quantum algorithms. Use the protocol's implementation rather than constructing your own combination. [RFC 9794, Section 5](https://www.rfc-editor.org/rfc/rfc9794.html#section-5) distinguishes hybrid confidentiality from authentication: a hybrid TLS key exchange does not make classical certificate signatures quantum-resistant.
+- Hybrid construction = classical + post-quantum algorithms combined. Use protocol's implementation; never build own combination. RFC 9794 section 5 distinguishes hybrid confidentiality from authentication: hybrid TLS key exchange does not make classical certificate signatures quantum-resistant.
+- Supported dual-signature scheme requiring both signatures: enforce both verifications. Accepting either permits classical-only acceptance; NIST: dual-signature verification requires all component signatures succeed. Never append custom signature field to existing token/certificate format.
+- Signed records needing long-term proof: validate them and preserve evidence via supported archive timestamp and renewal process (RFC 4998 section 1.1) before protecting algorithms weaken. Retaining old verifier alone does not preserve proof.
 
-Where a supported dual-signature scheme requires both signatures, enforce both verifications. Accepting either one permits classical-only acceptance; [NIST describes dual-signature verification](https://csrc.nist.gov/Projects/post-quantum-cryptography/faqs) as requiring all component signatures to succeed. Do not append a custom signature field to an existing token or certificate format.
-
-For signed records needing long-term proof, validate them and preserve evidence through a supported [archive timestamp and renewal process](https://www.rfc-editor.org/rfc/rfc4998.html#section-1.1) before the protecting algorithms become weak. Retaining an old verifier alone does not preserve that proof.
-
-**Complete when:** a supported migration works in a test environment, and the team has documented which security properties it provides.
+**Complete when:** supported migration works in test environment; team documented which security properties it provides.
 
 ## Stage 4: Test the full application path
 
-Test with the actual algorithms and parameter sets you will deploy. [NIST's crypto agility guidance, Sections 3.2 and 6.2](https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.39-upd1.pdf) calls out larger cryptographic objects and protecting algorithm negotiation.
+Test w/ actual algorithms + parameter sets to deploy. NIST crypto agility guidance (CSWP 39-upd1, sections 3.2 and 6.2) flags larger crypto objects and protecting algorithm negotiation.
 
-- Exercise real clients, proxies, gateways, and backend connections. Verify the negotiated key exchange for new connections. For [resumed TLS sessions](https://datatracker.ietf.org/doc/html/rfc9846#section-4.3.9), check the resumption mode and how the original connection and resumption secrets were protected.
-- Measure handshake and verification costs under expected load. Check certificate, signature, message, and database field limits. Keep size limits explicit when increasing them.
-- Test rejection of invalid signatures, untrusted certificates, and disallowed algorithms. If both signatures are required, either missing or invalid signature must cause rejection.
-- Decide where classical fallback is temporarily allowed. For paths requiring PQC, verify that failures cannot silently trigger a classical-only retry.
-- Test existing data, older signed artifacts, backup restoration, and key recovery before retiring old keys or formats.
+- Exercise real clients, proxies, gateways, backend connections. Verify negotiated key exchange for new connections. For resumed TLS sessions (RFC 9846 section 4.3.9), check resumption mode and how original connection + resumption secrets were protected.
+- Measure handshake + verification costs under expected load. Check certificate, signature, message, database field limits. Keep size limits explicit when increasing.
+- Test rejection of invalid signatures, untrusted certificates, disallowed algorithms. If both signatures required, missing or invalid signature must cause rejection.
+- Decide where classical fallback temporarily allowed. Paths requiring PQC: verify failures cannot silently trigger classical-only retry.
+- Test existing data, older signed artifacts, backup restoration, key recovery before retiring old keys/formats.
 
-**Complete when:** compatibility, rejection behavior, recovery, and rollback tests pass for the intended deployment policy.
+**Complete when:** compatibility, rejection behavior, recovery, rollback tests pass for intended deployment policy.
 
 ## Stage 5: Roll out and retire temporary exceptions
 
-Deploy to a small group of services or clients, then expand using the tests and monitoring results. Keep an approved rollback plan and explicit criteria for ending classical-only support, as recommended by the [NCSC migration guidance](https://www.ncsc.gov.uk/guidance/pqc-migration-timelines).
+Deploy to small group of services/clients, expand using test + monitoring results. Keep approved rollback plan + explicit criteria for ending classical-only support (NCSC migration guidance).
 
-- Record negotiated algorithms and verification outcomes without logging secrets. Alert on unexpected classical-only use and verification failures.
-- Treat a rollback to classical-only protection as a security exception with an owner and expiry date. Where PQC is required, pause the affected operation instead of silently weakening the policy.
-- Track library security updates and applicable standards. Remove temporary fallback only after required peers and recovery workflows have migrated. Preserve required access to older data and signed records under an explicit legacy policy. Once PQC verification is required, restrict classical-only exceptions to identified legacy artifacts; do not use them to accept new artifacts.
+- Record negotiated algorithms + verification outcomes w/o logging secrets. Alert on unexpected classical-only use and verification failures.
+- Treat rollback to classical-only protection as security exception w/ owner + expiry date. Where PQC required, pause affected operation instead of silently weakening policy.
+- Track library security updates + applicable standards. Remove temporary fallback only after required peers + recovery workflows migrated. Preserve required access to older data/signed records under explicit legacy policy. Once PQC verification required, restrict classical-only exceptions to identified legacy artifacts; never use them to accept new artifacts.
 
-**Complete when:** required paths demonstrably use the intended protection, and remaining exceptions have owners and retirement dates. Keep the inventory current as dependencies change.
+**Complete when:** required paths demonstrably use intended protection; remaining exceptions have owners + retirement dates. Keep inventory current as dependencies change.
 
 ## References
 
-- [NCSC: Timelines for migration to post-quantum cryptography](https://www.ncsc.gov.uk/guidance/pqc-migration-timelines)
-- [NIST CSWP 39-upd1: Considerations for Achieving Crypto Agility](https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.39-upd1.pdf)
-- [RFC 9794: Terminology for Post-Quantum Traditional Hybrid Schemes](https://www.rfc-editor.org/rfc/rfc9794.html)
+- NCSC: Timelines for migration to post-quantum cryptography
+- NIST CSWP 39-upd1: Considerations for Achieving Crypto Agility
+- RFC 9794: Terminology for Post-Quantum Traditional Hybrid Schemes

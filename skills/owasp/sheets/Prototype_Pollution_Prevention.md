@@ -2,15 +2,15 @@
 
 ## Explanation
 
-Prototype Pollution is a critical vulnerability that can allow attackers to manipulate an application's JavaScript objects and properties, leading to serious security issues such as unauthorized access to data, privilege escalation, and even remote code execution.
+Prototype Pollution: attacker manipulates app JavaScript objects/properties → unauthorized data access, privilege escalation, RCE.
 
-For examples of why this is dangerous, see the links in the [Other resources](#other-resources) section below.
+Examples of danger: see [Other resources](#other-resources).
 
 ## Suggested protection mechanisms
 
 ### Use "new Set()" or "new Map()"
 
-Developers should use `new Set()` or `new Map()` instead of using object literals:
+Use `new Set()` or `new Map()` instead of object literals:
 
 ```javascript
 let allowedTags = new Set();
@@ -26,13 +26,13 @@ let spaces = options.get('spaces')
 
 ### If objects or object literals are required
 
-If objects have to be used then they should be created using the `Object.create(null)` API to ensure they don't inherit from the Object prototype:
+If objects needed, create w/ `Object.create(null)` → no inheritance from Object prototype:
 
 ```javascript
 let obj = Object.create(null);
 ```
 
-If object literals are required then as a last resort you could use the `__proto__` property:
+If object literals needed, last resort: `__proto__` property:
 
 ```javascript
 let obj = {__proto__:null};
@@ -40,26 +40,26 @@ let obj = {__proto__:null};
 
 ### Use object "freeze" and "seal" mechanisms
 
-Freezing built-in prototypes with [`Object.freeze()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze) prevents adding or removing their properties and makes existing data properties non-writable. Freezing is shallow: objects referenced by those properties remain mutable unless separately frozen. Test compatibility first, because libraries that modify built-in prototypes can break.
+`Object.freeze()` on built-in prototypes: blocks adding/removing properties, makes existing data properties non-writable. Shallow: referenced objects stay mutable unless frozen separately. Test compatibility first; libraries modifying built-in prototypes can break.
 
-[`Object.seal()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/seal) only prevents adding or removing properties and changing their configuration; existing writable property values can still change. Do not rely on sealing to prevent those modifications.
+`Object.seal()`: only blocks adding/removing properties and changing their configuration; existing writable values still changeable. Do not rely on sealing to prevent those modifications.
 
 ### Node.js configuration flag
 
-Node.js also offers the ability to remove the `__proto__` property completely using the `--disable-proto=delete` flag. Note this is a defense in depth measure.
+Node.js: remove `__proto__` entirely w/ `--disable-proto=delete`. Defense in depth only.
 
-Prototype pollution is still possible using `constructor.prototype` properties but removing `__proto__` helps reduce attack surface and prevent certain attacks.
+Pollution still possible via `constructor.prototype`, but removing `__proto__` reduces attack surface, blocks some attacks.
 
 ### Other resources
 
-- [What is prototype pollution? (Portswigger Web Security Academy)](https://portswigger.net/web-security/prototype-pollution)
-- [Prototype pollution (Snyk Learn)](https://learn.snyk.io/lessons/prototype-pollution/javascript/)
+- Portswigger Web Security Academy: What is prototype pollution?
+- Snyk Learn: Prototype pollution
 
 ### Credits
 
-Credit to [Gareth Hayes](https://garethheyes.co.uk/) for providing the original protection guidance [in this comment](https://github.com/OWASP/ASVS/issues/1563#issuecomment-1470027723).
+Gareth Hayes: original protection guidance (OWASP ASVS issue 1563 comment).
 
 ## References
 
-- [MDN: JavaScript prototype pollution](https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/Prototype_pollution)
-- [Node.js: Command-line API](https://nodejs.org/download/release/v26.5.1/docs/api/cli.html)
+- MDN: JavaScript prototype pollution
+- Node.js: Command-line API

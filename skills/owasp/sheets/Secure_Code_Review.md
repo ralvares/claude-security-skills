@@ -2,29 +2,29 @@
 
 ## Introduction
 
-**Secure Code Review** is the process of manually examining source code to identify security vulnerabilities that automated tools often miss. It involves analyzing application logic, data flow, and implementation details to detect security flaws that require human expertise and contextual understanding.
+**Secure Code Review**: manually examine source code for security vulnerabilities automated tools often miss. Analyze application logic, data flow, implementation details; needs human expertise + context.
 
-**Manual Code Review** complements automated security testing tools (SAST/DAST) by focusing on areas where human analysis provides the most value, including business logic validation, complex security implementations, and context-specific vulnerabilities. While automated tools can assist by highlighting potential areas of concern, the core analysis relies on human judgment and domain expertise.
+**Manual Code Review** complements automated testing (SAST/DAST), focusing where humans add most value: business logic validation, complex security implementations, context-specific vulnerabilities. Tools can highlight areas of concern; core analysis relies on human judgment + domain expertise.
 
-**Security-Focused Review** differs from functional code review by specifically targeting security concerns such as input validation, authentication mechanisms, authorization controls, cryptographic implementations, and potential attack vectors.
+**Security-Focused Review** differs from functional review: targets input validation, authentication mechanisms, authorization controls, cryptographic implementations, attack vectors.
 
 ### Review Types
 
-**Baseline Reviews** examine the entire codebase comprehensively. Use for:
+**Baseline Reviews**: examine entire codebase. Use for:
 
 - New applications or major releases
 - Legacy system onboarding
 - Compliance requirements
 - Post-incident analysis
 
-**Diff-Based Reviews** focus on code changes only. Use for:
+**Diff-Based Reviews**: code changes only. Use for:
 
 - Pull requests and commits
 - Daily development workflow
 - Feature completion
 - Continuous security validation
 
-This cheat sheet provides practical guidance for conducting effective manual security code reviews, with emphasis on both baseline and incremental review methodologies.
+Practical guidance for manual security code reviews, baseline + incremental methodologies.
 
 ## Review Methodology
 
@@ -32,10 +32,10 @@ This cheat sheet provides practical guidance for conducting effective manual sec
 
 **For All Reviews:**
 
-- Understand application architecture and business requirements
-- Gather [threat models](Threat_Modeling.md) and previous security findings
-- Identify critical assets and high-risk functions
-- Review security requirements and documentation
+- Understand architecture + business requirements
+- Gather [threat models](Threat_Modeling.md) + previous security findings
+- Identify critical assets, high-risk functions
+- Review security requirements + documentation
 
 **Additional for Baseline Reviews:**
 
@@ -46,7 +46,7 @@ This cheat sheet provides practical guidance for conducting effective manual sec
 
 **Additional for Diff-Based Reviews:**
 
-- Identify modified files and affected components
+- Identify modified files + affected components
 - Assess impact on existing security controls
 - Understand purpose of changes
 - Prioritize high-risk modifications
@@ -56,13 +56,13 @@ This cheat sheet provides practical guidance for conducting effective manual sec
 **Baseline Review Steps:**
 
 1. Architecture review for security anti-patterns
-2. Entry point analysis and input validation
-3. Authentication and authorization verification
+2. Entry point analysis + input validation
+3. Authentication + authorization verification
 4. Data flow tracing
 5. Business logic analysis
 6. Cryptographic implementation review
 7. Error handling verification
-8. Configuration and deployment review
+8. Configuration + deployment review
 
 **Diff-Based Review Steps:**
 
@@ -75,55 +75,55 @@ This cheat sheet provides practical guidance for conducting effective manual sec
 
 ## Common Vulnerability Patterns
 
-For request forgery and redirect checks, also consult the [CSRF Prevention](Cross-Site_Request_Forgery_Prevention.md), [SSRF Prevention](Server_Side_Request_Forgery_Prevention.md), and [Unvalidated Redirects and Forwards](Unvalidated_Redirects_and_Forwards.md) cheat sheets.
+Request forgery + redirect checks: also see [CSRF Prevention](Cross-Site_Request_Forgery_Prevention.md), [SSRF Prevention](Server_Side_Request_Forgery_Prevention.md), [Unvalidated Redirects and Forwards](Unvalidated_Redirects_and_Forwards.md) cheat sheets.
 
 ### Input Validation Vulnerabilities
 
-Check for missing server-side validation, improper sanitization, and weak input filtering. For more information, see [Input Validation Cheat Sheet](Input_Validation.md) and [Mass Assignment Cheat Sheet](Mass_Assignment.md).
+Check missing server-side validation, improper sanitization, weak input filtering. See [Input Validation Cheat Sheet](Input_Validation.md), [Mass Assignment Cheat Sheet](Mass_Assignment.md).
 
 ### Injection Vulnerabilities
 
 **SQL Injection:**
 
-Look for string concatenation in database queries and unsafe query construction. For more information, see [SQL Injection Prevention Cheat Sheet](SQL_Injection_Prevention.md).
+Look for string concatenation in database queries, unsafe query construction. See [SQL Injection Prevention Cheat Sheet](SQL_Injection_Prevention.md).
 
 **Cross-Site Scripting (XSS):**
 
-Review output encoding, DOM manipulation, and user input rendering. For more information, see [Cross Site Scripting Prevention Cheat Sheet](Cross_Site_Scripting_Prevention.md).
+Review output encoding, DOM manipulation, user input rendering. See [Cross Site Scripting Prevention Cheat Sheet](Cross_Site_Scripting_Prevention.md).
 
 **Path Traversal:**
 
-Check for unsafe file path construction and directory traversal vulnerabilities. For more information, see [File Upload Cheat Sheet](File_Upload.md).
+Check unsafe file path construction, directory traversal. See [File Upload Cheat Sheet](File_Upload.md).
 
 **Command Injection:**
 
-Identify direct command execution with user input and unsafe system calls. For more information, see [OS Command Injection Defense Cheat Sheet](OS_Command_Injection_Defense.md).
+Identify direct command execution w/ user input, unsafe system calls. See [OS Command Injection Defense Cheat Sheet](OS_Command_Injection_Defense.md).
 
 **NoSQL Injection:**
 
-Examine NoSQL query construction and parameter binding. For more information, see [NoSQL Security Cheat Sheet](NoSQL_Security.md).
+Examine NoSQL query construction + parameter binding. See [NoSQL Security Cheat Sheet](NoSQL_Security.md).
 
 ### Authentication & Session Management Vulnerabilities
 
-Review authentication mechanisms, session token generation, and user credential handling. For more information, refer to [Authentication Cheat Sheet](Authentication.md) and [Session Management Cheat Sheet](Session_Management.md).
+Review authentication mechanisms, session token generation, user credential handling. See [Authentication Cheat Sheet](Authentication.md), [Session Management Cheat Sheet](Session_Management.md).
 
 ### Access Control Vulnerabilities
 
-Examine authorization checks, role-based access controls, and privilege escalation prevention. For more information, see [Authorization Cheat Sheet](Authorization.md).
+Examine authorization checks, role-based access controls, privilege escalation prevention. See [Authorization Cheat Sheet](Authorization.md).
 
 ### Deserialization Vulnerabilities
 
 **Insecure Deserialization:**
 
-Check for unsafe deserialization of untrusted data and object injection vulnerabilities. For more information, see [Deserialization Cheat Sheet](Deserialization.md).
+Check unsafe deserialization of untrusted data, object injection. See [Deserialization Cheat Sheet](Deserialization.md).
 
 **XML External Entity (XXE):**
 
-Review XML parsing configurations and external entity processing. For more information, see [XML External Entity Prevention Cheat Sheet](XML_External_Entity_Prevention.md).
+Review XML parsing configurations, external entity processing. See [XML External Entity Prevention Cheat Sheet](XML_External_Entity_Prevention.md).
 
 ### Cryptographic Implementation Flaws
 
-Examine encryption algorithms, key management, and cryptographic implementations. For more information, refer to [Cryptographic Storage Cheat Sheet](Cryptographic_Storage.md).
+Examine encryption algorithms, key management, cryptographic implementations. See [Cryptographic Storage Cheat Sheet](Cryptographic_Storage.md).
 
 ## Review Techniques
 
@@ -131,46 +131,46 @@ Examine encryption algorithms, key management, and cryptographic implementations
 
 Focus on high-risk code patterns:
 
-- Input processing and validation functions
-- Database query construction and ORM usage
-- File operations and path handling
-- Authentication and session management logic
-- Authorization and access control checks
-- Cryptographic operations and key management
-- Error handling and logging mechanisms
-- Configuration loading and environment variables
+- Input processing + validation functions
+- Database query construction, ORM usage
+- File operations, path handling
+- Authentication + session management logic
+- Authorization + access control checks
+- Cryptographic operations, key management
+- Error handling + logging mechanisms
+- Configuration loading + environment variables
 
 ### Data Flow Analysis
 
-Trace data through the application:
+Trace data through application:
 
-1. **Identify Sources**: User inputs, file uploads, API calls, database reads, environment variables
-2. **Follow Processing**: Validation, transformation, business logic, caching
-3. **Check Sinks**: Database queries, file writes, output rendering, logging, external APIs
-4. **Validate Boundaries**: Input validation and output encoding at trust boundaries
-5. **Trust Zones**: Verify security controls at each trust boundary crossing
-6. **Data Classification**: Ensure sensitive data receives appropriate protection
+1. **Identify Sources**: user inputs, file uploads, API calls, database reads, environment variables
+2. **Follow Processing**: validation, transformation, business logic, caching
+3. **Check Sinks**: database queries, file writes, output rendering, logging, external APIs
+4. **Validate Boundaries**: input validation + output encoding at trust boundaries
+5. **Trust Zones**: verify security controls at each trust boundary crossing
+6. **Data Classification**: sensitive data gets appropriate protection
 
 ### Threat-Based Review
 
 Align review with common attack patterns:
 
-- **OWASP Top 10**: Focus on prevalent web application risks
+- **OWASP Top 10**: prevalent web application risks
 - **STRIDE Model**: Spoofing, Tampering, Repudiation, Information Disclosure, DoS, Elevation
-- **Attack Trees**: Map potential attack paths through the application
-- **Abuse Cases**: Consider how features could be misused by attackers
-- **Security Controls**: Verify defense-in-depth implementation
+- **Attack Trees**: map potential attack paths
+- **Abuse Cases**: how attackers could misuse features
+- **Security Controls**: verify defense-in-depth implementation
 
 ### Business Logic Review
 
-Use the [Abuse Case Cheat Sheet](Abuse_Case.md) to identify misuse scenarios.
+Use [Abuse Case Cheat Sheet](Abuse_Case.md) to identify misuse scenarios.
 
-Analyze application workflows for:
+Analyze workflows for:
 
-- State management and transition validation
-- Race conditions and concurrency issues
-- Transaction integrity and rollback mechanisms
-- Resource limits and quota enforcement
+- State management + transition validation
+- Race conditions + concurrency issues
+- Transaction integrity + rollback mechanisms
+- Resource limits + quota enforcement
 - Authorization at each workflow step
 - Workflow bypass opportunities
 
@@ -178,87 +178,87 @@ Analyze application workflows for:
 
 ### Input Validation
 
-- [ ] **Server-side validation**: All inputs validated on server regardless of client-side checks
-- [ ] **Allowlist validation**: Uses allowlists rather than blocklists for input validation
-- [ ] **Output encoding**: Context-appropriate encoding (HTML, JavaScript, CSS, URL)
-- [ ] **File upload security**: Content-based validation, size limits, safe storage
-- [ ] **SQL injection prevention**: [Parameterized queries or safely implemented stored procedures](SQL_Injection_Prevention.md#primary-defenses) used, with user-controlled data values passed as parameters instead of concatenated into SQL
-- [ ] **Length limits**: Input length restrictions enforced
-- [ ] **Character handling**: Special characters and Unicode properly processed
-- [ ] **Error messages**: No sensitive information disclosed in error responses
+- [ ] **Server-side validation**: all inputs validated on server regardless of client-side checks
+- [ ] **Allowlist validation**: allowlists, not blocklists
+- [ ] **Output encoding**: context-appropriate encoding (HTML, JavaScript, CSS, URL)
+- [ ] **File upload security**: content-based validation, size limits, safe storage
+- [ ] **SQL injection prevention**: [Parameterized queries or safely implemented stored procedures](SQL_Injection_Prevention.md#primary-defenses) used; user-controlled data values passed as parameters, not concatenated into SQL
+- [ ] **Length limits**: input length restrictions enforced
+- [ ] **Character handling**: special characters + Unicode properly processed
+- [ ] **Error messages**: no sensitive info in error responses
 
 ### Authentication & Session Management
 
-- [ ] **Password security**: Strong hashing algorithms and salt usage (for more information, see [Password Storage Cheat Sheet](Password_Storage.md))
-- [ ] **Account protection**: Lockout mechanisms with appropriate thresholds
-- [ ] **Session management**: Secure token generation (≥128 bits entropy)
-- [ ] **Session lifecycle**: Proper invalidation on logout/timeout
-- [ ] **Re-authentication**: Required for sensitive operations
-- [ ] **Multi-factor authentication**: Implementation for high-risk accounts (for more information, see [Multifactor Authentication Cheat Sheet](Multifactor_Authentication.md))
-- [ ] **Password reset**: Secure, time-limited reset mechanisms (for more information, see [Forgot Password Cheat Sheet](Forgot_Password.md))
+- [ ] **Password security**: strong hashing algorithms + salt (see [Password Storage Cheat Sheet](Password_Storage.md))
+- [ ] **Account protection**: lockout mechanisms w/ appropriate thresholds
+- [ ] **Session management**: secure token generation (≥128 bits entropy)
+- [ ] **Session lifecycle**: proper invalidation on logout/timeout
+- [ ] **Re-authentication**: required for sensitive operations
+- [ ] **Multi-factor authentication**: implemented for high-risk accounts (see [Multifactor Authentication Cheat Sheet](Multifactor_Authentication.md))
+- [ ] **Password reset**: secure, time-limited reset mechanisms (see [Forgot Password Cheat Sheet](Forgot_Password.md))
 - [ ] **Session security**: HttpOnly, Secure, SameSite cookie attributes
-- [ ] **Concurrent sessions**: Appropriate limits and monitoring
+- [ ] **Concurrent sessions**: appropriate limits + monitoring
 
 ### Authorization
 
-- [ ] **Server-side enforcement**: All access controls enforced server-side
-- [ ] **Fail-safe defaults**: Default deny access policy
-- [ ] **IDOR prevention**: Proper authorization for resource access (see [Insecure Direct Object Reference Prevention Cheat Sheet](Insecure_Direct_Object_Reference_Prevention.md))
-- [ ] **Function-level controls**: Administrative functions properly protected
-- [ ] **Role validation**: Role assignments cannot be manipulated
-- [ ] **Privilege escalation**: Horizontal and vertical escalation prevented
-- [ ] **Centralized decisions**: Access control logic centralized
-- [ ] **Post-authentication checks**: Authorization verified after authentication
+- [ ] **Server-side enforcement**: all access controls enforced server-side
+- [ ] **Fail-safe defaults**: default deny
+- [ ] **IDOR prevention**: proper authorization for resource access (see [Insecure Direct Object Reference Prevention Cheat Sheet](Insecure_Direct_Object_Reference_Prevention.md))
+- [ ] **Function-level controls**: administrative functions protected
+- [ ] **Role validation**: role assignments cannot be manipulated
+- [ ] **Privilege escalation**: horizontal + vertical escalation prevented
+- [ ] **Centralized decisions**: access control logic centralized
+- [ ] **Post-authentication checks**: authorization verified after authentication
 
 ### Cryptography
 
-- [ ] **Strong algorithms**: Modern algorithms (AES-256, RSA-2048+, ECDSA P-256+)
-- [ ] **Key management**: Proper key generation, storage, and rotation (for more information, see [Key Management Cheat Sheet](Key_Management.md))
-- [ ] **Certificate validation**: Proper validation including hostname verification
-- [ ] **Random generation**: Cryptographically secure random number generation
-- [ ] **Data protection**: Encryption at rest and in transit
-- [ ] **IV/Nonce handling**: Follow the selected mode's requirements for initialization vectors (IVs) and nonces. For example, [cipher block chaining (CBC) requires unpredictable IVs](https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38a.pdf#page=27), while [Galois/Counter Mode (GCM) requires IV uniqueness under each key](https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38d.pdf#page=26) and permits deterministic generation
-- [ ] **Library maintenance**: Up-to-date cryptographic libraries
-- [ ] **Side-channel protection**: Consideration of timing and other side-channel attacks
+- [ ] **Strong algorithms**: modern algorithms (AES-256, RSA-2048+, ECDSA P-256+)
+- [ ] **Key management**: proper key generation, storage, rotation (see [Key Management Cheat Sheet](Key_Management.md))
+- [ ] **Certificate validation**: proper validation incl. hostname verification
+- [ ] **Random generation**: cryptographically secure random number generation
+- [ ] **Data protection**: encryption at rest + in transit
+- [ ] **IV/Nonce handling**: follow selected mode's requirements for initialization vectors (IVs) + nonces. E.g., cipher block chaining (CBC) requires unpredictable IVs (NIST SP 800-38A), while Galois/Counter Mode (GCM) requires IV uniqueness under each key (NIST SP 800-38D) and permits deterministic generation
+- [ ] **Library maintenance**: up-to-date cryptographic libraries
+- [ ] **Side-channel protection**: consider timing + other side-channel attacks
 
 ### Business Logic
 
-- [ ] **Workflow integrity**: Proper state validation in multi-step processes
-- [ ] **Race condition prevention**: Synchronization in concurrent operations
-- [ ] **Transaction atomicity**: Proper rollback and consistency mechanisms
-- [ ] **Resource limits**: Rate limiting and resource quotas implemented (see [Denial of Service Cheat Sheet](Denial_of_Service.md))
-- [ ] **Business rule enforcement**: Cannot bypass rules through direct API access
+- [ ] **Workflow integrity**: proper state validation in multi-step processes
+- [ ] **Race condition prevention**: synchronization in concurrent operations
+- [ ] **Transaction atomicity**: proper rollback + consistency mechanisms
+- [ ] **Resource limits**: rate limiting + resource quotas implemented (see [Denial of Service Cheat Sheet](Denial_of_Service.md))
+- [ ] **Business rule enforcement**: rules cannot be bypassed via direct API access
 
 ### Configuration & Deployment
 
-- [ ] **Secure defaults**: Security-focused default configurations
-- [ ] **Environment separation**: Proper isolation between environments
-- [ ] **Secrets management**: No hardcoded secrets, proper secret storage and rotation (for more information, see [Secrets Management Cheat Sheet](Secrets_Management.md))
-- [ ] **Error handling**: Graceful error handling without information disclosure (for more information, see [Error Handling Cheat Sheet](Error_Handling.md))
-- [ ] **Logging security**: Sensitive data not logged, proper log protection (for more information, see [Logging Cheat Sheet](Logging.md))
-- [ ] **Security headers**: Appropriate HTTP security headers configured (for more information, see [HTTP Headers Cheat Sheet](HTTP_Headers.md))
-- [ ] **TLS configuration**: Strong cipher suites and protocol versions (for more information, see [Transport Layer Security Cheat Sheet](Transport_Layer_Security.md))
-- [ ] **Dependency management**: Up-to-date libraries without known vulnerabilities (for more information, see [Vulnerable Dependency Management Cheat Sheet](Vulnerable_Dependency_Management.md))
+- [ ] **Secure defaults**: security-focused default configurations
+- [ ] **Environment separation**: proper isolation between environments
+- [ ] **Secrets management**: no hardcoded secrets, proper secret storage + rotation (see [Secrets Management Cheat Sheet](Secrets_Management.md))
+- [ ] **Error handling**: graceful, no information disclosure (see [Error Handling Cheat Sheet](Error_Handling.md))
+- [ ] **Logging security**: sensitive data not logged, logs protected (see [Logging Cheat Sheet](Logging.md))
+- [ ] **Security headers**: appropriate HTTP security headers (see [HTTP Headers Cheat Sheet](HTTP_Headers.md))
+- [ ] **TLS configuration**: strong cipher suites + protocol versions (see [Transport Layer Security Cheat Sheet](Transport_Layer_Security.md))
+- [ ] **Dependency management**: up-to-date libraries w/o known vulnerabilities (see [Vulnerable Dependency Management Cheat Sheet](Vulnerable_Dependency_Management.md))
 
 ### Security Monitoring
 
-- [ ] **Security events**: Authentication failures, authorization violations logged
-- [ ] **Anomaly detection**: Unusual patterns and behaviors monitored
-- [ ] **Audit trails**: Complete audit logs for sensitive operations
-- [ ] **Real-time alerts**: Critical security events trigger immediate notifications
-- [ ] **Log integrity**: Logs protected from tampering and unauthorized access
-- [ ] **Incident response**: Clear procedures for security incident handling
+- [ ] **Security events**: authentication failures, authorization violations logged
+- [ ] **Anomaly detection**: unusual patterns/behaviors monitored
+- [ ] **Audit trails**: complete audit logs for sensitive operations
+- [ ] **Real-time alerts**: critical security events trigger immediate notifications
+- [ ] **Log integrity**: logs protected from tampering + unauthorized access
+- [ ] **Incident response**: clear procedures for security incident handling
 
 ## Tools and Techniques
 
 ### Code Editors
 
-Use editors with security extensions:
+Editors w/ security extensions:
 
-- Visual Studio Code with ESLint, SonarLint
-- IntelliJ IDEA with SpotBugs, SonarLint
-- Eclipse with security plugins
-- Vim/Neovim with security linters
+- Visual Studio Code w/ ESLint, SonarLint
+- IntelliJ IDEA w/ SpotBugs, SonarLint
+- Eclipse w/ security plugins
+- Vim/Neovim w/ security linters
 
 ### Command-Line Pattern Detection
 
@@ -277,43 +277,43 @@ grep -r "SELECT.*+\|executeQuery.*+" source/
 
 **Human Expertise Advantages:**
 
-- **Business Logic Flaws**: Complex workflows and state management issues that require domain understanding
-- **Context-Specific Vulnerabilities**: Security issues that depend on application-specific business rules
-- **Authorization Logic**: Complex permission models and access control implementations
-- **Race Conditions**: Timing-based vulnerabilities in concurrent operations
-- **Cryptographic Misuse**: Proper implementation of cryptographic primitives and protocols
-- **Architecture Security**: High-level design flaws and security anti-patterns
+- **Business Logic Flaws**: complex workflows, state management issues needing domain understanding
+- **Context-Specific Vulnerabilities**: issues depending on application-specific business rules
+- **Authorization Logic**: complex permission models, access control implementations
+- **Race Conditions**: timing-based vulnerabilities in concurrent operations
+- **Cryptographic Misuse**: proper implementation of cryptographic primitives + protocols
+- **Architecture Security**: high-level design flaws, security anti-patterns
 
 **Manual Analysis Techniques:**
 
-- **Code Path Tracing**: Following execution paths through complex business logic
-- **State Analysis**: Understanding application state transitions and validation
-- **Trust Boundary Mapping**: Identifying and analyzing security control points
-- **Threat Modeling Integration**: Applying threat models to specific code implementations
-- **Attack Scenario Simulation**: Mentally simulating attack paths through the code
+- **Code Path Tracing**: follow execution paths through complex business logic
+- **State Analysis**: understand state transitions + validation
+- **Trust Boundary Mapping**: identify/analyze security control points
+- **Threat Modeling Integration**: apply threat models to specific code
+- **Attack Scenario Simulation**: mentally simulate attack paths through code
 
 ### Automated Tool Integration
 
 **Supporting Manual Reviews:**
 
-- **SAST Tool Triage**: Use automated findings to prioritize manual review areas
-- **Dependency Scanning**: Identify vulnerable libraries requiring manual assessment
-- **Code Quality Metrics**: Focus manual effort on complex or frequently changed code
-- **Pattern Detection**: Use tools to highlight potential security anti-patterns for human analysis
+- **SAST Tool Triage**: use automated findings to prioritize manual review areas
+- **Dependency Scanning**: identify vulnerable libraries needing manual assessment
+- **Code Quality Metrics**: focus manual effort on complex or frequently changed code
+- **Pattern Detection**: tools highlight potential security anti-patterns for human analysis
 
 **Tool Integration Strategy:**
 
-- **Pre-Review Scanning**: Run automated tools before manual review to identify obvious issues
-- **Complementary Analysis**: Use tool findings to guide deeper manual investigation
-- **False Positive Filtering**: Apply human judgment to validate automated findings
-- **Coverage Gaps**: Focus manual review on areas automated tools cannot effectively analyze
+- **Pre-Review Scanning**: run automated tools before manual review to find obvious issues
+- **Complementary Analysis**: tool findings guide deeper manual investigation
+- **False Positive Filtering**: human judgment validates automated findings
+- **Coverage Gaps**: manual review targets areas tools cannot effectively analyze
 
 **Security Metrics:**
 
-- **Manual Review Coverage**: Percentage of critical code paths reviewed by humans
-- **Finding Quality**: Ratio of valid security issues to total findings
-- **Review Efficiency**: Time spent on manual review vs. security value delivered
-- **Trend Analysis**: Security posture improvement over time
+- **Manual Review Coverage**: percentage of critical code paths reviewed by humans
+- **Finding Quality**: ratio of valid security issues to total findings
+- **Review Efficiency**: manual review time vs. security value delivered
+- **Trend Analysis**: security posture improvement over time
 
 ### Documentation Templates
 
@@ -366,72 +366,72 @@ Overall Risk Assessment: [Low/Medium/High/Critical]
 
 #### Baseline Review Integration
 
-- **Project Initiation**: Comprehensive security assessment of existing codebase
-- **Major Releases**: Full security review before significant version releases
-- **Architecture Changes**: Complete review when fundamental design changes occur
-- **Compliance Cycles**: Periodic comprehensive reviews for regulatory requirements
-- **Security Incidents**: Thorough review following security breaches or major vulnerabilities
-- **Onboarding Legacy Systems**: Initial security assessment when bringing existing applications under secure development practices
+- **Project Initiation**: comprehensive security assessment of existing codebase
+- **Major Releases**: full security review before significant version releases
+- **Architecture Changes**: complete review on fundamental design changes
+- **Compliance Cycles**: periodic comprehensive reviews for regulatory requirements
+- **Security Incidents**: thorough review after breaches/major vulnerabilities
+- **Onboarding Legacy Systems**: initial security assessment when bringing existing applications under secure development practices
 
 #### Diff-Based Review Integration
 
-- **Pull Requests**: Security-focused review of code changes as part of standard PR process
-- **Pre-commit Hooks**: Lightweight security checks on developer commits
-- **Feature Completion**: Security review of completed user stories or features
-- **Sprint Reviews**: Regular assessment of security implications of sprint deliverables
-- **Hotfix Reviews**: Rapid security assessment of emergency fixes
-- **Continuous Integration**: Automated triggering of security reviews based on code changes
+- **Pull Requests**: security-focused review of changes in standard PR process
+- **Pre-commit Hooks**: lightweight security checks on developer commits
+- **Feature Completion**: security review of completed user stories/features
+- **Sprint Reviews**: regular assessment of security implications of sprint deliverables
+- **Hotfix Reviews**: rapid security assessment of emergency fixes
+- **Continuous Integration**: automated triggering of security reviews on code changes
 
 #### Hybrid Approach
 
-- **Risk-Based Scheduling**: Combine baseline reviews for high-risk components with diff-based reviews for routine changes
-- **Incremental Baseline Updates**: Gradually expand baseline review coverage over multiple development cycles
-- **Trigger-Based Reviews**: Escalate from diff-based to baseline review when significant security concerns are identified
+- **Risk-Based Scheduling**: baseline reviews for high-risk components + diff-based for routine changes
+- **Incremental Baseline Updates**: gradually expand baseline coverage over multiple development cycles
+- **Trigger-Based Reviews**: escalate diff-based → baseline when significant security concerns identified
 
-For CI/CD integration and automated security testing, for more information see [CI CD Security Cheat Sheet](CI_CD_Security.md).
+CI/CD integration + automated security testing: [CI CD Security Cheat Sheet](CI_CD_Security.md).
 
 ### Team Collaboration
 
 **Roles:**
 
-- **Security reviewers**: Conduct analysis and provide guidance
-- **Developers**: Implement fixes and follow secure coding practices
-- **Security champions**: Bridge security and development teams
+- **Security reviewers**: conduct analysis, provide guidance
+- **Developers**: implement fixes, follow secure coding practices
+- **Security champions**: bridge security + development teams
 
 **Best Practices:**
 
-- Use standardized checklists and templates
-- Maintain a knowledge base of common issues
+- Standardized checklists + templates
+- Maintain knowledge base of common issues
 - Track metrics on review effectiveness
-- Provide regular security training
-- Integrate with existing development workflows
+- Regular security training
+- Integrate w/ existing development workflows
 
 ## Advanced Techniques
 
 ### Race Condition Analysis
 
-Focus on Time-of-Check vs Time-of-Use (TOCTOU) vulnerabilities and ensure atomic operations.
+Focus on Time-of-Check vs Time-of-Use (TOCTOU) vulnerabilities; ensure atomic operations.
 
 ### Business Logic Analysis
 
 Analyze workflows for:
 
-- State transitions and validation
-- Opportunities to bypass steps or validation
+- State transitions + validation
+- Opportunities to bypass steps/validation
 - Proper validation at each workflow step
-- Rollback mechanisms and cleanup on failures
+- Rollback mechanisms + cleanup on failures
 - Behavior under concurrent access
-- Boundary conditions and error scenarios
+- Boundary conditions + error scenarios
 
 ### Security Architecture Review
 
-Review architecture patterns for consistent security enforcement and proper API security controls; see the [Secure Product Design Cheat Sheet](Secure_Product_Design.md).
+Review architecture patterns for consistent security enforcement + proper API security controls; see [Secure Product Design Cheat Sheet](Secure_Product_Design.md).
 
 ### Memory Safety
 
-Review buffer management, integer overflow protection, and resource limits.
+Review buffer management, integer overflow protection, resource limits.
 
 ## References
 
-- [OWASP Code Review Guide, Version 2](https://raw.githubusercontent.com/OWASP/www-project-code-review-guide/master/assets/OWASP_Code_Review_Guide_v2.pdf)
-- [NIST SP 800-218: Secure Software Development Framework (SSDF) Version 1.1](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-218.pdf)
+- OWASP Code Review Guide, Version 2
+- NIST SP 800-218: Secure Software Development Framework (SSDF) Version 1.1

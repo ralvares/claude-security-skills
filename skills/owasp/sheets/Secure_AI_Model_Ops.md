@@ -2,125 +2,124 @@
 
 ## Introduction
 
-This cheat sheet provides practical security guidance for operating and deploying AI/ML systems—including traditional machine learning models and large language models (LLMs).
-It helps MLOps, DevOps, and security teams protect the model lifecycle from development to production, covering threats like data poisoning, adversarial input, model theft, and operational abuse.
+Security guidance for operating/deploying AI/ML systems (traditional ML + LLMs). For MLOps, DevOps, security teams. Protects model lifecycle dev → prod vs data poisoning, adversarial input, model theft, operational abuse.
 
 ## Common Security Issues
 
-For prompt-specific defenses, see the [LLM Prompt Injection Prevention Cheat Sheet](LLM_Prompt_Injection_Prevention.md).
+Prompt-specific defenses: [LLM Prompt Injection Prevention Cheat Sheet](LLM_Prompt_Injection_Prevention.md).
 
-Data Poisoning – A threat where attackers inject malicious data into training datasets to manipulate model behavior.
+Data Poisoning – attackers inject malicious data into training sets to manipulate model behavior.
 
-Model Inversion & Extraction – Attacks that infer information about training data or recreate a model's behavior or parameters, respectively. [NIST distinguishes these attack goals](https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-2e2025.pdf#page=41).
+Model Inversion & Extraction – attacks inferring training data / recreating model behavior or parameters, respectively. NIST distinguishes these attack goals (NIST AI 100-2e2025).
 
-Membership Inference – Determining whether a particular data sample was used to train a model; see [NIST's membership-inference definition](https://csrc.nist.gov/glossary/term/membership_inference_attack).
+Membership Inference – determining whether a sample was used to train a model (NIST membership-inference definition).
 
-Adversarial Examples – Slightly modified inputs crafted to mislead model predictions without obvious changes to human observers.
+Adversarial Examples – slightly modified inputs misleading predictions, no obvious change to humans.
 
-Prompt Injection – A manipulation technique that breaks LLM outputs by injecting malicious input to override or hijack intended behavior.
+Prompt Injection – malicious input overrides/hijacks intended LLM behavior.
 
-Unsecured APIs – Publicly exposed inference endpoints lacking authentication, rate limiting, or input validation.
+Unsecured APIs – public inference endpoints w/o authentication, rate limiting, input validation.
 
-Hardcoded Secrets – The inclusion of sensitive credentials (e.g., API keys, tokens) in source code or notebooks.
+Hardcoded Secrets – credentials (API keys, tokens) in source code/notebooks.
 
-Unvalidated Third-party Models – Use of external pre-trained models without verifying integrity, provenance, or trustworthiness.
+Unvalidated Third-party Models – external pre-trained models used w/o integrity, provenance, trust checks.
 
-Open Artifact Stores – Public access to model binaries, datasets, or logs due to misconfigured storage or missing access controls.
+Open Artifact Stores – public model binaries, datasets, logs from misconfigured storage/missing access controls.
 
-Lack of Monitoring & Drift Detection – Absence of systems to detect shifts in model behavior, data distribution, or performance.
+Lack of Monitoring & Drift Detection – no detection of shifts in model behavior, data distribution, performance.
 
-Orphaned Deployments – Test or deprecated models left accessible in production environments, often unprotected.
+Orphaned Deployments – test/deprecated models left accessible in prod, often unprotected.
 
-Weak Runtime Isolation - Shared training or inference infrastructure allows cross-tenant data exposure, credential reuse, side-channel leakage, or unauthorized access to accelerator memory.
+Weak Runtime Isolation - shared training/inference infra → cross-tenant data exposure, credential reuse, side-channel leakage, unauthorized accelerator memory access.
 
 ## Real-World Examples
 
-- Data Poisoning via Public Dataset Manipulation: Attackers inject mislabeled samples into open-source datasets. These poisoned samples, when used during training, degrade model accuracy or introduce bias.
-- Membership Inference in Healthcare ML: An attacker infers whether a specific individual’s data was part of a medical model’s training dataset.
-- Malicious Model Files: A `.pt` or `.pkl` file embedded with malware is uploaded to a pipeline and executed during deserialization.
-- Insecure LLM Prompt Injection: Inputs like `"Ignore all previous instructions..."` manipulate chatbot behavior and may leak internal system prompts.
-- Leaked API Keys on GitHub: OpenAI or Hugging Face API keys accidentally committed and exploited for free access or abuse.
-- Open MLFlow Instance: No authentication on MLFlow or similar tool exposes all models and training logs.
-- Adversarial Input Attacks in Vision Systems: Altering a few pixels causes an image classifier to mislabel a stop sign as a speed limit sign.
-- Legacy Test Models in Production: Old staging models left running in public cloud endpoints, vulnerable to extraction.
+- Data Poisoning via Public Dataset Manipulation: mislabeled samples injected into open-source datasets; used in training → degrade accuracy/introduce bias.
+- Membership Inference in Healthcare ML: attacker infers whether individual's data was in medical model's training set.
+- Malicious Model Files: `.pt`/`.pkl` file w/ embedded malware uploaded to pipeline, executed on deserialization.
+- Insecure LLM Prompt Injection: inputs like `"Ignore all previous instructions..."` manipulate chatbot, may leak internal system prompts.
+- Leaked API Keys on GitHub: OpenAI/Hugging Face keys committed by accident, exploited for free access/abuse.
+- Open MLFlow Instance: no authentication on MLFlow or similar exposes all models + training logs.
+- Adversarial Input Attacks in Vision Systems: few altered pixels → classifier mislabels stop sign as speed limit sign.
+- Legacy Test Models in Production: old staging models left running on public cloud endpoints, vulnerable to extraction.
 
 ## Security Recommendations
 
 ### 1. Model Development & Training
 
-- Use version-controlled, auditable training pipelines (e.g., MLFlow, DVC).
-- Validate and sanitize training data.
-- Employ differential privacy or data anonymization if training on sensitive data.
-- Train using reproducible environments (e.g., containers, virtualenv).
+- Version-controlled, auditable training pipelines (e.g., MLFlow, DVC).
+- Validate + sanitize training data.
+- Differential privacy or data anonymization for sensitive training data.
+- Reproducible training environments (e.g., containers, virtualenv).
 
 ### 2. Secrets & Configurations
 
-- Never hardcode secrets in source code or notebooks.
+- Never hardcode secrets in source code/notebooks.
 - Use secret managers (e.g., AWS Secrets Manager, HashiCorp Vault).
 - Use environment variables or CI secrets injection.
 
 ### 3. Model Storage & Artifacts
 
 - Store models in access-controlled registries.
-- Sign model binaries with digital signatures.
-- Ensure encryption at rest for model weights and datasets.
-- Restrict access to training logs and intermediate outputs.
-- Validate third-party or pre-trained models before production to ensure integrity and safe behavior.
+- Sign model binaries w/ digital signatures.
+- Encrypt model weights + datasets at rest.
+- Restrict access to training logs + intermediate outputs.
+- Validate third-party/pre-trained models before production for integrity + safe behavior.
 
 ### 4. Inference API Security
 
-- Apply authentication and authorization (OAuth, API tokens).
-- Validate and sanitize all inputs.
-- Use rate limiting and abuse detection (e.g. bot detection, anomaly scoring).
-- Use structured prompt templates for LLMs to separate instructions from user input.
-- Set per-tenant token, request, concurrency, and spend limits to reduce denial-of-wallet risk.
-- Enforce recursion, retry, and chain-depth limits for agentic or tool-using inference flows.
-- Implement circuit breakers or kill switches for abnormal cost, latency, or tool-call spikes.
-- Monitor usage telemetry in near real time and alert on sudden changes in tokens, requests, or spend.
+- Authentication + authorization (OAuth, API tokens).
+- Validate + sanitize all inputs.
+- Rate limiting + abuse detection (e.g. bot detection, anomaly scoring).
+- Structured prompt templates for LLMs to separate instructions from user input.
+- Per-tenant token, request, concurrency, spend limits → reduce denial-of-wallet risk.
+- Enforce recursion, retry, chain-depth limits for agentic/tool-using inference flows.
+- Circuit breakers/kill switches for abnormal cost, latency, tool-call spikes.
+- Monitor usage telemetry near real time; alert on sudden changes in tokens, requests, spend.
 
 ### 5. Deployment & Infrastructure
 
-- Harden containers and limit capabilities (use distroless images, AppArmor).
-- Use CI/CD pipelines that include security scanning.
-- Minimize permissions for training and inference jobs (least privilege).
-- Isolate environments for development, staging, and production.
+- Harden containers, limit capabilities (distroless images, AppArmor).
+- CI/CD pipelines w/ security scanning.
+- Least privilege for training + inference jobs.
+- Isolate dev, staging, prod environments.
 
 ### 6. Runtime & Hardware Isolation
 
-- Separate training, evaluation, and production inference workloads by trust boundary.
-- Avoid sharing GPU or accelerator devices between mutually untrusted tenants unless the platform provides strong hardware-backed partitioning and memory isolation.
-- Clear model inputs, outputs, temporary files, caches, and accelerator memory between jobs where the runtime supports it.
-- Run untrusted model evaluation, fine-tuning, and conversion jobs in sandboxes or isolated workers with restricted network egress.
-- Use microVMs, gVisor, Kata Containers, confidential compute, or dedicated nodes for high-sensitivity models and datasets.
-- Disable access to host paths, container sockets, cloud metadata services, and unnecessary device mounts from model-serving containers.
-- Apply per-workload CPU, memory, GPU, disk, process, and network limits to prevent noisy-neighbor and denial-of-service impact.
-- Keep model-serving credentials scoped to the specific model, endpoint, and environment rather than sharing broad platform credentials.
-- Validate that job teardown removes temporary artifacts, local checkpoints, prompt logs, and cached embeddings.
-- Monitor runtime isolation failures, unexpected device access, cross-namespace network traffic, and attempts to access metadata endpoints.
+- Separate training, evaluation, prod inference workloads by trust boundary.
+- Don't share GPU/accelerator devices between mutually untrusted tenants unless platform gives strong hardware-backed partitioning + memory isolation.
+- Clear model inputs, outputs, temp files, caches, accelerator memory between jobs where runtime supports it.
+- Run untrusted model evaluation, fine-tuning, conversion jobs in sandboxes/isolated workers w/ restricted network egress.
+- microVMs, gVisor, Kata Containers, confidential compute, or dedicated nodes for high-sensitivity models/datasets.
+- Disable host paths, container sockets, cloud metadata services, unnecessary device mounts in model-serving containers.
+- Per-workload CPU, memory, GPU, disk, process, network limits → prevent noisy-neighbor + DoS impact.
+- Scope model-serving credentials to specific model, endpoint, environment; no broad shared platform credentials.
+- Validate job teardown removes temp artifacts, local checkpoints, prompt logs, cached embeddings.
+- Monitor runtime isolation failures, unexpected device access, cross-namespace network traffic, metadata endpoint access attempts.
 
 ### 7. Monitoring & Logging
 
-- Monitor input distribution, output entropy, and latency.
+- Monitor input distribution, output entropy, latency.
 - Detect drift via statistical analysis or shadow models.
-- Log requests and access with traceability (avoid logging sensitive data).
-- Alert on unusual usage patterns (e.g., scraping, injection attempts).
+- Log requests + access w/ traceability (avoid logging sensitive data).
+- Alert on unusual usage (e.g., scraping, injection attempts).
 
 ### 8. Adversarial Robustness
 
-- Include adversarial examples in testing and evaluation.
-- Use robust training techniques (e.g., adversarial training, input denoising).
-- Monitor model confidence thresholds to identify out-of-distribution inputs.
-- Use shadow deployments to evaluate candidate model behavior on real production inputs without affecting live outputs.
-- Use canary releases to gradually route a small percentage of traffic to the new model with rapid rollback capability if there are problems.
+- Include adversarial examples in testing/evaluation.
+- Robust training (e.g., adversarial training, input denoising).
+- Monitor model confidence thresholds to spot out-of-distribution inputs.
+- Shadow deployments: evaluate candidate model on real prod inputs w/o affecting live outputs.
+- Canary releases: route small traffic percentage to new model gradually, rapid rollback on problems.
 
 ### 9. Incident Response & Governance
 
-- Define escalation procedures for model abuse or drift.
-- Implement rollback mechanisms for model deployments.
+- Escalation procedures for model abuse/drift.
+- Rollback mechanisms for model deployments.
 - Map threats to OWASP ASVS or Proactive Controls for AI/ML.
 
 ## References
 
-- [NIST SP 800-218A: Secure Software Development Practices for Generative AI and Dual-Use Foundation Models](https://csrc.nist.gov/pubs/sp/800/218/a/final)
-- [NIST AI 100-2 E2025: Adversarial Machine Learning](https://csrc.nist.gov/pubs/ai/100/2/e2025/final)
-- [OWASP AI Security Verification Standard](https://github.com/OWASP/AISVS)
+- NIST SP 800-218A: Secure Software Development Practices for Generative AI and Dual-Use Foundation Models
+- NIST AI 100-2 E2025: Adversarial Machine Learning
+- OWASP AI Security Verification Standard

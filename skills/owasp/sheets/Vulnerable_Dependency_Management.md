@@ -2,123 +2,119 @@
 
 ## Introduction
 
-The objective of the cheat sheet is to provide a proposal of approach regarding the handling of vulnerable third-party dependencies when they are detected, and this, depending on different situation.
+Proposed approach for handling vulnerable third-party dependencies once detected, per situation.
 
-The cheat sheet is not tools oriented but it contains a [tools](#tools) section informing the reader about free and commercial solutions that can be used to detect vulnerable dependencies, depending on the level of support on the technologies at hand
+Not tools oriented; [tools](#tools) section lists free and commercial detectors, by technology support.
 
 **Note:**
 
-Proposals mentioned in this cheat sheet are not silver-bullet (recipes that work in all situations) yet can be used as a foundation and adapted to your context.
+Proposals not silver bullets (recipes for all situations); use as foundation, adapt to context.
 
 ## Context
 
-Most of the projects use third-party dependencies to delegate handling of different kind of operations, _e.g._ generation of document in a specific format, HTTP communications, data parsing of a specific format, etc.
+Most projects use third-party dependencies for operations, _e.g._ document generation in specific format, HTTP communications, data parsing.
 
-It's a good approach because it allows the development team to focus on the real application code supporting the expected business feature. The dependency brings forth an expected downside where the security posture of the real application is now resting on it.
+Lets team focus on real application code. Downside: app security posture now rests on dependency.
 
-This aspect is referenced in the following projects:
+Referenced in:
 
-- [OWASP TOP 10 2017](https://owasp.org/www-project-top-ten/OWASP_Top_Ten_2017/) under the point _[A9 - Using Components with Known Vulnerabilities](https://owasp.org/www-project-top-ten/OWASP_Top_Ten_2017/Top_10-2017_A9-Using_Components_with_Known_Vulnerabilities.html)_.
-- [OWASP Application Security Verification Standard Project](https://owasp.org/www-project-application-security-verification-standard/) under the section _V14.2 Dependency_.
+- OWASP TOP 10 2017, _A9 - Using Components with Known Vulnerabilities_.
+- OWASP Application Security Verification Standard Project, section _V14.2 Dependency_.
 
-Based on this context, it's important for a project to ensure that all the third-party dependencies implemented are clean of any security issue, and if they happen to contain any security issues, the development team needs to be aware of it and apply the required mitigation measures to secure the affected application.
+Project MUST ensure all third-party dependencies free of security issues; if issues exist, team must know and apply mitigations.
 
-It's highly recommended to perform automated analysis of the dependencies from the birth of the project. Indeed, if this task is added at the middle or end of the project, it can imply a huge amount of work to handle all the issues identified and that will in turn impose a huge burden on the development team and might to blocking the advancement of the project at hand.
+Highly recommended: automated dependency analysis from project birth. Added mid/late project → huge workload, burden on team, may block progress.
 
 **Note:**
 
-In the rest of the cheat sheet, when we refer to _development team_ then we assume that the team contains a member with the required application security skills or can refer to someone in the company having these kind of skills to analyze the vulnerability impacting the dependency.
+_Development team_ below assumes member with app security skills, or access to someone in company with them, to analyze dependency vulnerability.
 
 ## Remark about the detection
 
-It's important to keep in mind the different ways in which a security issue is handled after its discovery.
+Know how security issues are handled after discovery.
 
 ### 1. Responsible disclosure
 
-See a description [here](https://en.wikipedia.org/wiki/Responsible_disclosure).
+Researcher finds vulnerability in component; after collaboration with provider, issues [CVE](https://en.wikipedia.org/wiki/Common_Vulnerabilities_and_Exposures) (sometimes provider-specific identifier, generally CVE preferred) → public reference to issue + available fix/mitigation.
 
-A researcher discovers a vulnerability in a component, and after collaboration with the component provider, they issue a [CVE](https://en.wikipedia.org/wiki/Common_Vulnerabilities_and_Exposures) (sometimes a specific vulnerability identifier to the provider is created but generally a CVE identifier is preferred) associated to the issue allowing the public referencing of the issue as well as the available fixation/mitigation.
+If provider doesn't cooperate, expect:
 
-If in case the provider doesn't properly cooperate with the researcher, the following results are expected:
+- CVE accepted by vendor yet provider refuses to fix issue.
+- Usually, no response in 30 days → researcher does [full disclosure](#2-full-disclosure).
 
-- CVE gets accepted by the vendor yet the provider [refuses to fix the issue](https://www.excellium-services.com/cert-xlm-advisory/cve-2019-7161/).
-- Most of the time, if the researcher doesn't receive back a response in 30 days, they go ahead and do a [full disclosure](#2-full-disclosure) of the vulnerability.
-
-Here, the vulnerability is always referenced in the [CVE global database](https://nvd.nist.gov/vuln/data-feeds) used, generally, by the detection tools as one of the several input sources used.
+Vulnerability always referenced in CVE global database, generally one of several detection-tool input sources.
 
 ### 2. Full disclosure
 
-See a description [here](https://en.wikipedia.org/wiki/Full_disclosure), into the section named **Computers** about **Computer Security**.
+Researcher releases all info incl. exploitation code/method on services like Full Disclosure mailing list, Exploit-DB.
 
-The researcher decides to release all the information including exploitation code/method on services like [Full Disclosure mailing list](https://seclists.org/fulldisclosure/), [Exploit-DB](https://www.exploit-db.com).
-
-Here a CVE is not always created then the vulnerability is not always in the CVE global database causing the detection tools to be potentially blind about unless the tools use other input sources.
+CVE not always created → vulnerability not always in CVE global database → detection tools potentially blind unless using other input sources.
 
 ## Remark about the security issue handling decision
 
-When a security issue is detected, it's possible to decide to accept the risk represented by the security issue. However, this decision must be taken by the [Chief Risk Officer](https://en.wikipedia.org/wiki/Chief_risk_officer) (fallback possible to [Chief Information Security Officer](https://en.wikipedia.org/wiki/Chief_information_security_officer)) of the company based on technical feedback from the development team that have analyzed the issue (see the _[Cases](#cases)_ section) as well as the CVEs [CVSS](https://www.first.org/cvss/user-guide) score indicators.
+Risk acceptance for detected issue: decision MUST be by Chief Risk Officer (fallback Chief Information Security Officer), based on technical feedback from development team that analyzed issue (see _[Cases](#cases)_) and CVE CVSS score indicators.
 
 ## Cases
 
-When a security issue is detected, the development team can meet one of the situations (named _Case_ in the rest of the cheat sheet) presented in the sub sections below.
+On detection, team meets one of situations (_Case_ below).
 
-If the vulnerably impact a [transitive dependency](https://en.wikipedia.org/wiki/Transitive_dependency) then the action will be taken on the direct dependency of the project because acting on a transitive dependency often impact the stability of the application.
+Vulnerable transitive dependency → act on project's direct dependency; acting on transitive often impacts app stability.
 
-Acting on a on a transitive dependency require the development team to fully understand the complete relation/communication/usage from the project first level dependency until the dependency impacted by the security vulnerability, this task is very time consuming.
+Acting on transitive dependency requires full understanding of relation/communication/usage from first-level dependency down to impacted one; very time consuming.
 
 ### Case 1
 
 #### Context
 
-Patched version of the component has been released by the provider.
+Provider released patched version.
 
 #### Ideal condition of application of the approach
 
-Set of automated unit or integration or functional or security tests exist for the features of the application using the impacted dependency allowing to validate that the feature is operational.
+Automated unit/integration/functional/security tests exist for features using impacted dependency, validating feature works.
 
 #### Approach
 
 **Step 1:**
 
-Update the version of the dependency in the project on a testing environment.
+Update dependency version in testing environment.
 
 **Step 2:**
 
-Prior to running the tests, 2 output paths are possible:
+Before running tests, 2 output paths:
 
-- All tests succeed, and thus the update can be pushed to production.
-- One or several tests failed, several output paths are possible:
-    - Failure is due to change in some function calls (_e.g._ signature, argument, package, etc.). The development team must update their code to fit the new library. Once that is done, re-run the tests.
-    - The fixed version cannot be adopted at all (_e.g._ the fix only ships in a new major version that breaks the application, or the vulnerable version is pinned by a transitive dependency). Apply [Case 5](#case-5), using [Case 2](#case-2) as an interim mitigation.
-    - Technical incompatibility of the released dependency (_e.g._ require a more recent runtime version) which leads to the following actions:
-    1. Raise the issue to the provider.
-    2. Apply [Case 2](#case-2) while waiting for the provider's feedback.
+- All tests succeed → push update to production.
+- Test(s) fail, several paths:
+    - Failure from changed function calls (_e.g._ signature, argument, package). Team updates code to fit new library, re-runs tests.
+    - Fixed version cannot be adopted at all (_e.g._ fix only in new major version that breaks app, or vulnerable version pinned by transitive dependency). Apply [Case 5](#case-5), [Case 2](#case-2) as interim mitigation.
+    - Technical incompatibility of released dependency (_e.g._ needs newer runtime version) → actions:
+    1. Raise issue to provider.
+    2. Apply [Case 2](#case-2) while awaiting provider feedback.
 
 ### Case 2
 
 #### Context
 
-Provider informs the team that it will take a while to fix the issue and, so, a patched version will not be available before months.
+Provider says fix will take a while; patched version not available for months.
 
 #### Ideal condition of application of the approach
 
-Provider can share any of the below with the development team:
+Provider can share any of:
 
-- The exploitation code.
-- The list of impacted functions by the vulnerability.
-- A workaround to prevent the exploitation of the issue.
+- Exploitation code.
+- List of functions impacted by vulnerability.
+- Workaround preventing exploitation.
 
 #### Approach
 
 **Step 1:**
 
-If a workaround is provided, it should be applied and validated on the testing environment, and thereafter deployed to production.
+Workaround provided → apply, validate in testing environment, deploy to production.
 
-Identify the reachable calls to affected functions and the conditions required to exploit the vulnerability. Use a wrapper only when its checks block those conditions on every affected call path. Otherwise, disable the affected functionality or isolate it while pursuing a fix. Treat the wrapper as a temporary mitigation, and track the upgrade or replacement that removes the vulnerable dependency.
+Identify reachable calls to affected functions + conditions required to exploit. Use wrapper only when its checks block those conditions on every affected call path. Otherwise disable affected functionality or isolate it while pursuing fix. Wrapper = temporary mitigation; track the upgrade/replacement that removes vulnerable dependency.
 
-Moreover, security devices, such as the Web Application Firewall (WAF), can handle such issues by protecting the internal applications through parameter validation and by generating detection rules for those specific libraries. Yet, in this cheat sheet, the focus is set on the application level in order to patch the vulnerability as close as possible to the source.
+Security devices like Web Application Firewall (WAF) can also handle such issues via parameter validation + detection rules for specific libraries. This sheet focuses on application level: patch as close to source as possible.
 
-_Illustrative allowlist wrapper: use this only if analysis of the specific vulnerability establishes that the accepted values cannot trigger it. This pattern is not a general defense against remote code execution._
+_Illustrative allowlist wrapper: use only if analysis of the specific vulnerability establishes accepted values cannot trigger it. Not a general defense against remote code execution._
 
 ```java
 public void callFunctionWithRCEIssue(String externalInput){
@@ -134,188 +130,188 @@ public void callFunctionWithRCEIssue(String externalInput){
 }
 ```
 
-If the provider has provided nothing about the vulnerability, [Case 3](#case-3) can be applied skipping the _step 2_ of this case. We assume here that, at least, the [CVE](https://en.wikipedia.org/wiki/Common_Vulnerabilities_and_Exposures) has been provided.
+Provider gave nothing about vulnerability → apply [Case 3](#case-3), skipping _step 2_ here. Assumes at least [CVE](https://en.wikipedia.org/wiki/Common_Vulnerabilities_and_Exposures) provided.
 
 **Step 2:**
 
-Use any provider-supplied exploit as a regression test. Blocking that payload does not prove that the library is secure: test alternate inputs and all reachable paths to the affected functionality. The [Core Rule Set rule-writing guidance](https://coreruleset.org/docs/3-about-rules/creating/#advanced-transformation-usage) illustrates how small payload changes can bypass a filter. Follow the [virtual patch testing guidance](Virtual_Patching.md#implementationtesting-phase) and keep the permanent fix on the remediation plan.
+Use provider-supplied exploit as regression test. Blocking that payload ≠ library secure: test alternate inputs + all reachable paths to affected functionality. Core Rule Set rule-writing guidance shows how small payload changes bypass filters. Follow [virtual patch testing guidance](Virtual_Patching.md#implementationtesting-phase); keep permanent fix on remediation plan.
 
-If you have a set of automated unit or integration or functional or security tests that exist for the application, run them to verify that the protection code added does not impact the stability of the application.
+Existing automated unit/integration/functional/security tests → run to verify added protection code doesn't affect stability.
 
-Add a comment in the project _README_ explaining that the issue (specify the related [CVE](https://en.wikipedia.org/wiki/Common_Vulnerabilities_and_Exposures)) is handled during the waiting time of a patched version because the detection tool will continue to raise an alert on this dependency.
+Add comment in project _README_: issue (specify [CVE](https://en.wikipedia.org/wiki/Common_Vulnerabilities_and_Exposures)) handled while awaiting patched version, since detection tool keeps alerting on dependency.
 
-**Note:** You can add the dependency to the ignore list but the ignore scope for this dependency must only cover the [CVE](https://en.wikipedia.org/wiki/Common_Vulnerabilities_and_Exposures) related to the vulnerability because a dependency can be impacted by several vulnerabilities having each one its own [CVE](https://en.wikipedia.org/wiki/Common_Vulnerabilities_and_Exposures).
+**Note:** Dependency may go on ignore list, but ignore scope MUST cover only the related [CVE](https://en.wikipedia.org/wiki/Common_Vulnerabilities_and_Exposures); dependency can have several vulnerabilities, each with own [CVE](https://en.wikipedia.org/wiki/Common_Vulnerabilities_and_Exposures).
 
 ### Case 3
 
 #### Context
 
-Provider informs the team that they cannot fix the issue, so no patched version will be released at all (applies also if provider does not want to fix the issue or does not answer at all).
+Provider says it cannot fix issue; no patched version ever (also if provider unwilling or unresponsive).
 
-In this case the only information given to the development team is the [CVE](https://en.wikipedia.org/wiki/Common_Vulnerabilities_and_Exposures).
+Only info given to team: [CVE](https://en.wikipedia.org/wiki/Common_Vulnerabilities_and_Exposures).
 
 **Notes:**
 
-- This case is really complex and time consuming and is generally used as last resort.
-- If the impacted dependency is an open source library then we, the development team, can create a patch and create [pull request](https://help.github.com/en/articles/about-pull-requests) - that way we can protect our company/application from the source as well as helping others secure their applications.
+- Complex, time consuming; generally last resort.
+- Open source library → team can create patch + pull request: protects company/app at source, helps others.
 
 #### Ideal condition of application of the approach
 
-Nothing specific because here we are in a _patch yourself_ condition.
+None specific; _patch yourself_ condition.
 
 #### Approach
 
 **Step 1:**
 
-If we are in this case due to one of the following conditions, it's a good idea to start a parallel study to find another component better maintained or if it's a commercial component with support **then put pressure** on the provider with the help of your [Chief Risk Officer](https://en.wikipedia.org/wiki/Chief_risk_officer) (fallback possible to [Chief Information Security Officer](https://en.wikipedia.org/wiki/Chief_information_security_officer)):
+If here because provider unwilling or unresponsive, start parallel study for better-maintained component; if commercial with support, **put pressure** on provider via Chief Risk Officer (fallback Chief Information Security Officer):
 
-- Provider does not want to fix the issue.
+- Provider does not want to fix issue.
 - Provider does not answer at all.
 
-In all cases, here, we need to handle the vulnerability right now.
+In all cases, handle vulnerability right now.
 
 **Step 2:**
 
-As we know the vulnerable dependency, we know where it is used in the application (if it's a transitive dependency then we can identify the first level dependency using it using the [IDE](https://en.wikipedia.org/wiki/Integrated_development_environment) built-in feature or the dependency management system used (Maven, Gradle, NuGet, npm, etc.). Note that IDE is also used to identify the calls to the dependency.
+Vulnerable dependency known → usage in app known (transitive: identify first-level dependency using it via [IDE](https://en.wikipedia.org/wiki/Integrated_development_environment) built-in feature or dependency management system (Maven, Gradle, NuGet, npm, etc.). IDE also identifies calls to dependency.
 
-Identifying calls to this dependency is fine but it is the first step. The team still lacks information on what kind of patching needs to be performed.
+Identifying calls = first step only; still lack info on patching needed.
 
-Use the CVE description to identify the reported weakness, then consult the upstream advisory, issue, and fix to determine the affected behavior and required change. A vulnerability category alone does not establish which checks or configuration changes will prevent exploitation. If the root cause is still unclear, do not assume that a wrapper from [Case 2](#case-2) fixes it.
+Use CVE description to identify reported weakness, then consult upstream advisory, issue, fix to determine affected behavior + required change. Vulnerability category alone doesn't establish which checks/config changes prevent exploitation. Root cause unclear → do not assume [Case 2](#case-2) wrapper fixes it.
 
 _Example:_
 
-The team has an application using the Jackson API in a version exposed to the [CVE-2016-3720](https://nvd.nist.gov/vuln/detail/CVE-2016-3720).
+App uses Jackson API in version exposed to [CVE-2016-3720](https://nvd.nist.gov/vuln/detail/CVE-2016-3720).
 
-The description of the CVE is as follows:
+CVE description:
 
 ```text
 XML external entity (XXE) vulnerability in XmlMapper in the Data format extension for Jackson
 (aka jackson-dataformat-xml) allows attackers to have unspecified impact via unknown vectors.
 ```
 
-The [upstream issue](https://github.com/FasterXML/jackson-dataformat-xml/issues/190) and [fix](https://github.com/FasterXML/jackson-dataformat-xml/commit/f0f19a4c924d9db9a1e2830434061c8640092cc0) disable `XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES` for input factories created by Jackson. This is a parser configuration change, not generic XML pre-validation. Use a maintained release containing the fix. If an upgrade is blocked, evaluate that specific fix through [Case 5](#case-5); also harden any application-supplied parser using the [XXE prevention guidance](XML_External_Entity_Prevention.md#xmlinputfactory-stax).
+Upstream issue and fix disable `XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES` for input factories created by Jackson. Parser configuration change, not generic XML pre-validation. Use maintained release containing fix. Upgrade blocked → evaluate that specific fix via [Case 5](#case-5); also harden any application-supplied parser per [XXE prevention guidance](XML_External_Entity_Prevention.md#xmlinputfactory-stax).
 
 **Step 3:**
 
-If possible, create a unit test that mimics the vulnerability in order to ensure that the patch is effective and have a way to continuously ensure that the patch is in place during the evolution of the project.
+If possible, create unit test mimicking vulnerability: ensures patch effective, continuously verifies patch stays in place as project evolves.
 
-If you have a set of automated unit or integration or functional or security tests that exists for the application then run them to verify that the patch does not impact the stability of the application.
+Existing automated unit/integration/functional/security tests → run to verify patch doesn't affect stability.
 
-A patch written in-house does not get the benefit of the doubt that an upstream release gets, so hold it to an explicit bar before considering the vulnerability handled:
+In-house patch gets no benefit of doubt vs upstream release; meet explicit bar before vulnerability considered handled:
 
-- The test reproducing the vulnerability fails against the unpatched dependency and passes against the patched one. A test that passes in both cases proves nothing about the patch.
-- The tests of the dependency itself still pass, which catches behavior that the patch broke but the application does not exercise directly.
-- The alert raised by the detection tool is suppressed per [CVE](https://en.wikipedia.org/wiki/Common_Vulnerabilities_and_Exposures) only once the two points above hold. Suppressing the alert, or changing a version string so that the tool stops matching it, records a fix but does not make one.
+- Test reproducing vulnerability fails against unpatched dependency, passes against patched. Test passing in both cases proves nothing about patch.
+- Dependency's own tests still pass; catches behavior patch broke that app doesn't exercise directly.
+- Detection-tool alert suppressed per [CVE](https://en.wikipedia.org/wiki/Common_Vulnerabilities_and_Exposures) only once both points above hold. Suppressing alert, or changing version string so tool stops matching, records a fix but doesn't make one.
 
-Expect the tool to keep flagging the dependency even after a correct patch, because [looking at the version number of a package will not tell you whether the fix is present](https://access.redhat.com/security/updates/backporting). That is a reporting problem to be handled with a scoped suppression, not a reason to change the patch.
+Expect tool to keep flagging dependency after correct patch, since version number doesn't tell whether fix present. Reporting problem → scoped suppression, not reason to change patch.
 
 ### Case 4
 
 #### Context
 
-The vulnerable dependency is found during one of the following situation in which the provider is not aware of the vulnerability:
+Vulnerable dependency found in situation where provider unaware:
 
-- Via the discovery of a full disclosure post on the Internet.
-- During a penetration test.
+- Full disclosure post found on Internet.
+- During penetration test.
 
 #### Ideal condition of application of the approach
 
-Provider collaborates with you after being notified of the vulnerability.
+Provider collaborates after notification.
 
 #### Approach
 
 **Step 1:**
 
-Inform the provider about the vulnerability by sharing the post with them.
+Inform provider, sharing the post.
 
 **Step 2:**
 
-Using the information from the full disclosure post or the pentester's exploitation feedback, if the provider collaborates then apply [Case 2](#case-2), otherwise apply [Case 3](#case-3), and instead of analyzing the CVE information, the team needs to analyze the information from the full disclosure post/pentester's exploitation feedback.
+Using full disclosure post info or pentester's exploitation feedback: provider collaborates → [Case 2](#case-2); otherwise [Case 3](#case-3). Team analyzes full disclosure post/pentester feedback instead of CVE info.
 
 ### Case 5
 
 #### Context
 
-A fixed version has been released by the provider, but the project cannot adopt it:
+Provider released fixed version, project cannot adopt:
 
-- The fix only ships in a new major version that breaks the application code.
-- The vulnerable version is pinned by a [transitive dependency](https://en.wikipedia.org/wiki/Transitive_dependency) that has not been updated yet.
-- The version line in use is no longer maintained and the fix landed only on a newer line.
+- Fix only in new major version that breaks app code.
+- Vulnerable version pinned by [transitive dependency](https://en.wikipedia.org/wiki/Transitive_dependency) not yet updated.
+- Version line in use unmaintained; fix only on newer line.
 
-This is not [Case 3](#case-3): the fix exists and is public, so nothing has to be invented, but it has to be moved onto the version line that the project can actually run. That practice is called _backporting_, and operating system vendors have handled the same problem this way for years. [Debian](https://www.debian.org/security/faq) states that "instead of upgrading to a new release we backport security fixes to the version that was shipped in the stable release", and [Red Hat](https://access.redhat.com/security/updates/backporting) defines backporting as "the action of taking a fix for a security flaw out of the most recent version of an upstream software package and applying that fix to an older version".
+Not [Case 3](#case-3): fix exists and is public, nothing to invent, but must move onto version line project can run. Practice = _backporting_; OS vendors do it for years. Debian: "instead of upgrading to a new release we backport security fixes to the version that was shipped in the stable release"; Red Hat defines backporting as "the action of taking a fix for a security flaw out of the most recent version of an upstream software package and applying that fix to an older version".
 
 #### Ideal condition of application of the approach
 
-The upstream fix can be identified (a commit, a patch file, or an advisory precise enough to locate the change), the source of the version in use is available, and automated tests exist for the application features using the dependency.
+Upstream fix identifiable (commit, patch file, or advisory precise enough to locate change), source of version in use available, automated tests exist for app features using dependency.
 
 #### Approach
 
 **Step 1:**
 
-Confirm that the upgrade is really blocked by attempting it on a testing environment as described in [Case 1](#case-1). Backporting is cheaper than a major upgrade in the short term and more expensive over the life of the project, so it must be a deliberate choice rather than the first reflex. Record the exact blocker (breaking API, transitive pin, unsupported runtime), because that is the condition to re-test later.
+Confirm upgrade really blocked by attempting in testing environment per [Case 1](#case-1). Backporting cheaper than major upgrade short term, costlier over project life → deliberate choice, not first reflex. Record exact blocker (breaking API, transitive pin, unsupported runtime) = condition to re-test later.
 
 **Step 2:**
 
-Isolate the security-relevant change from the rest of the upstream release. Fix commits are frequently bundled with refactoring, renaming and unrelated bugfixes that must not be carried over, and the fix may rely on internal functions that do not exist in the older line, in which case the same check has to be re-implemented instead of cherry-picked. Keep the patch minimal: the goal is to block the vulnerability without changing any existing legitimate behavior.
+Isolate security-relevant change from rest of upstream release. Fix commits often bundled with refactoring, renaming, unrelated bugfixes that MUST NOT be carried over; fix may rely on internal functions absent in older line → re-implement check instead of cherry-pick. Keep patch minimal: block vulnerability without changing any existing legitimate behavior.
 
 **Step 3:**
 
-Verify the patch rather than assume it. A test reproducing the vulnerability must fail against the unpatched dependency and pass against the patched one, and both the dependency's own test suite and the application tests must still pass. Silencing the scanner or bumping a version string is not remediation.
+Verify patch, don't assume. Test reproducing vulnerability must fail against unpatched dependency, pass against patched; dependency's own test suite and app tests must still pass. Silencing scanner or bumping version string ≠ remediation.
 
 **Step 4:**
 
-Distribute the patched artifact so that every build resolves it: publish it to the internal registry or proxy that the build already trusts, instead of committing a locally built file into each project. Give it a version identifier that remains traceable to the upstream version it derives from, and record its provenance (source commit, CVE, who produced it) so that the next reader can audit it. Expect detection tools to keep flagging the dependency, because [looking at the version number of a package will not tell you whether a backported fix is present](https://access.redhat.com/security/updates/backporting); suppress the alert per CVE as described in the note of [Case 2](#case-2).
+Distribute patched artifact so every build resolves it: publish to internal registry/proxy build already trusts, not locally built file committed into each project. Version identifier stays traceable to upstream version; record provenance (source commit, CVE, producer) for audit. Expect detection tools to keep flagging dependency, since version number doesn't tell whether backported fix present; suppress alert per CVE as in note of [Case 2](#case-2).
 
 **Step 5:**
 
-Treat the patch as a standing commitment and not a one-off task. Every new upstream release of the dependency has to be re-patched, and every new CVE affecting it adds another patch to carry. Before deciding to maintain patches in-house, size that recurring work against acquiring maintained backports from a provider whose business is producing them. Drop the backport as soon as the fixed version becomes adoptable: re-test the blocker recorded in step 1 at each dependency review, then go back to [Case 1](#case-1).
+Patch = standing commitment, not one-off. Every new upstream release must be re-patched; every new CVE adds another patch. Before maintaining patches in-house, size recurring work vs acquiring maintained backports from provider whose business is producing them. Drop backport once fixed version adoptable: re-test step 1 blocker at each dependency review, then return to [Case 1](#case-1).
 
 ## Tools
 
-This section lists several tools that can used to analyze the dependencies used by a project in order to detect the vulnerabilities.
+Tools analyzing project dependencies to detect vulnerabilities.
 
-It's important to ensure, during the selection process of a vulnerable dependency detection tool, that this one:
+When selecting detection tool, ensure it:
 
-- Uses several reliable input sources in order to handle both vulnerability disclosure ways.
-- Support for flagging an issue raised on a component as a [false-positive](https://www.whitehatsec.com/glossary/content/false-positive).
+- Uses several reliable input sources to cover both disclosure ways.
+- Supports flagging issue on component as false-positive.
 
 - Free
-    - [OWASP Dependency Check](https://owasp.org/www-project-dependency-check/):
+    - OWASP Dependency Check:
         - Full support: Java, .Net.
         - Experimental support: Python, Ruby, PHP (composer), NodeJS, C, C++.
-    - [NPM Audit](https://docs.npmjs.com/cli/audit)
+    - NPM Audit
         - Full support: NodeJS, JavaScript.
-        - HTML report available via this [module](https://www.npmjs.com/package/npm-audit-html).
-    - [OWASP Dependency Track](https://dependencytrack.org/) can be used to manage vulnerable dependencies across an organization.
-    - [Trivy](https://github.com/aquasecurity/trivy)
+        - HTML report via npm-audit-html module.
+    - OWASP Dependency Track: manage vulnerable dependencies across organization.
+    - Trivy
         - Full support: Base OS, Java, NodeJS, JavaScript, Ruby, Python, Go, .NET, Rust, PHP, Dart, Swift
         - Targets: Kubernetes (nodes and containers), Docker (nodes and containers), filesystem, Git repositories, cloud images
-    - [Grype](https://github.com/anchore/grype)
+    - Grype
         - Full support across mainstream language ecosystems with SBOM-driven scanning
-        - Targets: container images, filesystems, and SBOMs produced by [Syft](https://github.com/anchore/syft)
+        - Targets: container images, filesystems, SBOMs produced by Syft
 - Commercial
-    - [Snyk](https://snyk.io/) (open source and free option available):
-        - [Full support](https://snyk.io/docs/) for many languages and package manager.
-    - [JFrog XRay](https://jfrog.com/xray/):
-        - [Full support](https://jfrog.com/integration/) for many languages and package manager.
-    - [Renovate](https://renovatebot.com) (allow to detect old dependencies):
-        - [Full support](https://renovatebot.com/docs/) for many languages and package manager.
+    - Snyk (open source and free option available):
+        - Full support for many languages and package managers.
+    - JFrog XRay:
+        - Full support for many languages and package managers.
+    - Renovate (detects old dependencies):
+        - Full support for many languages and package managers.
 
 ### Remediation and maintained backports
 
-The tools above detect vulnerable dependencies, they do not fix them. When the fixed version cannot be adopted, the patch still has to come from somewhere: either the development team maintains it or someone else does.
+Tools detect, don't fix. When fixed version cannot be adopted, patch still must come from somewhere: team maintains it or someone else does.
 
-Linux distribution security teams are the reference model for the second option. [Debian](https://www.debian.org/security/faq) and [Red Hat](https://access.redhat.com/security/updates/backporting) both backport security fixes into the version shipped in the stable release instead of upgrading it. When the dependency is consumed as an operating system package, take the distribution's patched build rather than maintaining a private patch.
+Linux distribution security teams = reference model for second option. Debian and Red Hat both backport security fixes into version shipped in stable release instead of upgrading. Dependency consumed as OS package → take distribution's patched build, not private patch.
 
-Language ecosystem packages are rarely covered that way, so the choice there is between maintaining the patch in-house and paying someone to maintain it. Judge either option on the same criteria as a detection tool, plus:
+Language ecosystem packages rarely covered that way; choice: maintain patch in-house or pay someone. Judge either option by same criteria as detection tool, plus:
 
-- Coverage of the ecosystems, version lines and severities the project depends on, with a published response time.
-- Publication of the patch itself and of its provenance, so that the change can be reviewed instead of being trusted blindly.
-- Delivery as a compatible artifact through a registry or proxy that the build already uses, so that no manifest rewrite is required.
-- A documented way out, so that leaving the source does not mean re-patching everything from scratch.
+- Coverage of ecosystems, version lines, severities project depends on, with published response time.
+- Publication of patch itself + provenance, so change reviewable, not trusted blindly.
+- Delivery as compatible artifact via registry/proxy build already uses; no manifest rewrite.
+- Documented way out; leaving source ≠ re-patching everything from scratch.
 
 ## References
 
-- [OpenSSF: Concise Guide for Evaluating Open Source Software](https://best.openssf.org/Concise-Guide-for-Evaluating-Open-Source-Software)
-- [Debian security FAQ](https://www.debian.org/security/faq)
-- [Red Hat: Backporting Security Fixes](https://access.redhat.com/security/updates/backporting)
+- OpenSSF: Concise Guide for Evaluating Open Source Software
+- Debian security FAQ
+- Red Hat: Backporting Security Fixes

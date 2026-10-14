@@ -2,23 +2,23 @@
 
 ## Introduction
 
-FastAPI is a Python web framework using the Asynchronous Server Gateway Interface (ASGI). This cheat sheet covers authentication dependencies, input and output models, and deployment controls, building on the [FastAPI security documentation](https://fastapi.tiangolo.com/tutorial/security/).
+FastAPI = Python web framework on Asynchronous Server Gateway Interface (ASGI). Covers authentication dependencies, input/output models, deployment controls; builds on FastAPI security documentation.
 
-See the [REST Security Cheat Sheet](REST_Security.md) for general API controls.
+General API controls: [REST Security Cheat Sheet](REST_Security.md).
 
-Code snippets illustrate individual controls, not complete applications. They assume an existing FastAPI application and application-specific user and persistence functions; adapt and test them for your application.
+Snippets illustrate single controls, not complete apps. Assume existing FastAPI app and app-specific user/persistence functions; adapt and test.
 
 ## Dependency Injection and Access Control
 
-Use FastAPI's dependency injection system, through `Depends()`, to enforce authentication and authorization consistently. Missing or insufficient dependencies can leave sensitive operations accessible to unauthorized users. See the [FastAPI dependencies tutorial](https://fastapi.tiangolo.com/tutorial/dependencies/).
+Use FastAPI dependency injection (`Depends()`) to enforce authentication and authorization consistently. Missing/insufficient dependencies can leave sensitive operations open to unauthorized users.
 
 ### OAuth2PasswordBearer Does Not Validate Tokens
 
-The helper class `OAuth2PasswordBearer` checks the authorization scheme and extracts the bearer token from the `Authorization` header. It does **not validate the token or verify its signature**. An authentication dependency must verify the token and reject invalid credentials before returning a user. See the [OAuth2PasswordBearer reference](https://fastapi.tiangolo.com/reference/security/#fastapi.security.OAuth2PasswordBearer).
+Helper class `OAuth2PasswordBearer` checks authorization scheme, extracts bearer token from `Authorization` header. It does **not validate token or verify signature**. Authentication dependency must verify token, reject invalid credentials before returning user.
 
 ### Scoping Authorization Dependencies
 
-Authentication alone does not authorize an operation. Endpoints requiring elevated privileges, such as admin tasks, must also check the user's permissions. In this example, `get_current_user` is an authentication dependency that rejects invalid credentials.
+Authentication alone ≠ authorization. Endpoints needing elevated privileges (e.g. admin tasks) must also check user permissions. Example: `get_current_user` = authentication dependency rejecting invalid credentials.
 
 ```python
 from fastapi import Depends, HTTPException, status
@@ -38,7 +38,7 @@ def update_settings(admin: User = Depends(get_admin_user)):
 
 ### Router-Level Deny-by-Default
 
-Apply authentication dependencies to an entire `APIRouter` so new endpoints in that router inherit the check. This covers only that router's routes; sensitive operations still need permission checks.
+Apply authentication dependencies to entire `APIRouter` so new endpoints inherit check. Covers only that router's routes; sensitive operations still need permission checks.
 
 ```python
 from fastapi import APIRouter, Depends
@@ -52,34 +52,34 @@ router = APIRouter(
 
 ## Secure Authentication and JWT Implementation
 
-When using JSON Web Tokens (JWTs), developers are responsible for token verification and key management. The [FastAPI OAuth2 with JWT tutorial](https://fastapi.tiangolo.com/tutorial/security/oauth2-jwt/) demonstrates verification with PyJWT.
+JSON Web Tokens (JWTs): developers responsible for token verification and key management. FastAPI OAuth2 with JWT tutorial demonstrates verification w/ PyJWT.
 
 ### Cryptographic Library Choice
 
-- **Use PyJWT:** Delegate token verification to the library rather than writing custom parsing or cryptographic logic. Configure verification using the [PyJWT decoding API](https://pyjwt.readthedocs.io/en/latest/api.html#jwt.decode).
+- **Use PyJWT:** Delegate token verification to library; no custom parsing/crypto logic. Configure verification via PyJWT decoding API.
 
 ### Key Claims Verification
 
-- **Validate Required Claims:** Verify the signature and require `exp` (expiration), `iss` (issuer), and `aud` (audience) for authentication tokens. In PyJWT, use `options={"require": ["exp", "iss", "aud"]}` and supply the expected `issuer` and `audience`. Requiring a claim only checks its presence; keep the corresponding verification enabled. Validate `nbf` (not before) when present, and require it if your token profile calls for it.
-- **Explicit Algorithms:** Configure the expected algorithm during decoding, for example `algorithms=["HS256"]` for tokens issued with that algorithm. Do not derive the accepted algorithms from the token's header.
-- **Revocation and Replay:** Expiration bounds a token's lifetime. Checking a revocation blocklist rejects revoked tokens, but a stolen, still-active bearer token remains reusable. See the [JWT replay-protection guidance](../cheatsheets/JSON_Web_Token.md#replay-protection) for controls beyond expiration and revocation.
+- **Validate Required Claims:** Verify signature; require `exp` (expiration), `iss` (issuer), `aud` (audience) for authentication tokens. PyJWT: `options={"require": ["exp", "iss", "aud"]}` + supply expected `issuer` and `audience`. Requiring claim checks presence only; keep corresponding verification enabled. Validate `nbf` (not before) when present; require it if token profile calls for it.
+- **Explicit Algorithms:** Configure expected algorithm during decoding, e.g. `algorithms=["HS256"]` for tokens issued w/ it. Never derive accepted algorithms from token header.
+- **Revocation and Replay:** Expiration bounds token lifetime. Revocation blocklist rejects revoked tokens, but stolen still-active bearer token stays reusable. See [JWT replay-protection guidance](../cheatsheets/JSON_Web_Token.md#replay-protection) for controls beyond expiration and revocation.
 
 ### Cookie-Stored Refresh Tokens
 
-- **Cookie Attributes:** If you store refresh tokens in cookies, set `HttpOnly`, `Secure`, and `SameSite=Lax` or `Strict` where compatible with your authentication flow. `HttpOnly` prevents JavaScript from reading the cookie; it does not prevent injected scripts from making authenticated requests.
-- **CSRF Mitigations:** Browsers attach cookies automatically, introducing Cross-Site Request Forgery (CSRF) risk. Protect refresh and other state-changing endpoints with the defenses in the [CSRF Prevention Cheat Sheet](../cheatsheets/Cross-Site_Request_Forgery_Prevention.md), such as validated CSRF tokens. Treat `SameSite` as defense in depth.
+- **Cookie Attributes:** Refresh tokens in cookies: set `HttpOnly`, `Secure`, `SameSite=Lax` or `Strict` where compatible w/ auth flow. `HttpOnly` stops JavaScript reading cookie; does not stop injected scripts making authenticated requests.
+- **CSRF Mitigations:** Browsers attach cookies automatically → Cross-Site Request Forgery (CSRF) risk. Protect refresh and other state-changing endpoints w/ defenses in [CSRF Prevention Cheat Sheet](../cheatsheets/Cross-Site_Request_Forgery_Prevention.md), e.g. validated CSRF tokens. `SameSite` = defense in depth.
 
 ### Signing Key Management
 
-Never hardcode signing secrets or provide a default development key in production. Supply keys from deployment-managed secret storage; prefer a mounted secret file or retrieval from a secret manager, and use environment variables only when safer injection methods are unavailable. Pydantic Settings can read deployment-supplied configuration. Keep local `.env` files containing secrets out of source control. Follow the [Secrets Management Cheat Sheet](../cheatsheets/Secrets_Management.md) for provisioning and rotation.
+Never hardcode signing secrets or ship default development key in production. Supply keys from deployment-managed secret storage; prefer mounted secret file or secret manager retrieval; env vars only when safer injection unavailable. Pydantic Settings can read deployment-supplied config. Keep local `.env` files w/ secrets out of source control. Follow [Secrets Management Cheat Sheet](../cheatsheets/Secrets_Management.md) for provisioning and rotation.
 
 ## Pydantic Validation and Input Hardening
 
-Pydantic schemas validate data, but they do not replace authorization checks or prevent injection vulnerabilities. See the [Pydantic models documentation](https://docs.pydantic.dev/latest/concepts/models/).
+Pydantic schemas validate data; do not replace authorization checks or prevent injection.
 
 ### Reject Unrecognized Fields
 
-By default, Pydantic ignores undeclared input fields. Use `extra="forbid"` when the API should reject requests containing such fields instead of ignoring them:
+Pydantic ignores undeclared input fields by default. Use `extra="forbid"` for API to reject such requests:
 
 ```python
 from pydantic import BaseModel, ConfigDict
@@ -92,11 +92,11 @@ class UserCreate(BaseModel):
 
 ### Prevent Mass Assignment
 
-Use separate, restricted input schemas (`UserCreate`, `UserUpdate`) that exclude server-controlled fields like `is_admin` or `id`. Persist only validated, allowed fields, not the raw request dictionary. `extra="forbid"` does not prevent clients from setting a sensitive field that you declared in the input schema. See the [Mass Assignment Cheat Sheet](../cheatsheets/Mass_Assignment.md).
+Use separate restricted input schemas (`UserCreate`, `UserUpdate`) excluding server-controlled fields like `is_admin` or `id`. Persist only validated allowed fields, not raw request dict. `extra="forbid"` does not stop clients setting sensitive field you declared in input schema. See [Mass Assignment Cheat Sheet](../cheatsheets/Mass_Assignment.md).
 
 ### Prevent Sensitive Data Exposure
 
-Explicitly specify `response_model` in path decorators to filter database objects and exclude sensitive fields (e.g., `password_hash`) from responses. See [FastAPI Response Model documentation](https://fastapi.tiangolo.com/tutorial/response-model/).
+Specify `response_model` explicitly in path decorators to filter DB objects, exclude sensitive fields (e.g., `password_hash`) from responses.
 
 ```python
 class UserResponse(BaseModel):
@@ -110,76 +110,76 @@ def create_user(user: UserCreate):
 
 ### Strict Typing
 
-Pydantic can convert input values to the declared types, such as `"123"` to `123` for an `int` field. Where security decisions require an exact input type, use strict types such as `StrictInt` and `StrictBool` to reject unintended conversions.
+Pydantic can convert input to declared types, e.g. `"123"` to `123` for `int` field. Where security decisions need exact input type, use strict types e.g. `StrictInt`, `StrictBool` to reject unintended conversions.
 
 ### Injection Countermeasure
 
-Input validation does not prevent SQL injection. Use parameterized queries, including through Object-Relational Mapper (ORM) APIs that bind parameters. Never build raw SQL queries using string formatting with user input. See the [SQL Injection Prevention Cheat Sheet](../cheatsheets/SQL_Injection_Prevention.md).
+Input validation ≠ SQL injection prevention. Use parameterized queries, incl. via Object-Relational Mapper (ORM) APIs that bind parameters. Never build raw SQL w/ string formatting of user input. See [SQL Injection Prevention Cheat Sheet](../cheatsheets/SQL_Injection_Prevention.md).
 
 ## Cross-Origin Resource Sharing (CORS) Configuration
 
-Incorrect CORS settings can expose private API responses to untrusted websites in a user's browser. CORS does not replace endpoint authorization or restrict non-browser clients. See the [FastAPI CORS documentation](https://fastapi.tiangolo.com/tutorial/cors/).
+Incorrect CORS can expose private API responses to untrusted websites in user's browser. CORS does not replace endpoint authorization or restrict non-browser clients.
 
 ### Restrictive CORS Settings
 
-- **Explicit Origins:** When using `allow_credentials=True`, explicitly list trusted origins in `allow_origins`. Do not combine credentialed requests with `allow_origins=["*"]`.
-- **Restrict Headers and Methods:** Limit `allow_methods` and `allow_headers` to only the verbs and headers your client application uses.
-- For complete CORS design patterns, refer to the [OWASP HTML5 Security Cheat Sheet](../cheatsheets/HTML5_Security.md).
+- **Explicit Origins:** With `allow_credentials=True`, list trusted origins explicitly in `allow_origins`. Never combine credentialed requests w/ `allow_origins=["*"]`.
+- **Restrict Headers and Methods:** Limit `allow_methods` and `allow_headers` to verbs/headers client app uses.
+- Full CORS design patterns: [OWASP HTML5 Security Cheat Sheet](../cheatsheets/HTML5_Security.md).
 
 ## OpenAPI and Swagger UI Exposure
 
-FastAPI exposes interactive documentation at `/docs` and `/redoc`, with the schema at `/openapi.json`. Decide whether this information should be public. The [conditional OpenAPI guidance](https://fastapi.tiangolo.com/how-to/conditional-openapi/#about-security-apis-and-docs) explains why hiding documentation does not secure the API operations themselves.
+FastAPI exposes interactive docs at `/docs` and `/redoc`, schema at `/openapi.json`. Decide whether public. Hiding docs does not secure API operations themselves (conditional OpenAPI guidance).
 
 ### Hardening Documentation in Production
 
-If the documentation is private, restrict access to both the documentation pages and schema, or disable them with `FastAPI(openapi_url=None)`. This prevents disclosure through those routes; authorization must still protect every API operation.
+Private docs: restrict access to doc pages and schema, or disable w/ `FastAPI(openapi_url=None)`. Prevents disclosure via those routes; authorization must still protect every API operation.
 
 ## Async Event Loop and Background Tasks
 
-Blocking a worker's event loop prevents it from handling other requests, creating a Denial of Service (DoS) risk. See the [FastAPI async tutorial](https://fastapi.tiangolo.com/async/).
+Blocking worker's event loop stops it handling other requests → Denial of Service (DoS) risk.
 
 ### Event Loop Blocking
 
-- Use asynchronous database and network clients inside `async def` routes. For synchronous libraries, use `def` routes or dependencies, which FastAPI runs in a thread pool. Ordinary helper functions called directly inside `async def` are not automatically moved to that pool.
-- Move CPU-heavy or long-running work to a separate worker system, such as Celery. `BackgroundTasks` still runs in the application process; see the [background-task caveat](https://fastapi.tiangolo.com/tutorial/background-tasks/#caveat).
+- Use async DB and network clients inside `async def` routes. Synchronous libraries: use `def` routes/dependencies, which FastAPI runs in thread pool. Ordinary helper functions called directly inside `async def` not auto-moved to pool.
+- Move CPU-heavy/long-running work to separate worker system, e.g. Celery. `BackgroundTasks` still runs in app process (background-task caveat).
 
 ## Exception Handling and Information Leakage
 
-Control which error details reach clients and logs. FastAPI supports [custom exception handlers](https://fastapi.tiangolo.com/tutorial/handling-errors/#override-request-validation-exceptions) for sanitizing validation responses.
+Control which error details reach clients and logs. FastAPI supports custom exception handlers to sanitize validation responses.
 
 ### Validation Error Leakage
 
-Request validation errors can include submitted values and custom error details. Avoid reflecting passwords or tokens into responses or recording them in logs. In a `RequestValidationError` handler, return only safe field locations and error descriptions, or a generic message where necessary. Do not return `str(exc)` or the entire request body; these can include sensitive input or internal context.
+Request validation errors can include submitted values and custom error details. Avoid reflecting passwords/tokens in responses or logs. In `RequestValidationError` handler, return only safe field locations and error descriptions, or generic message where necessary. Never return `str(exc)` or entire request body; can include sensitive input or internal context.
 
 ## File Upload Security
 
-FastAPI parses multipart uploads into `UploadFile` objects, which spool larger files to temporary disk storage. See the [UploadFile documentation](https://fastapi.tiangolo.com/tutorial/request-files/#uploadfile).
+FastAPI parses multipart uploads into `UploadFile` objects, spooling larger files to temporary disk.
 
 ### Upload Protections
 
-- **Limit Payloads Before Parsing:** Set a request-body limit at the reverse proxy or gateway, for example Nginx's [`client_max_body_size`](https://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size). Ensure clients cannot bypass that layer. FastAPI [parses the form before running dependencies](https://github.com/fastapi/fastapi/blob/28a206107302ee20ce6a9a876d05a258c1c8d328/fastapi/routing.py#L438-L502); checking `UploadFile.size` in a dependency or endpoint does not protect against the resources already consumed during parsing.
-- **Treat Metadata as Untrusted:** Do not use `UploadFile.filename` directly as a storage path or trust `content_type` as proof of file type. Apply the filename, content-validation, and storage controls in the [File Upload Cheat Sheet](../cheatsheets/File_Upload.md).
+- **Limit Payloads Before Parsing:** Set request-body limit at reverse proxy/gateway, e.g. Nginx `client_max_body_size`. Ensure clients cannot bypass that layer. FastAPI parses form before running dependencies; checking `UploadFile.size` in dependency/endpoint does not protect against resources already consumed during parsing.
+- **Treat Metadata as Untrusted:** Never use `UploadFile.filename` directly as storage path or trust `content_type` as proof of file type. Apply filename, content-validation, storage controls in [File Upload Cheat Sheet](../cheatsheets/File_Upload.md).
 
 ## Rate Limiting
 
-Apply request limits to reduce abuse of sensitive or expensive endpoints.
+Apply request limits to reduce abuse of sensitive/expensive endpoints.
 
 ### Mitigation Options
 
-- Use a dedicated library like [slowapi](https://github.com/laurentS/slowapi) to implement route-specific rate limiting in code.
-- With multiple workers or replicas, use a shared counter store, such as Redis, so limits apply across instances instead of independently in each process.
-- Implement rate limiting at the reverse proxy (Nginx, HAProxy) or API gateway layer.
+- Dedicated library e.g. slowapi for route-specific rate limiting in code.
+- Multiple workers/replicas: shared counter store (e.g. Redis) so limits apply across instances, not per process.
+- Rate limit at reverse proxy (Nginx, HAProxy) or API gateway.
 
 ## ASGI Server Hardening
 
-Configure the ASGI server's proxy trust explicitly so clients cannot spoof the client address or request scheme using forwarding headers. See the [Uvicorn HTTP settings](https://uvicorn.dev/settings/#http).
+Configure ASGI server proxy trust explicitly so clients cannot spoof client address or request scheme via forwarding headers (Uvicorn HTTP settings).
 
 ### Deployment Configuration
 
-- **Limit Proxy Forwarding:** Set `--forwarded-allow-ips` to the addresses of trusted reverse proxies and configure those proxies to overwrite untrusted forwarding headers. Avoid `--forwarded-allow-ips="*"`, which trusts every connecting client. Disable proxy-header handling with `--no-proxy-headers` if it is not needed.
-- **Disable Server Header:** Use `--no-server-header` to suppress Uvicorn's default `Server` header. This removes one identifying header; it does not prevent other forms of server fingerprinting.
+- **Limit Proxy Forwarding:** Set `--forwarded-allow-ips` to trusted reverse proxy addresses; configure proxies to overwrite untrusted forwarding headers. Avoid `--forwarded-allow-ips="*"` (trusts every connecting client). Disable proxy-header handling w/ `--no-proxy-headers` if not needed.
+- **Disable Server Header:** `--no-server-header` suppresses Uvicorn default `Server` header. Removes one identifying header; does not prevent other server fingerprinting.
 
 ## References
 
-- [FastAPI: Dependencies](https://fastapi.tiangolo.com/tutorial/dependencies/)
-- [FastAPI: OAuth2 with JWT tokens](https://fastapi.tiangolo.com/tutorial/security/oauth2-jwt/)
+- FastAPI: Dependencies
+- FastAPI: OAuth2 with JWT tokens

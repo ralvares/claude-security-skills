@@ -4,7 +4,7 @@
 
 ### Vulnerability: Permissions Overreach
 
-Browser extensions sometimes request more permissions than they actually need. This can grant them access to all tabs, browsing history, and even sensitive user data. If an extension is compromised, it could lead to serious privacy risks.
+Extensions request more permissions than needed → access to all tabs, browsing history, sensitive user data. Compromised extension → serious privacy risk.
 
 ### Example: Permissions Overreach
 
@@ -25,13 +25,13 @@ Browser extensions sometimes request more permissions than they actually need. T
 
 ### Mitigation: Permissions Overreach
 
-Follow the Principle of Least Privilege (PoLP) and request only the permissions that are absolutely necessary. Use optional permissions whenever possible instead of granting full access upfront. Regularly audit and remove any permissions that are no longer needed. In Manifest V3, declare URL access separately in [`host_permissions` or `optional_host_permissions`](https://developer.chrome.com/docs/extensions/develop/migrate/manifest#update-host-permissions).
+Least Privilege (PoLP): request only absolutely necessary permissions. Prefer optional permissions over full upfront access. Regularly audit, remove unneeded permissions. Manifest V3: declare URL access separately in `host_permissions` or `optional_host_permissions`.
 
 ## 2. Data Leakage
 
 ### Vulnerability: Data Leakage
 
-Some extensions unintentionally expose user data by sending browsing activity or personal details to external servers without proper security measures.
+Extensions unintentionally expose user data by sending browsing activity or personal details to external servers w/o proper security.
 
 ### Example: Data Leakage
 
@@ -48,13 +48,13 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 
 ### Mitigation: Data Leakage
 
-Always use HTTPS for all communications to prevent data interception. Limit data collection and be transparent by clearly stating what data is collected in a Privacy Policy.Implement user consent mechanisms before collecting or sending any personal data.
+Always HTTPS for all communications to prevent interception. Limit data collection; state collected data clearly in Privacy Policy. Implement user consent before collecting or sending personal data.
 
 ## 3. Cross-Site Scripting (XSS)
 
 ### Vulnerability: Cross-Site Scripting (XSS)
 
-If user input is not properly sanitized, attackers can inject malicious scripts into web pages, potentially stealing user data or performing unauthorized actions.
+Unsanitized user input → attackers inject malicious scripts into pages, steal data or perform unauthorized actions.
 
 ### Example: Cross-Site Scripting (XSS)
 
@@ -65,13 +65,13 @@ document.getElementById('output').innerHTML = userInput; // No sanitization
 
 ### Mitigation: Cross-Site Scripting (XSS)
 
-Implement Content Security Policy (CSP) to block inline scripts. Use libraries like DOMPurify to sanitize user input before displaying it. Avoid using innerHTML and instead use textContent to prevent execution of injected scripts.
+Implement Content Security Policy (CSP) to block inline scripts. Sanitize user input w/ libraries like DOMPurify before display. Avoid innerHTML; use textContent.
 
 ## 4. Insecure Communication
 
 ### Vulnerability: Insecure Communication
 
-Some extensions send sensitive data over unsecured HTTP connections, making it vulnerable to interception by attackers.
+Sensitive data over unsecured HTTP → interception.
 
 ### Example: Insecure Communication
 
@@ -81,13 +81,13 @@ fetch('http://example.com/api/data');
 
 ### Mitigation: Insecure Communication
 
-Always use HTTPS for external communications to prevent data theft. Validate server responses before processing them to ensure data integrity.
+Always HTTPS for external communications. Validate server responses before processing for data integrity.
 
 ## 5. Code Injection
 
 ### Vulnerability: Code Injection
 
-An extension that dynamically loads scripts from an untrusted source can be exploited to inject and execute malicious code.
+Extension dynamically loading scripts from untrusted source → injection and execution of malicious code.
 
 ### Example: Code Injection
 
@@ -99,13 +99,13 @@ document.body.appendChild(script);
 
 ### Mitigation: Code Injection
 
-Use CSP (Content Security Policy) to restrict script sources. For more details, refer to the [CSP Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html). Avoid using eval() and innerHTML as they can execute malicious code. Prefer using extension messaging APIs instead of injecting scripts into web pages.
+Use CSP (Content Security Policy) to restrict script sources; see [CSP Cheat Sheet](Content_Security_Policy.md). Avoid eval() and innerHTML (execute malicious code). Prefer extension messaging APIs over injecting scripts into web pages.
 
 ## 6. Malicious Updates
 
 ### Vulnerability: Malicious Updates
 
-If an extension fetches updates from an untrusted server, an attacker could push malicious updates to all users.
+Extension fetching updates from untrusted server → attacker pushes malicious updates to all users.
 
 ### Example: Malicious Updates
 
@@ -119,15 +119,15 @@ chrome.runtime.onInstalled.addListener(() => {
 
 ### Mitigation: Malicious Updates
 
-Sign extension updates with digital signatures to ensure authenticity. Instead of fetching updates within the extension, rely on updates from the extension marketplace.
-See ["Don’t inject or incorporate remote scripts"](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Security_best_practices).
-Implement integrity checks before executing any fetched code.
+Sign extension updates w/ digital signatures for authenticity. Rely on extension marketplace updates, not fetching updates within extension.
+See "Don’t inject or incorporate remote scripts" (MDN WebExtensions Security best practices).
+Integrity checks before executing any fetched code.
 
 ## 7. Third-Party Dependencies
 
 ### Vulnerability: Third-Party Dependencies
 
-Using outdated or vulnerable third-party libraries in an extension can introduce security risks if those libraries have known exploits.
+Outdated or vulnerable third-party libraries w/ known exploits → security risk.
 
 ### Example: Third-Party Dependencies
 
@@ -141,13 +141,13 @@ Using outdated or vulnerable third-party libraries in an extension can introduce
 
 ### Mitigation: Third-Party Dependencies
 
-Regularly audit third-party dependencies for security vulnerabilities. Use tools like npm audit or OWASP Dependency-Check to detect risks.Prefer actively maintained libraries with frequent security updates.
+Regularly audit third-party dependencies. Use tools like npm audit or OWASP Dependency-Check. Prefer actively maintained libraries w/ frequent security updates.
 
 ## 8. Lack of Content Security Policy (CSP)
 
 ### Vulnerability: Lack of Content Security Policy (CSP)
 
-Weakening an extension’s Content Security Policy (CSP) can increase the impact of script injection. [Chrome enforces a default and minimum CSP for Manifest V3 extension pages](https://developer.chrome.com/docs/extensions/reference/manifest/content-security-policy), even when the manifest omits a custom policy.
+Weakening extension’s CSP increases script injection impact. Chrome enforces default and minimum CSP for Manifest V3 extension pages, even when manifest omits custom policy.
 
 ### Example: Restrictive Manifest V3 Policy
 
@@ -163,13 +163,13 @@ Weakening an extension’s Content Security Policy (CSP) can increase the impact
 
 ### Mitigation: Lack of Content Security Policy (CSP)
 
-Configure `content_security_policy.extension_pages` in `manifest.json` and load scripts from the extension package. Do not apply ordinary webpage nonce or hash recommendations to Chrome Manifest V3 extension pages: their [allowed script sources are restricted](https://developer.chrome.com/docs/extensions/develop/migrate/improve-security#remove-unsupported-csv). Keep inline script execution blocked and restrict other resource types to those the extension needs.
+Configure `content_security_policy.extension_pages` in `manifest.json`; load scripts from extension package. Don't apply ordinary webpage nonce or hash recommendations to Chrome Manifest V3 extension pages: allowed script sources restricted. Keep inline script execution blocked; restrict other resource types to what extension needs.
 
 ## 9. Insecure Storage
 
 ### Vulnerability: Insecure Storage
 
-Storing sensitive data like authentication tokens in localStorage or other unsecured locations makes it easy for attackers to access.
+Sensitive data like auth tokens in localStorage or other unsecured locations → easy attacker access.
 
 ### Example: Insecure Storage
 
@@ -179,14 +179,14 @@ localStorage.setItem('token', 'my-secret-token'); // No encryption
 
 ### Mitigation: Insecure Storage
 
-Avoid persisting sensitive user data in the extension: [extension storage is not encrypted](https://developer.chrome.com/docs/extensions/develop/security-privacy/user-privacy#data_collection). For sensitive data needed only while the browser is running, use [`chrome.storage.session`](https://developer.chrome.com/docs/extensions/reference/api/storage#storage_areas), which stores data in memory and is not exposed to content scripts by default. Keep that access restriction and clear data when it is no longer needed. This reduces persistence and content-script exposure; it does not protect secrets from a compromised extension or device.
-Never hardcode API keys or credentials within the extension code.
+Avoid persisting sensitive user data in extension: extension storage not encrypted. For sensitive data needed only while browser running, use `chrome.storage.session`: stores data in memory, not exposed to content scripts by default. Keep that access restriction; clear data when no longer needed. Reduces persistence and content-script exposure; does not protect secrets from compromised extension or device.
+Never hardcode API keys or credentials in extension code.
 
 ## 10. Insufficient Privacy Controls
 
 ### Vulnerability: Insufficient Privacy Controls
 
-If an extension does not clearly define how it collects and handles user data, it could lead to privacy violations and unauthorized data usage.
+Extension not clearly defining data collection/handling → privacy violations, unauthorized data usage.
 
 ### Example: Insufficient Privacy Controls
 
@@ -200,17 +200,17 @@ If an extension does not clearly define how it collects and handles user data, i
 
 ### Mitigation: Insufficient Privacy Controls
 
-Implement a clear privacy policy that explains data collection practices. Allow users to opt out of data collection. Disclose data-sharing practices to comply with GDPR, CCPA, and other privacy regulations.
+Clear privacy policy explaining data collection practices. Let users opt out of data collection. Disclose data-sharing practices to comply w/ GDPR, CCPA, other privacy regulations.
 
 ## 11. DOM-based Data Skimming
 
 ### Vulnerability: DOM-based Data Skimming
 
-When an extension renders sensitive user information directly into DOM of a web page, this data becomes accessible to the page's own scripts.
+Extension rendering sensitive user info directly into page DOM → data accessible to page's own scripts.
 
-This risk applies regardless of the method used, including plain JavaScript DOM manipulation or injecting components built with frameworks like React.
+Applies regardless of method: plain JavaScript DOM manipulation or injecting framework components like React.
 
-A malicious or compromised web page can inspect the DOM, read the sensitive data (e.g., personally identifiable information, financial details, AI chat histories), and exfiltrate it.
+Malicious or compromised page can inspect DOM, read sensitive data (e.g., PII, financial details, AI chat histories), exfiltrate it.
 
 ### Example: DOM-based Data Skimming
 
@@ -231,29 +231,29 @@ document.body.appendChild(userInfoDiv);
 
 ### Mitigation: DOM-based Data Skimming
 
-Avoid rendering any sensitive information directly into a web page's DOM. Instead, display sensitive data in UI elements that are isolated from the web page's context and controlled by the extension.
+Never render sensitive info directly into page DOM. Display in extension-controlled UI elements isolated from page context.
 
-Use secure alternatives such as:
+Secure alternatives:
 
-- Popup: Display information in a popup UI that appears when the user clicks the extension's icon.
-- Options Page: Use a dedicated options page for displaying user-specific data or settings.
-- Side Panel: Use the side panel to show a persistent UI in a separate pane, isolated from the page content. (FYI, "Side Panel" is a Chromium term. Firefox calls it "Sidebar".)
+- Popup: UI shown when user clicks extension icon.
+- Options Page: dedicated page for user-specific data or settings.
+- Side Panel: persistent UI in separate pane, isolated from page content. ("Side Panel" = Chromium term; Firefox calls it "Sidebar".)
 
-It is important to note that even using a Shadow DOM for encapsulation may not be a sufficient safeguard, as page scripts can still query an 'open' Shadow DOM. Moreover, even a 'closed' Shadow DOM is not safe, if you consider other browser extensions as threats under your security model. This is because extensions can spear through a 'closed' Shadow DOM using [`openOrClosedShadowRoot()` API](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/dom/openOrClosedShadowRoot).
+Shadow DOM encapsulation insufficient: page scripts can still query 'open' Shadow DOM. 'Closed' Shadow DOM also unsafe if other browser extensions are threats in security model: extensions can pierce 'closed' Shadow DOM via `openOrClosedShadowRoot()` API.
 
-Therefore, using truly separate extension-controlled UIs is the most reliable mitigation.
+Truly separate extension-controlled UIs = most reliable mitigation.
 
 ## 12. Prototype-based Data Skimming
 
 ### Vulnerability: Prototype-based Data Skimming
 
-An extension's content script is executed in "isolated world", a JavaScript context separated from the one of a web page. On the other hand, there are some ways for an extension to execute scripts in "main world", a web page's context. For example, an extension can inject a `<script>` tag directly to DOM with `src` attribute pointing to a script of [web accessible resources](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/web_accessible_resources).
+Content script runs in "isolated world", JavaScript context separate from page's. Extensions can also run scripts in "main world" (page's context), e.g. inject `<script>` tag into DOM w/ `src` pointing to a script of web accessible resources.
 
-When an extension uses sensitive user information in any scripts executed on the web page's context, the data becomes accessible to the page's scripts. So, if the web page is compromised or malicious, the data will be stolen.
+Sensitive user info used in scripts executed in page context → accessible to page's scripts. Compromised or malicious page steals data.
 
-The reason why the data becomes accessible is because global objects of a context (sometimes called "built-in objects", "primordials" or "prototypes") can be overwritten to behave differently than usual. This is known as "prototype pollution", "prototype overriding" and so on.
+Cause: global objects of a context (aka "built-in objects", "primordials", "prototypes") can be overwritten to behave differently ("prototype pollution", "prototype overriding").
 
-This means that a malicious or compromised webpage can overwrite global objects in its context to steal any data they handle. Please note that objects here include almost everything in the context such as functions. So, if the extension's injected script uses these overwritten objects with sensitive data, it will inadvertently trigger the malicious code, leading to the exfiltration of that data.
+Malicious or compromised page can overwrite global objects in its context to steal data they handle. Objects include almost everything in context, e.g. functions. Extension's injected script using overwritten objects w/ sensitive data inadvertently triggers malicious code → exfiltration.
 
 ### Example: Prototype-based Data Skimming
 
@@ -282,17 +282,17 @@ window.addEventListener('message', (data) => {
 
 ### Mitigation: Prototype-based Data Skimming
 
-Please don't use the web page's context when sensitive user information is handled just for a moment. If communication with scripts in the web page's context is necessary, use only non-sensitive, essential information. For example, pass just a result of validation instead of the whole secret token. It's the case even if you use `window.postMessage`, because it can be overwritten also and malicious scripts can add listeners for `message` event.
+Don't use page's context when handling sensitive user info, even briefly. If communication w/ page-context scripts necessary, pass only non-sensitive, essential info. E.g. pass just validation result, not whole secret token. Applies even to `window.postMessage`: can be overwritten too, malicious scripts can add listeners for `message` event.
 
-Please note that it's not recommended to try to get native (not-overwritten) prototypes by some tricks. It's sure that there are some hacks to get native prototypes in a context where other scripts are also executed, but bypasses of these measures, i.e. how to force other scripts to use overwritten prototypes, are often invented.
+Don't try to obtain native (not-overwritten) prototypes via tricks. Hacks exist to get native prototypes where other scripts also run, but bypasses (forcing other scripts to use overwritten prototypes) often invented.
 
-Also, please don't assume your extension's script can use native prototypes even if it's executed at `document_start` timing. At least, in the case of Chromium browser extension, it's known that the context of a newly created iframe can be tweaked by a web page's script BEFORE the extension's script starts in the iframe event at `document_start` ([official bug issue](https://issues.chromium.org/issues/40202434)).
+Don't assume extension script gets native prototypes even at `document_start`. In Chromium extensions, newly created iframe's context can be tweaked by page's script BEFORE extension's script starts in iframe even at `document_start` (official Chromium bug issue).
 
 ## 13. Insecure Message Passing
 
 ### Vulnerability: Insecure Message Passing
 
-Browser extensions often rely on message passing (`chrome.runtime.sendMessage/onMessage`) between low-privilege contexts (Content Scripts, Popup) and the high-privilege Service Worker (Background). If the Service Worker fails to validate the sender's origin or URL, a compromised webpage can send malicious messages, tricking the extension into performing privileged actions (e.g., retrieving sensitive data or API keys).
+Extensions rely on message passing (`chrome.runtime.sendMessage/onMessage`) between low-privilege contexts (Content Scripts, Popup) and high-privilege Service Worker (Background). Service Worker not validating sender's origin or URL → compromised webpage sends malicious messages, tricks extension into privileged actions (e.g., retrieving sensitive data or API keys).
 
 ### Example: Insecure Message Passing
 
@@ -311,12 +311,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 Treat all incoming messages as untrusted input.
 In Service Workers, always:
 
-- Validate `sender.id` to ensure the message originates from your own extension.
-- Validate `sender.url` or `sender.origin` to restrict which extension pages or content scripts may communicate.
-- Avoid allowing webpages to indirectly influence privileged logic through content scripts.
-- Perform strict validation and allow-listing of `request.action` and all request parameters.
+- Validate `sender.id`: message originates from own extension.
+- Validate `sender.url` or `sender.origin`: restrict which extension pages or content scripts may communicate.
+- Avoid letting webpages indirectly influence privileged logic through content scripts.
+- Strict validation and allow-listing of `request.action` and all request parameters.
 
-Chrome explicitly states that content scripts are less trustworthy than extension pages and must be treated accordingly. Secure example:
+Chrome states content scripts less trustworthy than extension pages; treat accordingly. Secure example:
 
 ```javascript
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -331,5 +331,5 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 ## References
 
-- [Chrome Extensions: Stay Secure](https://developer.chrome.com/docs/extensions/mv3/security/)
-- [MDN: WebExtension Security Best Practices](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Security_best_practices)
+- Chrome Extensions: Stay Secure
+- MDN: WebExtension Security Best Practices

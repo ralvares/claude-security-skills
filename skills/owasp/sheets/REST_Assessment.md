@@ -2,119 +2,119 @@
 
 ## About RESTful Web Services
 
-Web Services are an implementation of web technology used for machine to machine communication. As such they are used for Inter application communication, Web 2.0 and Mashups and by desktop and mobile applications to call a server.
+Web Services: web technology for machine-to-machine communication; used for inter-application communication, Web 2.0, Mashups, desktop/mobile apps calling a server.
 
-RESTful web services (often called simply REST) are a light weight variant of Web Services based on the RESTful design pattern. In practice RESTful web services utilizes HTTP requests that are similar to regular HTTP calls in contrast with other Web Services technologies such as SOAP which utilizes a complex protocol.
+RESTful web services (REST): light-weight Web Services variant based on RESTful design pattern. Use HTTP requests similar to regular HTTP calls, unlike SOAP's complex protocol.
 
 ## Key relevant properties of RESTful web services
 
-- Use of HTTP methods (`GET`, `POST`, `PUT` and `DELETE`) as the primary verb for the requested operation.
-- Non-standard parameters specifications:
-    - As part of the URL.
+- HTTP methods (`GET`, `POST`, `PUT`, `DELETE`) as primary verb for requested operation.
+- Non-standard parameter specification:
+    - In URL.
     - In headers.
-- Structured parameters and responses using JSON or XML in a parameter values, request body or response body. Those are required to communicate machine useful information.
-- Custom authentication and session management, often utilizing custom security tokens: this is needed as machine to machine communication does not allow for login sequences.
-- Lack of formal documentation. A [proposed standard for describing RESTful web services called WADL](http://www.w3.org/Submission/wadl/) was submitted by Sun Microsystems but was never officially adapted.
+- Structured parameters/responses as JSON or XML in parameter values, request body, response body; needed to communicate machine-useful info.
+- Custom authentication + session management, often custom security tokens: machine-to-machine communication allows no login sequences.
+- No formal documentation. WADL proposed by Sun Microsystems as standard for describing RESTful web services; never officially adopted.
 
 ## The challenge of security testing RESTful web services
 
-- Inspecting the application does not reveal the attack surface, I.e. the URLs and parameter structure used by the RESTful web service. The reasons are:
-    - No application utilizes all the available functions and parameters exposed by the service
-    - Those used are often activated dynamically by client side code and not as links in pages.
-    - The client application is often not a web application and does not allow inspection of the activating link or even relevant code.
-- The parameters are non-standard making it hard to determine what is just part of the URL or a constant header and what is a parameter worth [fuzzing](https://owasp.org/www-community/Fuzzing).
-- As a machine interface the number of parameters used can be very large, for example a JSON structure may include dozens of parameters. [fuzzing](https://owasp.org/www-community/Fuzzing) each one significantly lengthen the time required for testing.
-- Custom authentication mechanisms require reverse engineering and make popular tools not useful as they cannot track a login session.
+- Inspecting application does not reveal attack surface (URLs, parameter structure). Reasons:
+    - No application uses all functions/parameters service exposes
+    - Used ones often activated dynamically by client-side code, not page links.
+    - Client often not a web application; no inspection of activating link or relevant code.
+- Non-standard parameters: hard to tell URL part or constant header from parameter worth [fuzzing](https://owasp.org/www-community/Fuzzing).
+- Machine interface → parameter count can be large (e.g. JSON w/ dozens of parameters). [fuzzing](https://owasp.org/www-community/Fuzzing) each significantly lengthens testing.
+- Custom authentication needs reverse engineering; popular tools useless as they cannot track login session.
 
 ## How to pentest a RESTful web service
 
-Determine the attack surface through documentation - RESTful pen testing might be better off if some level of clear-box testing is allowed and you can get information about the service.
+Determine attack surface via documentation; RESTful pen testing better if some clear-box testing allowed and service info obtainable.
 
-This information will ensure fuller coverage of the attack surface. Such information to look for:
+Info ensures fuller coverage. Look for:
 
-- Formal service description - While for other types of web services such as SOAP a formal description, usually in WSDL is often available, this is seldom the case for REST. That said, either WSDL 2.0 or WADL can describe REST and are sometimes used.
-- A developer guide for using the service may be less detailed but will commonly be found, and might even be considered *opaque-box* testing.
-- Application source or configuration - in many frameworks, including dotNet ,the REST service definition might be easily obtained from configuration files rather than from code.
+- Formal service description: SOAP usually has WSDL; seldom for REST. WSDL 2.0 or WADL can describe REST, sometimes used.
+- Developer guide: less detailed but commonly found; might even count as *opaque-box* testing.
+- Application source or configuration: many frameworks, incl. dotNet, expose REST service definition in configuration files rather than code.
 
-Collect full requests using a [proxy](https://www.zaproxy.org/) - while always an important pen testing step, this is more important for REST based applications as the application UI may not give clues on the actual attack surface.
+Collect full requests using a proxy (e.g. ZAP). Always important in pen testing; more so for REST since application UI may not hint at actual attack surface.
 
-Note that the proxy must be able to collect full requests and not just URLs as REST services utilize more than just GET parameters.
+Proxy must collect full requests, not just URLs: REST services use more than GET parameters.
 
-Analyze collected requests to determine the attack surface:
+Analyze collected requests to determine attack surface:
 
 - Look for non-standard parameters:
-    - Look for abnormal HTTP headers - those would many times be header based parameters.
-    - Determine if a URL segment has a repeating pattern across URLs. Such patterns can include a date, a number or an ID like string and indicate that the URL segment is a URL embedded parameter.
-        - For example: `http://server/srv/2013-10-21/use.php`
-    - Look for structured parameter values - those may be JSON, XML or a non-standard structure.
-    - If the last element of a URL does not have an extension, it may be a parameter. This is especially true if the application technology normally uses extensions or if a previous segment does have an extension.
-        - For example: `http://server/svc/Grid.asmx/GetRelatedListItems`
-    - Look for highly varying URL segments - a single URL segment that has many values may be parameter and not a physical directory.
-        - For example if the URL `http://server/src/XXXX/page` repeats with hundreds of value for `XXXX`, chances `XXXX` is a parameter.
+    - Abnormal HTTP headers: often header-based parameters.
+    - URL segment repeating pattern across URLs (date, number, ID-like string) → URL-embedded parameter.
+        - E.g. `http://server/srv/2013-10-21/use.php`
+    - Structured parameter values: JSON, XML, or non-standard structure.
+    - Last URL element without extension may be parameter. Esp. if application technology normally uses extensions or previous segment has one.
+        - E.g. `http://server/svc/Grid.asmx/GetRelatedListItems`
+    - Highly varying URL segments: single segment with many values may be parameter, not physical directory.
+        - E.g. `http://server/src/XXXX/page` repeating with hundreds of `XXXX` values → `XXXX` likely parameter.
 
-Verify non-standard parameters: in some cases (but not all), setting the value of a URL segment suspected of being a parameter to a value expected to be invalid can help determine if it is a path elements of a parameter. If a path element, the web server will return a *404* message, while for an invalid value to a parameter the answer would be an application level message as the value is legal at the web server level.
+Verify non-standard parameters: sometimes (not always), set suspected URL segment to value expected invalid to tell path element from parameter. Path element → web server returns *404*; invalid parameter value → application-level message (value legal at web server level).
 
-Analyzing collected requests to optimize [fuzzing](https://owasp.org/www-community/Fuzzing) - after identifying potential parameters to fuzz, analyze the collected values for each to determine:
+Analyze collected requests to optimize [fuzzing](https://owasp.org/www-community/Fuzzing): per potential parameter, determine:
 
-- Valid vs. invalid values, so that [fuzzing](https://owasp.org/www-community/Fuzzing) can focus on marginal invalid values.
-    - For example sending *0* for a value found to be always a positive integer.
-- Sequences allowing to fuzz beyond the range presumably allocated to the current user.
+- Valid vs. invalid values → fuzzing focuses on marginal invalid values.
+    - E.g. send *0* for value always positive integer.
+- Sequences allowing fuzzing beyond range presumably allocated to current user.
 
-Lastly, when [fuzzing](https://owasp.org/www-community/Fuzzing), don't forget to emulate the authentication mechanism used.
+When [fuzzing](https://owasp.org/www-community/Fuzzing), emulate the authentication mechanism used.
 
 ## Assessing OpenAPI and Swagger-Based REST APIs
 
-Modern REST APIs commonly publish a machine-readable description in [OpenAPI](https://spec.openapis.org/oas/v3.1.0) (formerly Swagger). Unlike the WADL option noted above, this format is widely adopted, and for an assessment it is the fastest route to the attack surface.
+Modern REST APIs commonly publish machine-readable description in OpenAPI (formerly Swagger). Unlike WADL, widely adopted; fastest route to attack surface in assessment.
 
-- Probe the common description locations first - `/openapi.json`, `/swagger.json` and `/docs` - before relying only on traffic captured through a [proxy](https://www.zaproxy.org/). The description lists paths, methods, parameters, schemas and security requirements in one place.
-- Reconcile the description with observed behavior. Call endpoints the description does not mention and send fields the schema does not define; an undocumented field the API accepts is a discrepancy to investigate, not proof of a contract violation, because additional properties may be valid depending on the intended schema and its documentation. Compare what you observed with the intended schema and the authorization policy before treating the field as a violation (see mass assignment below).
-- Fuzz from the schema: start with a valid request that satisfies the declared types, required fields and `enum` values, then mutate one constraint at a time, following the same [fuzzing](https://owasp.org/www-community/Fuzzing) approach used above.
-- Build the per-operation security test matrix from the effective OpenAPI [`security`](https://spec.openapis.org/oas/v3.1.0#security-requirement-object) requirements, which are the root-level requirements unless the operation declares its own `security`, in which case that declaration replaces them instead of combining with them: no credentials, a valid token, and a token that lacks the declared requirement (see the next section). [`securitySchemes`](https://spec.openapis.org/oas/v3.1.0#security-scheme-object) only define the reusable security mechanisms those requirements refer to.
+- Probe common description locations first: `/openapi.json`, `/swagger.json`, `/docs`; before relying only on traffic captured through a proxy. Description lists paths, methods, parameters, schemas, security requirements in one place.
+- Reconcile description with observed behavior. Call endpoints description omits; send fields schema does not define. Undocumented accepted field = discrepancy to investigate, not proof of contract violation: additional properties may be valid depending on intended schema + documentation. Compare observation with intended schema + authorization policy before treating field as violation (see mass assignment below).
+- Fuzz from schema: start with valid request satisfying declared types, required fields, `enum` values; mutate one constraint at a time, same [fuzzing](https://owasp.org/www-community/Fuzzing) approach as above.
+- Build per-operation security test matrix from effective OpenAPI `security` requirements: root-level requirements unless operation declares own `security`, which replaces (not combines with) them. Cases: no credentials, valid token, token lacking declared requirement (see next section). `securitySchemes` only define reusable security mechanisms those requirements refer to.
 
 ## JWT and OAuth2 Assessment
 
-A REST API is only as strong as the token checks in front of it, so test the token handling itself before testing the endpoints behind it.
+REST API only as strong as token checks in front of it → test token handling before endpoints behind it.
 
-- Tamper with the token: change a claim in the payload, re-sign it with a key you control, or remove the signature, and confirm the API rejects it. Also try `alg: none` and algorithm confusion. The corresponding server-side rules are in the [JSON Web Token Cheat Sheet](JSON_Web_Token.md) and the [REST Security Cheat Sheet](REST_Security.md#jwt), with the threat background in [RFC 8725](https://datatracker.ietf.org/doc/html/rfc8725).
-- Send a token that is expired (`exp`), not yet valid (`nbf`), or issued for another issuer (`iss`) or audience (`aud`). These [standard claims](https://datatracker.ietf.org/doc/html/rfc7519#section-4) must be checked against the configuration of the API rather than trusted as presented.
-- Send malformed tokens - truncated or extra parts, invalid Base64 or JSON - and confirm the API returns an authentication failure instead of a server error or a partially parsed token.
-- Check scope and role enforcement: call each operation with a valid token whose [OAuth 2.0](https://www.rfc-editor.org/rfc/rfc6749) scope does not grant it, and with a valid token belonging to a lower-privileged role that lacks permission for it. Both should be denied the result, on read and write operations alike, with the status code that the documented response policy of the API prescribes for such a denial: for example [`401 Unauthorized`](https://www.rfc-editor.org/rfc/rfc9110#section-15.5.2) or [`403 Forbidden`](https://www.rfc-editor.org/rfc/rfc9110#section-15.5.4) as described for bearer requests in [RFC 6750 Section 3.1](https://www.rfc-editor.org/rfc/rfc6750#section-3.1), or `404 Not Found` when the API [conceals the existence of the resource](https://www.rfc-editor.org/rfc/rfc9110#section-15.5.4).
+- Tamper with token: change payload claim, re-sign with key you control, or remove signature; confirm API rejects. Also try `alg: none` and algorithm confusion. Server-side rules: [JSON Web Token Cheat Sheet](JSON_Web_Token.md), [REST Security Cheat Sheet](REST_Security.md#jwt); threat background: RFC 8725.
+- Send token expired (`exp`), not yet valid (`nbf`), or issued for another issuer (`iss`) or audience (`aud`). These standard claims (RFC 7519 section 4) must be checked against API configuration, not trusted as presented.
+- Send malformed tokens (truncated or extra parts, invalid Base64 or JSON); confirm API returns authentication failure, not server error or partially parsed token.
+- Check scope + role enforcement: call each operation with valid token whose OAuth 2.0 (RFC 6749) scope does not grant it, and with valid token of lower-privileged role lacking permission. Both denied the result, on read and write alike, with status code the API's documented response policy prescribes for such denial: e.g. `401 Unauthorized` or `403 Forbidden` as described for bearer requests in RFC 6750 Section 3.1 (RFC 9110 sections 15.5.2, 15.5.4), or `404 Not Found` when API conceals resource existence (RFC 9110 section 15.5.4).
 
 ## Broken Object Level Authorization (BOLA)
 
-[Broken Object Level Authorization](https://owasp.org/API-Security/editions/2023/en/0xa1-broken-object-level-authorization/) is the API form of [IDOR](https://owasp.org/www-community/attacks/insecure_direct_object_reference): an endpoint uses an identifier from the request without checking that the caller may access the object it points at.
+Broken Object Level Authorization (OWASP API Security 2023 API1) = API form of IDOR: endpoint uses request identifier without checking caller may access the object it points at.
 
-- Run the swap test: create the same kind of object with two accounts or tenants, then replay each request under the other session's identifiers. Cover reads and writes (`GET`, `PUT`, `PATCH`, `DELETE`); an ownership check on `GET` next to an unchecked `PUT` on the same resource is a common result.
-- Prefer identifiers the other session can already observe - list responses, error messages, notification links - over guessing, and include nested routes such as `/users/{id}/orders/{id}`, where authorization is often only enforced for the outer resource.
-- Test vertical escalation too: use a low-privilege token against owner-only or administrator-only operations of the same API; whether a role may call such an operation at all is [Broken Function Level Authorization](https://owasp.org/API-Security/editions/2023/en/0xa5-broken-function-level-authorization/), a separate check from BOLA's per-object access.
-- Repeat for every object type the API exposes; the object is wherever an identifier in the request ends up, not only in the obvious profile or order endpoints.
+- Swap test: create same kind of object with two accounts/tenants, replay each request under other session's identifiers. Cover reads and writes (`GET`, `PUT`, `PATCH`, `DELETE`); ownership check on `GET` next to unchecked `PUT` on same resource is common.
+- Prefer identifiers other session can already observe (list responses, error messages, notification links) over guessing; include nested routes such as `/users/{id}/orders/{id}`, where authorization often enforced only for outer resource.
+- Test vertical escalation too: low-privilege token against owner-only or administrator-only operations of same API. Whether a role may call such operation at all = Broken Function Level Authorization (API5:2023), separate check from BOLA per-object access.
+- Repeat for every object type the API exposes; object is wherever a request identifier ends up, not only obvious profile/order endpoints.
 
-Prevention guidance is in the [Insecure Direct Object Reference Prevention Cheat Sheet](Insecure_Direct_Object_Reference_Prevention.md) and the [Authorization Cheat Sheet](Authorization.md); test methodology is in the [WSTG IDOR test](https://wstg.owasp.org/latest/4-Web_Application_Security_Testing/05-Authorization/04-Insecure_Direct_Object_References/).
+Prevention: [Insecure Direct Object Reference Prevention Cheat Sheet](Insecure_Direct_Object_Reference_Prevention.md), [Authorization Cheat Sheet](Authorization.md); test methodology: WSTG IDOR test.
 
 ## Mass Assignment in JSON APIs
 
-Frameworks that bind a JSON request body directly to an internal object make [mass assignment](Mass_Assignment.md) testable with a single request: anything the client sends may be written, including fields the API never advertised.
+Frameworks binding JSON request body directly to internal object make [mass assignment](Mass_Assignment.md) testable with single request: anything client sends may be written, incl. unadvertised fields.
 
-- Take a normal create or update request and add fields outside the contract - a role, a verification flag, an internal identifier - then read the object back to see whether they were stored. Repeat for nested objects and arrays and for each update verb, including partial-update endpoints.
-- Confirm effect, not just reflection: a field echoed in the response means little until a following request shows that it persisted and changed behavior.
-- Treat every field the server accepts but the schema does not define as a candidate for this test (see the OpenAPI section above).
+- Take normal create/update request, add fields outside contract (role, verification flag, internal identifier), read object back to see whether stored. Repeat for nested objects, arrays, each update verb, incl. partial-update endpoints.
+- Confirm effect, not just reflection: echoed field means little until following request shows it persisted and changed behavior.
+- Treat every field server accepts but schema does not define as candidate (see OpenAPI section above).
 
-See [CWE-915](https://cwe.mitre.org/data/definitions/915.html) for the weakness classification.
+Weakness classification: CWE-915.
 
 ## Rate Limiting and Throttling Assessment
 
-Missing or weak limits let an attacker guess credentials, harvest data or consume capacity at will; this is [API4:2023 Unrestricted Resource Consumption](https://owasp.org/API-Security/editions/2023/en/0xa4-unrestricted-resource-consumption/).
+Missing/weak limits let attacker guess credentials, harvest data, consume capacity at will; API4:2023 Unrestricted Resource Consumption.
 
-- Drive the authentication, token and account recovery endpoints and check that throttling engages; without it, password guessing and [credential stuffing](Credential_Stuffing_Prevention.md) remain cheap. Compare with the [login throttling](Authentication.md#login-throttling) expectations for web applications.
-- Exercise the expensive operations - search, export, bulk writes - and note whether a limit applies to them at all. Throttling by request frequency does not by itself bound the amount of work performed within a single request, so check what one request can cost as well.
-- Identify what the limit is keyed on: a per-IP limit is worked around by changing address, so per-account or per-API-key limits must still hold, and an authenticated session must not disable them.
-- Record the observed limit, the point at which it triggers and the response returned, so each finding states the missing control precisely.
+- Drive authentication, token, account recovery endpoints; check throttling engages. Without it, password guessing and [credential stuffing](Credential_Stuffing_Prevention.md) stay cheap. Compare with [login throttling](Authentication.md#login-throttling) expectations for web apps.
+- Exercise expensive operations (search, export, bulk writes); note whether any limit applies. Request-frequency throttling does not bound work within single request → check what one request can cost.
+- Identify limit key: per-IP limit worked around by changing address, so per-account or per-API-key limits must still hold; authenticated session must not disable them.
+- Record observed limit, trigger point, response returned → each finding states missing control precisely.
 
 ## Related Resources
 
-See the [REST Security Cheat Sheet](REST_Security.md) for implementation guidance corresponding to these assessment topics.
+[REST Security Cheat Sheet](REST_Security.md): implementation guidance matching these assessment topics.
 
 ## References
 
-- [RFC 8725: JSON Web Token Best Current Practices](https://datatracker.ietf.org/doc/html/rfc8725)
-- [RFC 6750: OAuth 2.0 Bearer Token Usage](https://www.rfc-editor.org/rfc/rfc6750#section-3.1)
+- RFC 8725: JSON Web Token Best Current Practices
+- RFC 6750: OAuth 2.0 Bearer Token Usage

@@ -2,117 +2,117 @@
 
 ## Introduction
 
-This article is focused on providing clear, simple, actionable guidance for preventing the entire category of Injection flaws in your applications. Injection attacks, especially [SQL Injection](https://owasp.org/www-community/attacks/SQL_Injection), are unfortunately very common.
+Clear, actionable guidance to prevent entire category of Injection flaws. Injection attacks, esp. [SQL Injection](https://owasp.org/www-community/attacks/SQL_Injection), very common.
 
-Application accessibility is a very important factor in protection and prevention of injection flaws. Only the minority of all applications within a company/enterprise are developed in house, where as most applications are from external sources. Open source applications give at least the opportunity to fix problems, but closed source applications need a different approach to injection flaws.
+Application accessibility key factor in protection. Minority of enterprise apps developed in house; most from external sources. Open source apps at least allow fixing; closed source needs different approach.
 
-Injection flaws occur when an application sends untrusted data to an interpreter. Injection flaws are very prevalent, particularly in legacy code, often found in SQL queries, LDAP queries, XPath queries, OS commands, program arguments, etc. Injection flaws are easy to discover when examining code, but more difficult via testing. Scanners and fuzzers can help attackers find them.
+Injection flaws = app sends untrusted data to interpreter. Very prevalent, esp. legacy code: SQL queries, LDAP queries, XPath queries, OS commands, program arguments, etc. Easy to discover in code review, harder via testing. Scanners and fuzzers help attackers find them.
 
-Depending on the accessibility different actions must be taken in order to fix them. It is always the best way to fix the problem in source code itself, or even redesign some parts of the applications. But if the source code is not available or it is simply uneconomical to fix legacy software only virtual patching makes sense.
+Actions depend on accessibility. Best: fix in source code or redesign parts of app. Source unavailable or fixing legacy software uneconomical: only virtual patching makes sense.
 
 ## Application Types
 
-Three classes of applications can usually be seen within a company. Those 3 types are needed to identify the actions which need to take place in order to prevent/fix injection flaws.
+Three classes of app in a company; types determine actions to prevent/fix injection flaws.
 
 ### A1: New Application
 
-A new web application in the design phase, or in early stage development.
+New web app in design phase or early development.
 
 ### A2: Productive Open Source Application
 
-An already productive application, which can be easily adapted. A Model-View-Controller (MVC) type application is just one example of having a easily accessible application architecture.
+Productive app easily adapted. Model-View-Controller (MVC) app = one example of easily accessible architecture.
 
 ### A3: Productive Closed Source Application
 
-A productive application which cannot or only with difficulty be modified.
+Productive app that cannot, or only with difficulty, be modified.
 
 ## Forms of Injection
 
-There are several forms of injection targeting different technologies including SQL queries, LDAP queries, XPath queries and OS commands.
+Several forms target different technologies: SQL queries, LDAP queries, XPath queries, OS commands.
 
 ### Query languages
 
-The most famous form of injection is SQL Injection where an attacker can modify existing database queries. For more information see the [SQL Injection Prevention Cheat Sheet](SQL_Injection_Prevention.md).
+Most famous: SQL Injection, attacker modifies existing database queries. See [SQL Injection Prevention Cheat Sheet](SQL_Injection_Prevention.md).
 
-But also LDAP, SOAP, XPath and REST based queries can be susceptible to injection attacks allowing for data retrieval or control bypass.
+LDAP, SOAP, XPath, REST based queries also susceptible: data retrieval or control bypass.
 
 #### SQL Injection
 
-An SQL injection attack consists of insertion or "injection" of either a partial or complete SQL query via the data input or transmitted from the client (browser) to the web application.
+SQL injection = insertion/"injection" of partial or complete SQL query via data input or transmitted from client (browser) to web app.
 
-A successful SQL injection attack can read sensitive data from the database, modify database data (insert/update/delete), execute administration operations on the database (such as shutdown the DBMS), recover the content of a given file existing on the DBMS file system or write files into the file system, and, in some cases, issue commands to the operating system. SQL injection attacks are a type of injection attack, in which SQL commands are injected into data-plane input in order to affect the execution of predefined SQL commands.
+Successful attack can: read sensitive DB data, modify DB data (insert/update/delete), execute DB administration operations (e.g. shutdown DBMS), recover content of given file on DBMS file system or write files to it, in some cases issue OS commands. Type of injection attack: SQL commands injected into data-plane input to affect execution of predefined SQL commands.
 
-SQL Injection attacks can be divided into the following three classes:
+Three classes:
 
-- **Inband:** data is extracted using the same channel that is used to inject the SQL code. This is the most straightforward kind of attack, in which the retrieved data is presented directly in the application web page.
-- **Out-of-band:** data is retrieved using a different channel (e.g., an email with the results of the query is generated and sent to the tester).
-- **Inferential or Blind:** there is no actual transfer of data, but the tester is able to reconstruct the information by sending particular requests and observing the resulting behavior of the DB Server.
+- **Inband:** data extracted via same channel used to inject SQL. Most straightforward; retrieved data shown directly in app web page.
+- **Out-of-band:** data retrieved via different channel (e.g., email with query results sent to tester).
+- **Inferential or Blind:** no actual data transfer; tester reconstructs info by sending particular requests and observing DB Server behavior.
 
 ##### How to test for the issue
 
 ###### During code review
 
-please check for any queries to the database are not done via prepared statements.
+Check for DB queries not done via prepared statements.
 
-If dynamic statements are being made please check if the data is sanitized before used as part of the statement.
+Dynamic statements: check whether data sanitized before use in statement.
 
-Auditors should always look for uses of sp_execute, execute or exec within SQL Server stored procedures. Similar audit guidelines are necessary for similar functions for other vendors.
+Auditors always look for sp_execute, execute or exec in SQL Server stored procedures. Similar audit guidelines needed for similar functions of other vendors.
 
 ###### Automated Exploitation
 
-Most of the situation and techniques below here can be performed in a automated way using some tools. In this article the tester can find information how to perform an automated auditing using [SQLMap](https://wiki.owasp.org/index.php/Automated_Audit_using_SQLMap)
+Most situations/techniques below can be automated with tools. See article on automated auditing using SQLMap.
 
-Equally Static Code Analysis Data flow rules can detect of unsanitized user controlled input can change the SQL query.
+Static Code Analysis Data flow rules can also detect unsanitized user controlled input able to change SQL query.
 
 ###### Stored Procedure Injection
 
-When using dynamic SQL within a stored procedure, the application must properly sanitize the user input to eliminate the risk of code injection. If not sanitized, the user could enter malicious SQL that will be executed within the stored procedure.
+Dynamic SQL in stored procedure: app must properly sanitize user input to eliminate code injection risk. Unsanitized → user enters malicious SQL executed in stored procedure.
 
 ###### Time delay Exploitation technique
 
-The time delay exploitation technique is very useful when the tester find a Blind SQL Injection situation, in which nothing is known on the outcome of an operation. This technique consists in sending an injected query and in case the conditional is true, the tester can monitor the time taken to for the server to respond. If there is a delay, the tester can assume the result of the conditional query is true. This exploitation technique can be different from DBMS to DBMS (check DBMS specific section).
+Very useful in Blind SQL Injection, where outcome of operation unknown. Tester sends injected query; if conditional true, monitors server response time. Delay → conditional query result true. Technique varies by DBMS (check DBMS specific section).
 
 ```text
 http://www.example.com/product.php?id=10 AND IF(version() like '5%', sleep(10), 'false'))--
 ```
 
-In this example the tester is checking whether the MySql version is 5.x or not, making the server delay the answer by 10 seconds. The tester can increase the delay time and monitor the responses. The tester also doesn't need to wait for the response. Sometimes they can set a very high value (e.g. 100) and cancel the request after some seconds.
+Example: tester checks whether MySql version is 5.x, making server delay answer 10 seconds. Tester can increase delay and monitor responses. Needn't wait for response: can set very high value (e.g. 100), cancel request after some seconds.
 
 ###### Out of band Exploitation technique
 
-This technique is very useful when the tester find a Blind SQL Injection situation, in which nothing is known on the outcome of an operation. The technique consists of the use of DBMS functions to perform an out of band connection and deliver the results of the injected query as part of the request to the tester's server. Like the error based techniques, each DBMS has its own functions. Check for specific DBMS section.
+Very useful in Blind SQL Injection, where outcome unknown. Uses DBMS functions to make out of band connection and deliver injected query results in request to tester's server. Like error based techniques, each DBMS has own functions. Check specific DBMS section.
 
 ##### Remediation
 
 ###### Defense Option 1: Prepared Statements (with Parameterized Queries)
 
-Prepared statements ensure that an attacker is not able to change the intent of a query, even if SQL commands are inserted by an attacker. In the safe example below, if an attacker were to enter the userID of `tom' or '1'='1`, the parameterized query would not be vulnerable and would instead look for a username which literally matched the entire string `tom' or '1'='1`.
+Prepared statements ensure attacker can't change query intent, even if SQL commands inserted. In safe example below, attacker entering userID `tom' or '1'='1` → parameterized query not vulnerable; looks for username literally matching entire string `tom' or '1'='1`.
 
 ###### Defense Option 2: Stored Procedures
 
-The difference between prepared statements and stored procedures is that the SQL code for a stored procedure is defined and stored in the database itself, and then called from the application.
+Difference from prepared statements: stored procedure SQL code defined and stored in DB itself, then called from app.
 
-Both of these techniques have the same effectiveness in preventing SQL injection so your organization should choose which approach makes the most sense for you. Stored procedures are not always safe from SQL injection. However, certain standard stored procedure programming constructs have the same effect as the use of parameterized queries when implemented safely* which is the norm for most stored procedure languages.
+Both equally effective against SQL injection; organization chooses approach. Stored procedures not always safe from SQL injection. But certain standard stored procedure constructs have same effect as parameterized queries when implemented safely* (norm for most stored procedure languages).
 
-*Note:* 'Implemented safely' means the stored procedure does not include any unsafe dynamic SQL generation.
+*Note:* 'Implemented safely' = stored procedure includes no unsafe dynamic SQL generation.
 
 ###### Defense Option 3: Allow-List Input Validation
 
-Various parts of SQL queries aren't legal locations for the use of bind variables, such as the names of tables or columns, and the sort order indicator (ASC or DESC). In such situations, input validation or query redesign is the most appropriate defense. For the names of tables or columns, ideally those values come from the code, and not from user parameters.
+Various query parts can't use bind variables: table/column names, sort order indicator (ASC or DESC). Then input validation or query redesign most appropriate. Table/column names ideally come from code, not user parameters.
 
-But if user parameter values are used to make different for table names and column names, then the parameter values should be mapped to the legal/expected table or column names to make sure unvalidated user input doesn't end up in the query. Please note, this is a symptom of poor design and a full rewrite should be considered if time allows.
+If user parameter values select table/column names, map them to legal/expected names so unvalidated user input never reaches query. Symptom of poor design; consider full rewrite if time allows.
 
 ###### Defense Option 4: Escaping All User-Supplied Input
 
-This technique should only be used as a last resort, when none of the above are feasible. Input validation is probably a better choice as this methodology is frail compared to other defenses and we cannot guarantee it will prevent all SQL Injection in all situations.
+Last resort only, when none above feasible. Input validation probably better: this method frail vs other defenses; no guarantee of preventing all SQL Injection in all situations.
 
-This technique is to escape user input before putting it in a query. It's usually only recommended to retrofit legacy code when implementing input validation isn't cost effective.
+Escape user input before putting in query. Usually recommended only to retrofit legacy code when input validation not cost effective.
 
 ##### Example code - Java
 
 ###### Safe Java Prepared Statement Example
 
-The following code example uses a `PreparedStatement`, Java's implementation of a parameterized query, to execute the same database query.
+Code uses `PreparedStatement`, Java's parameterized query implementation, for same DB query.
 
 ```java
 // This should REALLY be validated too
@@ -124,11 +124,11 @@ pstmt.setString(1, custname);
 ResultSet results = pstmt.executeQuery();
 ```
 
-We have shown examples in Java, but practically all other languages, including Cold Fusion, and Classic ASP, support parameterized query interfaces.
+Examples in Java, but practically all other languages, incl. Cold Fusion and Classic ASP, support parameterized query interfaces.
 
 ###### Safe Java Stored Procedure Example
 
-The following code example uses a `CallableStatement`, Java's implementation of the stored procedure interface, to execute the same database query. The `sp_getAccountBalance` stored procedure would have to be predefined in the database and implement the same functionality as the query defined above.
+Code uses `CallableStatement`, Java's stored procedure interface, for same DB query. `sp_getAccountBalance` stored procedure must be predefined in DB, implementing same functionality as query above.
 
 ```java
 // This should REALLY be validated
@@ -145,69 +145,69 @@ try {
 
 #### LDAP Injection
 
-LDAP Injection is an attack used to exploit web based applications that construct LDAP statements based on user input. When an application fails to properly sanitize user input, it's possible to modify LDAP statements through techniques similar to [SQL Injection](https://owasp.org/www-community/attacks/SQL_Injection). LDAP injection attacks could result in the granting of permissions to unauthorized queries, and content modification inside the LDAP tree. For more information on LDAP Injection attacks, visit [LDAP injection](https://owasp.org/www-community/attacks/LDAP_Injection).
+LDAP Injection exploits web apps constructing LDAP statements from user input. Unsanitized input → modify LDAP statements similar to [SQL Injection](https://owasp.org/www-community/attacks/SQL_Injection). Can grant permissions to unauthorized queries, modify content inside LDAP tree. More: LDAP injection (OWASP).
 
-[LDAP injection](https://owasp.org/www-community/attacks/LDAP_Injection) attacks are common due to two factors:
+[LDAP injection](https://owasp.org/www-community/attacks/LDAP_Injection) common due to two factors:
 
-1. The lack of safer, parameterized LDAP query interfaces
-2. The widespread use of LDAP to authenticate users to systems.
+1. Lack of safer, parameterized LDAP query interfaces
+2. Widespread use of LDAP to authenticate users to systems.
 
 ##### How to test for the issue
 
 ###### During code review
 
-Please check for any queries to the LDAP escape special characters, see [here](LDAP_Injection_Prevention.md#defense-option-1-escape-all-variables-using-the-right-ldap-encoding-function).
+Check LDAP queries escape special characters, see [here](LDAP_Injection_Prevention.md#defense-option-1-escape-all-variables-using-the-right-ldap-encoding-function).
 
 ###### Automated Exploitation
 
-Scanner module of tool like OWASP [ZAP](https://www.zaproxy.org/) have module to detect LDAP injection issue.
+Scanner modules of tools like OWASP ZAP detect LDAP injection.
 
 ##### Remediation
 
 ###### Use the right LDAP encoding function
 
-LDAP distinguished names and LDAP search filters require different escaping rules, defined by [RFC 4514](https://datatracker.ietf.org/doc/html/rfc4514) and [RFC 4515](https://datatracker.ietf.org/doc/html/rfc4515), respectively. Avoid custom escaping code and use a library encoder for the correct context. See the [LDAP Injection Prevention Cheat Sheet](LDAP_Injection_Prevention.md) for current defenses and examples.
+LDAP distinguished names and search filters need different escaping rules: RFC 4514 and RFC 4515 respectively. Avoid custom escaping code; use library encoder for correct context. See [LDAP Injection Prevention Cheat Sheet](LDAP_Injection_Prevention.md) for defenses and examples.
 
 #### XPath Injection
 
-See the [XPath Injection Prevention Cheat Sheet](XPath_Injection_Prevention.md) for defenses and a parameterized query example.
+See [XPath Injection Prevention Cheat Sheet](XPath_Injection_Prevention.md) for defenses and parameterized query example.
 
 ### Scripting languages
 
-All scripting languages used in web applications have a form of an `eval` call which receives code at runtime and executes it. If code is crafted using unvalidated and unescaped user input code injection can occur which allows an attacker to subvert application logic and eventually to gain local access.
+All scripting languages in web apps have `eval` call receiving code at runtime and executing it. Code crafted from unvalidated, unescaped user input → code injection: subverts app logic, eventually local access.
 
-Every time a scripting language is used, the actual implementation of the 'higher' scripting language is done using a 'lower' language like C. If the scripting language has a flaw in the data handling code '[Null Byte Injection](http://projects.webappsec.org/w/page/13246949/Null%20Byte%20Injection)' attack vectors can be deployed to gain access to other areas in memory, which results in a successful attack.
+'Higher' scripting language implemented in 'lower' language like C. Flaw in scripting language's data handling code → 'Null Byte Injection' attack vectors reach other memory areas → successful attack.
 
 ### Operating System Commands
 
-OS command injection is a technique used via a web interface in order to execute OS commands on a web server. The user supplies operating system commands through a web interface in order to execute OS commands.
+OS command injection: executes OS commands on web server via web interface; user supplies OS commands through it.
 
-Any web interface that is not properly sanitized is subject to this exploit. With the ability to execute OS commands, the user can upload malicious programs or even obtain passwords. OS command injection is preventable when security is emphasized during the design and development of applications.
+Any unsanitized web interface vulnerable. Able to execute OS commands, user can upload malicious programs or obtain passwords. Preventable when security emphasized in design and development.
 
 #### How to test for the issue
 
 ##### During code review
 
-Check if any command execute methods are called and in unvalidated user input are taken as data for that command.
+Check whether command execute methods called and unvalidated user input taken as data for command.
 
-Out side of that, appending a semicolon to the end of a URL query parameter followed by an operating system command, will execute the command. `%3B` is URL encoded and decodes to semicolon. This is because the `;` is interpreted as a command separator.
+Also: appending semicolon to end of URL query parameter followed by OS command executes command. `%3B` is URL encoded semicolon. `;` interpreted as command separator.
 
 Example: `http://sensitive/something.php?dir=%3Bcat%20/etc/passwd`
 
-If the application responds with the output of the `/etc/passwd` file then you know the attack has been successful. Many web application scanners can be used to test for this attack as they inject variations of command injections and test the response.
+App responds with `/etc/passwd` output → attack successful. Many web app scanners test this by injecting command injection variations and testing response.
 
-Equally Static Code Analysis tools check the data flow of untrusted user input into a web application and check if the data is then entered into a dangerous method which executes the user input as a command.
+Static Code Analysis tools check data flow of untrusted user input into web app, check whether data enters dangerous method executing input as command.
 
 #### Remediation
 
-If it is considered unavoidable the call to a system command incorporated with user-supplied, the following two layers of defense should be used within software in order to prevent attacks
+If call to system command with user-supplied data unavoidable, use two defense layers:
 
-1. **Parameterization** - If available, use structured mechanisms that automatically enforce the separation between data and command. These mechanisms can help to provide the relevant quoting, encoding.
-2. **Input validation** - the values for commands and the relevant arguments should be both validated. There are different degrees of validation for the actual command and its arguments:
-    - When it comes to the **commands** used, these must be validated against a list of allowed commands.
-    - In regards to the **arguments** used for these commands, they should be validated using the following options:
-        - Positive or allowlist input validation - where are the arguments allowed explicitly defined
-        - Allow-list Regular Expression - where is explicitly defined a list of good characters allowed and the maximum length of the string. Ensure that metacharacters like `& | ; $ > < \` \ !` and whitespaces are not part of the Regular Expression. For example, the following regular expression only allows lowercase letters and numbers, and does not contain metacharacters. The length is also being limited to 3-10 characters:
+1. **Parameterization** - If available, use structured mechanisms auto-enforcing separation between data and command; provide relevant quoting, encoding.
+2. **Input validation** - validate both command values and relevant arguments, with different degrees:
+    - **Commands**: validate against list of allowed commands.
+    - **Arguments**: validate using:
+        - Positive or allowlist input validation - explicitly defined allowed arguments
+        - Allow-list Regular Expression - explicitly defined list of good characters and max string length. Ensure metacharacters like `& | ; $ > < \` \ !` and whitespaces not in Regular Expression. E.g. following regex allows only lowercase letters and numbers, no metacharacters; length limited to 3-10 characters:
 
 `^[a-z0-9]{3,10}$`
 
@@ -219,11 +219,11 @@ If it is considered unavoidable the call to a system command incorporated with u
 ProcessBuilder b = new ProcessBuilder("C:\\DoStuff.exe -arg1 -arg2");
 ```
 
-This creates a builder with one command-list element, not a program followed by two arguments. [`ProcessBuilder`](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/ProcessBuilder.html) represents the executable and its arguments as a list. The snippet does not start a process or demonstrate shell-command injection.
+Creates builder with one command-list element, not program followed by two arguments. `ProcessBuilder` represents executable and arguments as list. Snippet does not start process or demonstrate shell-command injection.
 
 ##### Correct Usage
 
-This illustrative example starts a process with a modified working directory and passes the executable and each argument separately. Keep the executable and working directory trusted, and validate any untrusted arguments for the invoked program. Argument separation does not replace [argument validation](OS_Command_Injection_Defense.md#layer-2).
+Illustrative example: starts process with modified working directory, passes executable and each argument separately. Keep executable and working directory trusted; validate any untrusted arguments for invoked program. Argument separation does not replace [argument validation](OS_Command_Injection_Defense.md#layer-2).
 
 ```java
 ProcessBuilder pb = new ProcessBuilder("TrustedCmd", "TrustedArg1", "TrustedArg2");
@@ -234,21 +234,21 @@ Process p = pb.start();
 
 ### Network Protocols
 
-Web applications often communicate with network daemons (like SMTP, IMAP, FTP) where user input becomes part of the communication stream. Here it is possible to inject command sequences to abuse an established session.
+Web apps often talk to network daemons (like SMTP, IMAP, FTP) where user input becomes part of communication stream. Command sequences can be injected to abuse established session.
 
 ## Injection Prevention Rules
 
 ### Rule \#1 (Perform proper input validation)
 
-Perform proper input validation. Positive or allowlist input validation with appropriate canonicalization is also recommended, but **is not a complete defense** as many applications require special characters in their input.
+Perform proper input validation. Positive/allowlist input validation with appropriate canonicalization also recommended, but **is not a complete defense**: many apps require special characters in input.
 
 ### Rule \#2 (Use a safe API)
 
-The preferred option is to use a safe API which avoids the use of the interpreter entirely or provides a parameterized interface. Be careful of APIs, such as stored procedures, that are parameterized, but can still introduce injection under the hood.
+Preferred: safe API avoiding interpreter entirely or providing parameterized interface. Beware APIs, e.g. stored procedures, that are parameterized but can still introduce injection under the hood.
 
 ### Rule \#3 (Contextually escape user data)
 
-If a parameterized API is not available, you should carefully escape special characters using the specific escape syntax for that interpreter.
+No parameterized API: carefully escape special characters using interpreter's specific escape syntax.
 
 ## Other Injection Cheatsheets
 
@@ -262,6 +262,6 @@ If a parameterized API is not available, you should carefully escape special cha
 
 ## References
 
-- [RFC 4514: LDAP Distinguished Names](https://datatracker.ietf.org/doc/html/rfc4514)
-- [RFC 4515: LDAP Search Filters](https://datatracker.ietf.org/doc/html/rfc4515)
-- [Oracle JDBC: Using Prepared Statements](https://docs.oracle.com/javase/tutorial/jdbc/basics/prepared.html)
+- RFC 4514: LDAP Distinguished Names
+- RFC 4515: LDAP Search Filters
+- Oracle JDBC: Using Prepared Statements

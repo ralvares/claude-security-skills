@@ -2,15 +2,15 @@
 
 ## Introduction
 
-This cheat sheet was previously named the AJAX Security Cheat Sheet.
+Previously named AJAX Security Cheat Sheet.
 
-This document will provide a starting point for AJAX security and will hopefully be updated and expanded reasonably often to provide more detailed information about specific frameworks and technologies.
+Starting point for AJAX security; to be expanded w/ framework/technology specifics.
 
-For applications that compose independently deployed frontend features, see the [Micro-Frontend Security Cheat Sheet](Micro_Frontend_Security.md) for runtime isolation, cross-application messaging, and host-to-remote trust boundaries.
+Apps composing independently deployed frontend features: see [Micro-Frontend Security Cheat Sheet](Micro_Frontend_Security.md) for runtime isolation, cross-application messaging, host-to-remote trust boundaries.
 
-**Before applying any specific control, developers must adopt a fundamental security mindset:**
-All data should be considered untrusted unless explicitly validated and safely handled.
-This applies to:
+**Before any specific control, adopt security mindset:**
+All data untrusted unless explicitly validated and safely handled.
+Applies to:
 
 - Client-side input
 - API response
@@ -24,20 +24,20 @@ This applies to:
 
 #### Use `innerHTML` with extreme caution
 
-Manipulating the Document Object Model (DOM) is common in web applications, especially in monolithic server-side rendering (e.g., PHP, ASP.NET) and AJAX-driven applications. While `innerHTML` seems like a convenient way to inject HTML content, it poses significant security risks on untrusted-data, particularly cross-site scripting (XSS).
+DOM manipulation common in web apps, esp. monolithic server-side rendering (e.g., PHP, ASP.NET) and AJAX apps. `innerHTML` convenient for injecting HTML but significant risk w/ untrusted data, esp. cross-site scripting (XSS).
 
 ##### What is `innerHTML`?
 
-The `innerHTML` property sets or gets the HTML content of an element, including tags, which the browser parses and renders as part of the DOM. For example, setting `innerHTML = "<p>Hello</p>"` creates a paragraph element.
+Property sets/gets element HTML content incl. tags; browser parses and renders as DOM. E.g. `innerHTML = "<p>Hello</p>"` creates paragraph element.
 
 ##### Why does `innerHTML` require extreme caution?
 
-Using `innerHTML` with untrusted data (e.g., from API responses in AJAX) can allow malicious JavaScript to execute in the user’s browser, leading to XSS vulnerabilities. Potential risks include:
+`innerHTML` w/ untrusted data (e.g., AJAX API responses) lets malicious JavaScript execute in user's browser → XSS. Risks:
 
-- Stealing user session cookies.
-- Defacing the website.
+- Stealing session cookies.
+- Defacing website.
 - Redirecting users to malicious sites.
-- Performing unauthorized actions (e.g., API calls on behalf of the user).
+- Unauthorized actions (e.g., API calls on user's behalf).
 - Keylogging user inputs.
 
 ###### Vulnerable Example
@@ -49,15 +49,15 @@ Using `innerHTML` with untrusted data (e.g., from API responses in AJAX) can all
 
 ##### When is `innerHTML` acceptable?
 
-The fundamental security rule is to never use innerHTML with untrusted data. However, in limited cases, such as legacy monolithic applications with no viable alternatives, innerHTML may be used cautiously:
+Fundamental rule: never use innerHTML w/ untrusted data. Limited cases (e.g., legacy monolithic apps w/o viable alternatives) allow cautious use:
 
-- **Static, Hardcoded HTML**: For small, fixed HTML snippets that are part of your application’s source code and contain no user input:
+- **Static, Hardcoded HTML**: small fixed snippets in app source code, no user input:
 
 ```javascript
 document.getElementById('footer').innerHTML = '<p>© 2025 My Company. All rights reserved.</p>';
 ```
 
-- **Sanitized HTML**: For user-generated HTML (e.g., in rich text editors), sanitize with a library like [DOMPurify](DOM_Clobbering_Prevention.md#1-html-sanitization) before using innerHTML:
+- **Sanitized HTML**: user-generated HTML (e.g., rich text editors): sanitize w/ library like [DOMPurify](DOM_Clobbering_Prevention.md#1-html-sanitization) before innerHTML:
 
 ```javascript
 import DOMPurify from 'dompurify';
@@ -67,16 +67,16 @@ document.getElementById('content').innerHTML = DOMPurify.sanitize(userInput); //
 
 ##### Alternatives
 
-- Use Templating Engines (with auto-escaping) for reusable, structured HTML snippets.
-- Use framework text bindings, which generally escape text rather than sanitize arbitrary markup; [Vue documents this distinction](https://vuejs.org/guide/best-practices/security). Raw-HTML APIs such as [React's `dangerouslySetInnerHTML`](https://react.dev/reference/react-dom/components/common#dangerously-setting-the-inner-html) require trusted, sanitized HTML. URL and style bindings need controls appropriate to their context; see [Framework Security](Cross_Site_Scripting_Prevention.md#framework-security).
+- Templating engines (auto-escaping) for reusable structured HTML snippets.
+- Framework text bindings: generally escape text, not sanitize arbitrary markup (Vue documents this distinction). Raw-HTML APIs like React's `dangerouslySetInnerHTML` require trusted, sanitized HTML. URL and style bindings need context-appropriate controls; see [Framework Security](Cross_Site_Scripting_Prevention.md#framework-security).
 
 #### Use of `textContent` or `innerText` for DOM updates (for text-only content)
 
-In AJAX and monolithic server-side rendering applications (e.g., PHP, ASP.NET), dynamic Document Object Model (DOM) updates are common for rendering text-only content from APIs or user inputs.
+AJAX and monolithic server-side rendering apps (e.g., PHP, ASP.NET) commonly update DOM dynamically w/ text-only content from APIs or user inputs.
 
 ##### What is `textContent`?
 
-The `textContent` property sets or gets the plain text content of an element. It treats inserted HTML tags as literal text and does not parse them. It is ideal for most text-only updates, such as displaying user comments, etc.
+Sets/gets plain text content of element. Inserted HTML tags treated as literal text, not parsed. Ideal for most text-only updates, e.g. user comments.
 
 ```javascript
 const userInput = '<script>alert("OWASP")</script>';
@@ -85,7 +85,7 @@ document.getElementById('content').textContent = userInput; // Displays plain te
 
 ##### What is `innerText`?
 
-The `innerText` property sets or gets the visible text content of an element, respecting CSS styling (e.g., ignoring text in `display: none` elements). It also reflects rendered text formatting, such as line breaks or spacing.
+Sets/gets visible text content, respecting CSS styling (e.g., ignores text in `display: none` elements). Reflects rendered text formatting, e.g. line breaks, spacing.
 
 ```javascript
 const userInput = 'OWASP'; 
@@ -94,78 +94,78 @@ document.getElementById('content').innerText = userInput;
 
 ##### When to Use `textContent` vs. `innerText`
 
-- **Use `textContent`**: Use textContent in monolithic applications to safely insert plain text content returned from APIs.
-- **Use `innerText`**: Only when CSS visibility or rendered text formatting (e.g. ignoring text in `display: none` elements) is required.
+- **`textContent`**: monolithic apps, safely insert plain text from APIs.
+- **`innerText`**: only when CSS visibility or rendered text formatting (e.g. ignoring text in `display: none` elements) required.
 
-> Note: `textContent` is slightly faster and more predictable; use it unless you need to respect rendered text formatting (`innerText`).
+> Note: `textContent` slightly faster, more predictable; use unless rendered text formatting needed (`innerText`).
 
 ##### Note
 
-- While `textContent` and `innerText` are safe for inserting plain text into the DOM, they do not protect against XSS in other contexts such as HTML attributes, JavaScript event handlers, or URLs. Always validate and sanitize untrusted input.
-- Modern Frameworks like React, Vue, Angular, or Svelte automatically update text-only content so there is no need to manually use `textContent` or `innerText`.
+- `textContent`/`innerText` safe for plain text in DOM, but don't protect against XSS in other contexts: HTML attributes, JavaScript event handlers, URLs. Always validate and sanitize untrusted input.
+- Modern frameworks (React, Vue, Angular, Svelte) update text-only content automatically; no manual `textContent`/`innerText` needed.
 
 #### Don't use `eval()`, `new Function()` or other code evaluation tools
 
-`eval()` function is dangerous, never use it. Needing to use eval() usually indicates a problem in your design.
+`eval()` dangerous, never use. Needing eval() usually signals design problem.
 
-> Note: Using `eval()` or `new Function()` opens doors to remote code execution and XSS. Avoid it entirely.
+> Note: `eval()` or `new Function()` open doors to remote code execution and XSS. Avoid entirely.
 
 #### Encode Data Before Use in an Output Context
 
-When using data to build HTML, script, CSS, XML, JSON, etc., make sure you take into account how that data must be presented in a literal sense to keep its logical meaning.
+Building HTML, script, CSS, XML, JSON, etc.: account for how data must be presented literally to keep logical meaning.
 
-Data should be properly encoded before being used in this manner to prevent injection style issues, and to make sure the logical meaning is preserved.
+Encode data properly before such use, preventing injection issues and preserving logical meaning.
 
-[Check out the OWASP Java Encoder Project.](https://owasp.org/www-project-java-encoder/)
+See OWASP Java Encoder Project.
 
 #### Don't rely on client logic for security
 
-Don't forget that the user controls the client-side logic. A number of browser plugins are available to set breakpoints, skip code, change values, etc. Never rely on client logic for security.
+User controls client-side logic. Browser plugins set breakpoints, skip code, change values. Never rely on client logic for security.
 
 #### Don't rely on client business logic
 
-As with security logic, make sure any important business rules are duplicated on the server side so a user cannot bypass them, which could lead to unexpected or costly behavior.
+As w/ security logic, duplicate important business rules server-side so users can't bypass them (unexpected or costly behavior).
 
 #### Avoid writing serialization code
 
-This is hard and even a small mistake can cause large security issues. There are already a lot of frameworks to provide this functionality.
+Hard; small mistake → large security issues. Use existing frameworks.
 
-Refer to the [JSON page](https://www.json.org/) for more info.
+See JSON page for more info.
 
 #### Avoid building XML or JSON dynamically
 
-Just like building HTML or SQL you may cause XML injection bugs, so stay away from this or at least use an encoding library or safe JSON or XML library to make attributes and element data safe.
+Like building HTML or SQL, may cause XML injection bugs. Avoid, or use encoding library or safe JSON/XML library for attributes and element data.
 
 - [XSS (Cross Site Scripting) Prevention](Cross_Site_Scripting_Prevention.md)
 - [SQL Injection Prevention](SQL_Injection_Prevention.md)
 
 #### Never transmit secrets to the client
 
-Anything sent to the client can be read or modified by the user, so keep all that secret stuff on the server please.
+Anything sent to client can be read/modified by user; keep secrets on server.
 
 #### Choose encryption for the threat model
 
-Use TLS for transport. Client-side encryption can also be appropriate for end-to-end protection or encryption before upload, as described in the [Web Cryptography use cases](https://www.w3.org/TR/webcrypto/#use-cases). Use reviewed protocols and implementations rather than designing a cryptographic protocol yourself. Browser cryptography does not protect plaintext or keys from malicious code running in the application; account for XSS and key management as described in the [Web Cryptography security considerations](https://www.w3.org/TR/webcrypto/#security-considerations).
+TLS for transport. Client-side encryption can also fit end-to-end protection or encryption before upload (Web Cryptography use cases). Use reviewed protocols/implementations, don't design own cryptographic protocol. Browser cryptography doesn't protect plaintext or keys from malicious code in the app; account for XSS and key management (Web Cryptography security considerations).
 
 #### Don't perform security impacting logic on client-side
 
-This principle serves as a fail-safe—if a security decision is ambiguous, perform it on the server.
+Fail-safe: security decision ambiguous → perform on server.
 
 ### Server-Side
 
 #### Use CSRF Protection
 
-Take a look at the [Cross-Site Request Forgery (CSRF) Prevention](Cross-Site_Request_Forgery_Prevention.md) cheat sheet.
+See [Cross-Site Request Forgery (CSRF) Prevention](Cross-Site_Request_Forgery_Prevention.md) cheat sheet.
 
 #### Protect against JSON hijacking for older browsers
 
 ##### Review AngularJS JSON hijacking defense mechanism
 
-See the [JSON Vulnerability Protection](https://docs.angularjs.org/api/ng/service/$http#json-vulnerability-protection) section of the AngularJS documentation.
+See AngularJS documentation, JSON Vulnerability Protection section.
 
 ##### Always return JSON with an object on the outside
 
-Always have the outside primitive be an object for JSON strings:
+Outside primitive of JSON strings MUST be object:
 
 **Exploitable:**
 
@@ -187,23 +187,23 @@ Always have the outside primitive be an object for JSON strings:
 
 #### Avoid writing serialization code server-side
 
-Remember reference vs. value types; use a reviewed library.
+Mind reference vs. value types; use reviewed library.
 
 #### Services can be called directly by users
 
-Even though you only expect your AJAX client-side code to call those services, a malicious user can also call them directly.
+Even if only AJAX client code expected to call services, malicious user can call directly.
 
-Validate inputs and treat them as if they are under user control.
+Validate inputs, treat as user-controlled.
 
 #### Avoid building XML or JSON by hand, use the framework
 
-Use the framework to serialize data; building payloads by hand can introduce security issues.
+Serialize via framework; hand-built payloads can introduce security issues.
 
 #### Use JSON and XML schema for web services
 
-Use a third-party library to validate web service inputs.
+Use third-party library to validate web service inputs.
 
 ## References
 
-- [MDN: innerHTML Security Considerations](https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML#security_considerations)
-- [DOMPurify: HTML Sanitization](https://github.com/cure53/DOMPurify#what-does-it-do)
+- MDN: innerHTML Security Considerations
+- DOMPurify: HTML Sanitization

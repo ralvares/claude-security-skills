@@ -2,45 +2,45 @@
 
 ## Introduction
 
-This cheat sheet provides tips to prevent common security issues when using JSON Web Tokens (JWT).
+Tips to prevent common security issues when using JSON Web Tokens (JWT).
 
-[**JSON Web Tokens**](https://datatracker.ietf.org/doc/html/rfc7519) (JWT) are security tokens for carrying information (**claims**), often about a user, an application, etc. (**subject**). JWTs can provide authenticity of the claims (**signed JWT**) and/or confidentiality of the claims (**encrypted JWT**). In addition, JWT defines [standard claims](https://www.iana.org/assignments/jwt/jwt.xhtml).
+**JSON Web Tokens** (JWT, RFC 7519) = security tokens carrying information (**claims**), often about user, application, etc. (**subject**). JWTs provide authenticity of claims (**signed JWT**) and/or confidentiality (**encrypted JWT**). JWT also defines standard claims (IANA registry).
 
-JWTs are used in a wide range of applications such as:
+Uses:
 
-- In [OpenID Connect](https://openid.net/specs/openid-connect-core-1_0.html), the [ID token](https://openid.net/specs/openid-connect-core-1_0.html#IDToken) is a JWT used to represent the identity and attributes of the connected user.
-- In [OAuth 2](https://datatracker.ietf.org/doc/html/rfc6749), the access token used to obtain access to a protected resource [can be a JWT](https://datatracker.ietf.org/doc/html/rfc9068).
-- A JWT is often suggested for “stateless” user sessions. However, this usage is [frowned upon](http://cryto.net/~joepie91/blog/2016/06/13/stop-using-jwt-for-sessions/).
-- A [DPoP Proof JWT](https://datatracker.ietf.org/doc/html/rfc9449#name-dpop-proof-jwts) can be used to prove possession of a private key.
-- In [SPIFFE](https://spiffe.io/), a [JWT-SVID](https://github.com/spiffe/spiffe/blob/main/standards/JWT-SVID.md) can be used to authenticate a workload.
+- OpenID Connect: ID token = JWT representing identity + attributes of connected user.
+- OAuth 2: access token for protected resource can be a JWT (RFC 9068).
+- "Stateless" user sessions: often suggested, but frowned upon.
+- DPoP Proof JWT: prove possession of private key.
+- SPIFFE: JWT-SVID authenticates a workload.
 
-In its most common form (signed JWT), this information is protected by the generating application (**issuer**) using a signature to ensure it has not been tampered with. This signature prevents attackers, such as a malicious client or user, from forging a token or modifying the claims in an existing token, for example changing the user role from a simple user to an admin or altering the client's login. The JWT can be seen as a protected identity card or certificate about a user, an application, etc. An application (**presenter**) presents the token to a consuming application (**audience**) which can verify the token's authenticity and validity and take decisions or actions based on these claims.
+Most common form (signed JWT): generating application (**issuer**) protects info w/ signature against tampering. Signature prevents attackers (e.g. malicious client/user) forging token or modifying claims in existing token, e.g. changing role from user to admin or altering client's login. JWT = protected identity card/certificate about user, application, etc. Application (**presenter**) presents token to consuming application (**audience**), which verifies authenticity + validity, decides/acts based on claims.
 
-JWT can also provide confidentiality of the claims (encrypted JWT). Encryption itself is only introduced briefly in [Token Confidentiality and JWE](#token-confidentiality-and-jwe), but many aspects of this cheat sheet also apply to encrypted JWTs.
+JWT can also provide claim confidentiality (encrypted JWT). Encryption only briefly introduced in [Token Confidentiality and JWE](#token-confidentiality-and-jwe); much of this sheet also applies to encrypted JWTs.
 
 ## Token Structure
 
-Signed JWTs have the following structure:
+Signed JWT structure:
 
 ```
 {base64url(json(header))}.{base64url(json(claims))}.{base64url(signature)}
 ```
 
-The following elements are present in signed JWTs:
+Elements:
 
-- **Protected Header:** the JWT header contains some information about the token such as the type of token (IANA media type) and the cryptographic algorithms used to protect the token.
-- **Claims:** the content JWT is a list of claims (usually about the subject). See the [JWT IANA Registry](https://www.iana.org/assignments/jwt/jwt.xhtml) for a list of standard claims.
-- **Signature:** a signature in JWT is either a public-key digital signature (using a public/private key pair) or a MAC (using a shared secret). The signature protects both the protected headers and the claims.
+- **Protected Header:** info about token such as token type (IANA media type), cryptographic algorithms protecting token.
+- **Claims:** content = list of claims (usually about subject). Standard claims: JWT IANA Registry.
+- **Signature:** public-key digital signature (public/private key pair) or MAC (shared secret). Protects both protected headers and claims.
 
 ### Example
 
-For example, the following example ([taken from JWT.IO](https://jwt.io/#token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30)):
+Example (taken from JWT.IO):
 
 ```text
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30
 ```
 
-The first part ([**protected header**](https://datatracker.ietf.org/doc/html/rfc7515#section-4)) can be decoded into:
+First part (**protected header**, RFC 7515 section 4) decodes to:
 
 ```json
 {
@@ -49,7 +49,7 @@ The first part ([**protected header**](https://datatracker.ietf.org/doc/html/rfc
 }
 ```
 
-The second part ([**claims**](https://datatracker.ietf.org/doc/html/rfc7519#section-4)) can be decoded into:
+Second part (**claims**, RFC 7519 section 4) decodes to:
 
 ```json
 {
@@ -60,7 +60,7 @@ The second part ([**claims**](https://datatracker.ietf.org/doc/html/rfc7519#sect
 }
 ```
 
-The last part (**signature**) guarantees the authenticity of both the header and the claims, either using a public/private key pair (digital signature) or a shared secret (MAC), depending on the `alg` header value. For our example, it is computed as:
+Last part (**signature**) guarantees authenticity of header + claims, via public/private key pair (digital signature) or shared secret (MAC), depending on `alg` header value. Example computed as:
 
 ```javascript
 base64url(
@@ -77,37 +77,37 @@ base64url(
 
 ### Not using JWTs
 
-Before using JWTs to solve your problems, you should consider if they are really necessary for your use case.
+Consider whether JWTs are really necessary for use case.
 
-JWTs are often suggested for “stateless” user sessions. However, if you use JWTs for user sessions, you will need a solution for managing session invalidation. This can be achieved using a deny list of revoked sessions/tokens. If your application implements such a deny list, user sessions won't be completely stateless anymore which might defeat the benefits of stateless sessions. You might want to consider using a plain session system and follow the advices from the dedicated [session management cheat sheet](Session_Management.md).
+JWTs often suggested for "stateless" user sessions. But JWT sessions need session invalidation solution, e.g. deny list of revoked sessions/tokens. Deny list → sessions no longer fully stateless, may defeat benefits. Consider plain session system following [session management cheat sheet](Session_Management.md).
 
 ### Public-key Signatures vs. MAC
 
-A signed JWT can be authenticated using either a digital signature or a MAC:
+Signed JWT authenticated via digital signature or MAC:
 
-- **When using a digital signature,** the issuer of the token uses its private key to generate a signature. The audience of the token can use the associated public key to verify the authenticity of the token. Whereas the private key must only be known by the issuer, the public key can be public.
-- **When using a MAC,** a shared secret is shared between the issuer and the audience. The *same* shared secret is used by the issuer to generate the token and by the audience to verify the authenticity of the token.
+- **Digital signature:** issuer signs w/ private key; audience verifies w/ associated public key. Private key known only to issuer; public key can be public.
+- **MAC:** shared secret between issuer and audience. *Same* secret used by issuer to generate token and audience to verify.
 
-The two approaches differ on how credentials are managed.
+Credential management differs.
 
-When using a digital signature:
+Digital signature:
 
-- The issuer can reuse the same public key for many different audiences.
-- The audience of the token only need public information to validate the token authenticity which removes the risk of secret leakage by the audience.
-- Because the public key does not need to be secret, it can easily be distributed (eg. by publishing it at a public HTTPS URI).
-- This makes key rotation simpler as well.
-- Traditional digital signature schemes might be [broken by post quantum computers](https://datatracker.ietf.org/doc/html/rfc9958#name-asymmetric-cryptography) in the future. They would need to be replaced with post-quantum digital signature schemes which [heavier](https://datatracker.ietf.org/doc/html/rfc9958#name-impact-on-constrained-devic) are traditional signature schemes.
+- Issuer can reuse same public key for many audiences.
+- Audience needs only public information to validate → no risk of secret leakage by audience.
+- Public key needn't be secret → easily distributed (e.g. publish at public HTTPS URI).
+- Simpler key rotation.
+- Traditional digital signature schemes might be broken by post quantum computers in future (RFC 9958); would need replacement w/ post-quantum schemes, which are heavier than traditional ones.
 
-When using a MAC:
+MAC:
 
-- A different secret must be used for each (issuer, audience) pair. If, for example, the same secret is reused for difference audiences, one audience can forge a token (impersonating the issuer).
-- Secret keys must obviously not be published at a public HTTPS URI. Some solution for secret distribution and rotation must be found.
-- MAC are much faster than digital signatures (but this is usually negligible in practice).
+- Different secret MUST be used for each (issuer, audience) pair. E.g. same secret reused for different audiences → one audience can forge token (impersonating issuer).
+- Secret keys obviously never published at public HTTPS URI. Need solution for secret distribution + rotation.
+- MAC much faster than digital signatures (usually negligible in practice).
 
-Using a MAC may be interesting in the following cases:
+MAC may suit:
 
-- The issuer of the token is the sole audience of the token. Even in this case, it might be easier to use digital signature for secret rotation/distribution.
-- The issuer of the token is the audience. In this case, there is no problem of secret rotation/distribution.
+- Issuer is sole audience. Even then, digital signature may be easier for secret rotation/distribution.
+- Issuer is the audience. No secret rotation/distribution problem.
 
 ### Public-key Signatures
 
@@ -117,21 +117,21 @@ Using a MAC may be interesting in the following cases:
 | ECDSA                 | ES256, ES384, ES512             | Traditional  | Recommended
 | RSASSA-PSS            | PS256, PS384, PS512             | Traditional  | Recommended
 | RSASSA-PKCS1-v1_5     | RS256, RS384, RS512             | Traditional  | Not recommended
-| Hybrid ML-DSA / EdDSA | ML-DSA-44-Ed25519, etc.         | PQ/T hybrid  | [Draft](https://ietf-wg-jose.github.io/draft-ietf-jose-pq-composite-sigs/draft-ietf-jose-pq-composite-sigs.html)
-| Hybrid ML-DSA / ECDSA | ML-DSA-44-ES256, etc.           | PQ/T hybrid  | [Draft](https://ietf-wg-jose.github.io/draft-ietf-jose-pq-composite-sigs/draft-ietf-jose-pq-composite-sigs.html)
+| Hybrid ML-DSA / EdDSA | ML-DSA-44-Ed25519, etc.         | PQ/T hybrid  | Draft
+| Hybrid ML-DSA / ECDSA | ML-DSA-44-ES256, etc.           | PQ/T hybrid  | Draft
 | ML-DSA                | ML-DSA-44, ML-DSA-65, ML-DSA-87 | Post-quantum | Very limited support at best
 
-Explanations:
+Notes:
 
-- Support for EdDSA in JWT implementations is currently limited.
-- Generating ECDSA signatures may be dangerous on embedded systems where the quality of the randomness may be problematic. In this case, you the implementation must use deterministic ECDA as defined in [RFC 6979](https://datatracker.ietf.org/doc/html/rfc6979).
-- Post-quantum signatures ([ML-DSA](https://datatracker.ietf.org/doc/html/rfc9964)) or [hybrid post quantum signatures](https://ietf-wg-jose.github.io/draft-ietf-jose-pq-composite-sigs/draft-ietf-jose-pq-composite-sigs.html) are designed to be resistant against quantum computers. However, they produce very large signatures, resulting in very large JWTs. Their usage is probably not justified at the moment unless you need signatures with a long validity.
+- EdDSA support in JWT implementations currently limited.
+- ECDSA signature generation may be dangerous on embedded systems w/ problematic randomness quality. Then implementation must use deterministic ECDA per RFC 6979.
+- Post-quantum signatures (ML-DSA, RFC 9964) or hybrid post quantum signatures resist quantum computers but produce very large signatures → very large JWTs. Probably not justified now unless signatures need long validity.
 
 Key management:
 
-- Do not reuse the key pair for another purpose (eg. for encryption).
-- Using the same key for authenticating different types of JWTs is fine as long as this does not introduce a risk of token type confusion.
-- Do not publish your private key!
+- Don't reuse key pair for another purpose (e.g. encryption).
+- Same key for authenticating different JWT types fine if no risk of token type confusion.
+- Don't publish private key!
 
 #### MAC
 
@@ -141,16 +141,16 @@ Key management:
 
 Secret management:
 
-- Do not reuse the same secret for another purpose (eg. for encryption).
-- Using the same key for authenticating different types of JWTs is fine as long as this does not introduce a risk of token type confusion.
-- Do not reuse the same secret with another audience.
-- Do not reuse the same secret with another issuer.
-- Do not use a password as MAC secret.
-- The secret must be generated using a local, cryptographically secure secret generator.
-- The secret must have at least the same size as the output (eg. 256, 384 and 512 bits respectively for HS256, HS384 and HS512).
-- Do not publish your secret key!
-- The secret must have at least 160 bits of entropy.
-- For HMAC, the secret [should be at least as long as the output size](https://datatracker.ietf.org/doc/html/rfc2104#section-3).
+- Don't reuse same secret for another purpose (e.g. encryption).
+- Same key for authenticating different JWT types fine if no risk of token type confusion.
+- Don't reuse same secret with another audience.
+- Don't reuse same secret with another issuer.
+- Don't use password as MAC secret.
+- Secret MUST be generated by local, cryptographically secure secret generator.
+- Secret MUST be at least same size as output (e.g. 256, 384 and 512 bits respectively for HS256, HS384 and HS512).
+- Don't publish secret key!
+- Secret MUST have at least 160 bits of entropy.
+- HMAC: secret should be at least as long as output size (RFC 2104 section 3).
 
 Valid HMAC secret generation example:
 
@@ -184,7 +184,7 @@ meh_secret_for_hs512 = secrets.token_bytes(256//8)
 
 ### Header fields
 
-The following table lists some important JWT (JOSE) header parameters for security purpose.
+Important JWT (JOSE) header parameters for security:
 
 | Parameter       | Semantic                               | Security impact
 |-----------------|----------------------------------------|----------------
@@ -198,11 +198,11 @@ The following table lists some important JWT (JOSE) header parameters for securi
 | `x5t`           | Verification key (certificate hash)    | Risk of untrusted key usage
 | `x5t#S256`      | Verification key (certificate hash)    | Risk of untrusted key usage
 
-See the [header parameters subregistry](https://www.iana.org/assignments/jose/jose.xhtml#web-signature-encryption-header-parameters) for a list of standard JWT (JOSE) header parameters.
+Standard JWT (JOSE) header parameters: header parameters subregistry.
 
 ### Claims
 
-The following table lists some important JWT claims for security purpose.
+Important JWT claims for security:
 
 | Parameter       | Semantic                               | Security impact
 |-----------------|----------------------------------------|----------------
@@ -221,71 +221,69 @@ The following table lists some important JWT claims for security purpose.
 | `amr`           | Authentication method reference        | Enforcing authentication strength (eg. MFA)
 | `cnf`           | Token holder (public) key              | Sender constrained token
 | `may_act`       | Authorized Actor (impersonation/delegation) | Risk of cross-issuer user impersonation
-| `act`           | Actor (delegation, “on behalf of”)     | Audit (logs), risk of invalid actor imputation
+| `act`           | Actor (delegation, "on behalf of")     | Audit (logs), risk of invalid actor imputation
 | `scope`         | Token restriction (OAuth 2)            | Authorization
 | `roles`         | User roles                             | Authorization, risk of spoofed cross-issuer authorization
 | `groups`        | User groups                            | Authorization, risk of spoofed cross-issuer authorization
 | `entitlements`  | User entitlements                      | Authorization, risk of spoofed cross-issuer authorization
 | `authorization_details` | Fine grained authorizations    | Authorization, risk of spoofed cross-issuer authorization
 
-See the [JSON Web Token Claims subregistry](https://www.iana.org/assignments/jwt/jwt.xhtml) for a list of standard JWT claims.
+Standard JWT claims: JSON Web Token Claims subregistry.
 
-Many implementation have built-in support for validating core JWT claims such as `nbf`, `exp`, `iss` and `aud`.
+Many implementations have built-in validation of core claims `nbf`, `exp`, `iss`, `aud`.
 
 ## Threats on JWTs
 
-See [RFC 8725](https://datatracker.ietf.org/doc/html/rfc8725#name-threats-and-vulnerabilities) for a discussion on threats and vulnerabilities related to JWT.
+Threats/vulnerabilities discussion: RFC 8725.
 
 ### Unsecured JWTs
 
-Some JWT libraries, [used to accept unsecured JWTs by default](https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/) (`"alg":"none"`). In this case, an attacker would be able to forge their own JWTs: depending on the application, they might be able to impersonate arbitrary users, obtains arbitrary authorizations, etc.
-
-This issue should now be fixed in JWT libraries.
+Some JWT libraries used to accept unsecured JWTs by default (`"alg":"none"`). Attacker forges own JWTs: may impersonate arbitrary users, obtain arbitrary authorizations, etc. Should now be fixed in libraries.
 
 Mitigation:
 
-- Make sure that `"alg":"none"` is not accepted by your JWT parser. It should be disabled by default by recent implementations.
+- Ensure JWT parser doesn't accept `"alg":"none"`. Recent implementations disable by default.
 
 ### Key type confusion
 
-Some JWT implementations would accept to use a public key intended for public-key digital signature as if it was a secret key used for MAC verification. In this context, an attacker could forge a MAC-based JWT by using the public key of the real issuer as if it was a secret key.
+Some JWT implementations accept public key meant for digital signature as secret key for MAC verification → attacker forges MAC-based JWT using real issuer's public key as secret key.
 
-This threat is also called “key confusion” or “algorithm confusion”.
+Also called "key confusion" or "algorithm confusion".
 
-Example of legitimate token issuance:
+Legitimate token issuance:
 
 ```python
 token = jwt.encode(claims, private_key_bytes, algorithm="ES256")
 ```
 
-Example of attacker forging a token based on key type confusion:
+Attacker forging token via key type confusion:
 
 ```python
 token = jwt.encode(claims, public_key_bytes, algorithm="HS256")
 ```
 
-Example of validation potentially vulnerable to key type confusion:
+Validation potentially vulnerable to key type confusion:
 
 ```python
 # If the token is using a MAC, the library might interpret the public key bytes as a MAC secret:
 decoded = jwt.decode(token, public_key_bytes, algorithms=jwt.algorithms.get_default_algorithms())
 ```
 
-Note: this issue is [mitigated](https://github.com/jpadilla/pyjwt/commit/9c528670c455b8d948aff95ed50e22940d1ad3fc) in recent versions of the PyJWT library by detecting whether a MAC key appears to be a public key (in PEM of SSH format).
+Note: mitigated in recent PyJWT versions by detecting whether MAC key appears to be public key (PEM or SSH format).
 
 Mitigations (at validation):
 
-- use a library which is not vulnerable to the issue (eg. strong-typing of the type of key);
-- chose the key depending on the requested signature algorithm or validate that the key used for validation is consistent with the signature algorithm;
-- if possible, hardcode the accepted algorithms and do not mix public-key digital signatures algorithms and MAC algorithms.
+- use library not vulnerable (e.g. strong-typing of key type);
+- choose key per requested signature algorithm, or validate key consistent w/ signature algorithm;
+- if possible, hardcode accepted algorithms; don't mix public-key signature algorithms and MAC algorithms.
 
-Example of validation not vulnerable because MAC algorithms are not accepted:
+Not vulnerable because MAC algorithms not accepted:
 
 ```python
 decoded = jwt.decode(token, public_key_bytes, algorithms=["ES256"])
 ```
 
-Illustrative signature verification using [joserfc's typed key import](https://jose.authlib.org/en/guide/jwk/#import-keys) and a trusted EC public key. [Claim validation](https://jose.authlib.org/en/guide/jwt/#validate-claims) is still required before accepting the token. Replace the example key with your issuer's trusted public key; `encoded` is the received token string.
+Illustrative signature verification using joserfc typed key import and trusted EC public key. Claim validation still required before accepting token. Replace example key w/ issuer's trusted public key; `encoded` = received token string.
 
 ```python
 from joserfc import jwt, jwk
@@ -302,50 +300,50 @@ decoded = jwt.decode(encoded, public_key, algorithms=["ES256"])
 
 References:
 
-- [Algorithm confusion attacks](https://portswigger.net/web-security/jwt/algorithm-confusion);
-- [CVE-2022-29217](https://nvd.nist.gov/vuln/detail/cve-2022-29217), Key confusion through non-blocklisted public key formats (PyJWT);
-- [CVE-2023-48223](https://nvd.nist.gov/vuln/detail/CVE-2023-48223), JWT Algorithm Confusion in fast-jwt.
+- Algorithm confusion attacks;
+- CVE-2022-29217, Key confusion through non-blocklisted public key formats (PyJWT);
+- CVE-2023-48223, JWT Algorithm Confusion in fast-jwt.
 
 ### Trusting key material named in the token header
 
-A JWS header can carry the verification key itself or a pointer to it: `jwk` (an embedded key), `jku` (a URL to a JWK Set), `x5u` (a URL to an X.509 certificate) and `x5c` (an embedded certificate chain), alongside the key selection hints `kid`, `x5t` and `x5t#S256`. An application that resolves or selects its verification key from these header parameters, without tying the result back to something it already trusts, can be steered into trusting a key the attacker controls, because the header is unauthenticated attacker input.
+JWS header can carry verification key or pointer: `jwk` (embedded key), `jku` (URL to JWK Set), `x5u` (URL to X.509 certificate), `x5c` (embedded certificate chain), plus key selection hints `kid`, `x5t`, `x5t#S256`. Application resolving/selecting verification key from these, w/o tying result to something already trusted, can be steered into trusting attacker-controlled key: header = unauthenticated attacker input.
 
-An attacker can forge their own token, include their own public key in `jwk`, or point `jku` or `x5u` at a JWK Set or certificate they host, and sign the token with the matching private key. A verifier that trusts the key it has just read from the token accepts the forgery. An attacker can also try to smuggle a symmetric key through the same parameters, in the hope that the implementation will use it for MAC verification.
+Attacker forges token, includes own public key in `jwk`, or points `jku`/`x5u` at attacker-hosted JWK Set/certificate, signs w/ matching private key. Verifier trusting key just read from token accepts forgery. Attacker may also smuggle symmetric key via same parameters hoping implementation uses it for MAC verification.
 
-These parameters have legitimate uses, so the distinction is anchoring rather than avoidance. `x5c` and `x5u` are usable where the certificate chain validates up to an anchor already trusted for that issuer, and `kid`, `x5t` and `x5t#S256` are the normal way to choose which key from an already configured JWKS should verify a given token. What must not happen is treating any of them as the source of trust rather than as a pointer within it.
+Parameters have legitimate uses → distinction is anchoring, not avoidance. `x5c`, `x5u` usable where certificate chain validates up to anchor already trusted for that issuer; `kid`, `x5t`, `x5t#S256` = normal way to choose which key from already configured JWKS verifies a token. Must not treat any as source of trust rather than pointer within it.
 
 Mitigations:
 
-- Do not take the verification key from the token unless that key can be tied, through a chain of trust, to a root trust anchor associated with the issuer.
-- Prefer trust material established out of band, such as a pinned key or the `jwks_uri` published in the issuer's metadata.
-- Validate or sanitize `kid` before using it in a lookup, since it also reaches databases and directories as an injection vector.
-- Where keys are fetched by URL, see the [Server Side Request Forgery Prevention Cheat Sheet](Server_Side_Request_Forgery_Prevention.md).
+- Don't take verification key from token unless key tied, via chain of trust, to root trust anchor associated w/ issuer.
+- Prefer out-of-band trust material, e.g. pinned key or `jwks_uri` published in issuer's metadata.
+- Validate/sanitize `kid` before lookup: also reaches databases/directories as injection vector.
+- Keys fetched by URL: see [Server Side Request Forgery Prevention Cheat Sheet](Server_Side_Request_Forgery_Prevention.md).
 
 References:
 
-- [RFC 8725, Do Not Trust Received Claims](https://datatracker.ietf.org/doc/html/rfc8725#name-do-not-trust-received-claim);
-- [CVE-2018-0114](https://nvd.nist.gov/vuln/detail/CVE-2018-0114), a key embedded in the JWS header trusted for verification.
+- RFC 8725, Do Not Trust Received Claims;
+- CVE-2018-0114, key embedded in JWS header trusted for verification.
 
 ### Issuer and audience confusion
 
-A JWT typically carries the `iss` (issuer) claim to say who created it and the `aud` (audience) claim to say which party is expected to consume and validate it. Neither claim is mandatory, and some designs omit one deliberately: a token an application issues and consumes itself, under a key used for nothing else, or an SD-JWT whose audience is established by the accompanying key binding JWT rather than by an `aud` claim. Where a key does speak for more than one issuer or more than one recipient, however, a verifier that checks only the signature and the expiration accepts any token that key has signed, whatever `iss` and `aud` it carries. An attacker holding such a token, whether legitimately issued to them or obtained from a service they control, may then be able to replay it against a different recipient. RFC 8725 calls this a substitution attack.
+JWT typically carries `iss` (issuer) = who created it, `aud` (audience) = which party should consume/validate it. Neither mandatory; some designs omit one deliberately: token app issues and consumes itself under key used for nothing else, or SD-JWT whose audience established by accompanying key binding JWT rather than `aud`. But where a key speaks for more than one issuer or recipient, verifier checking only signature + expiration accepts any token that key signed, whatever `iss`/`aud`. Attacker holding such token (legitimately issued to them or obtained from service they control) may replay against different recipient. RFC 8725 calls this substitution attack.
 
-Two variants are worth separating, because different checks defeat them.
+Two variants, defeated by different checks.
 
-**Audience confusion.** An attacker presents a token issued for one service to a second service that trusts the same issuer. If the second service does not require its own identifier in `aud`, the token is accepted. For example, a token minted for a low-privilege service is replayed against an internal API, and the attacker gains access that was never granted. On a different axis, a third-party application that legitimately receives tokens for its own use can replay one against another application, first-party or third-party, reaching data or operations it was never granted.
+**Audience confusion.** Attacker presents token issued for one service to second service trusting same issuer. Second service not requiring own identifier in `aud` → token accepted. E.g. token minted for low-privilege service replayed against internal API → access never granted. Another axis: third-party app legitimately receiving tokens for own use replays one against another application (first- or third-party), reaching data/operations never granted.
 
-**Issuer confusion.** An attacker presents a token from a different issuer that the verifier also trusts, such as a partner tenant or a self-service account at a public identity provider. Comparing the `iss` string alone does not stop this if the verifier resolves its verification key independently of `iss`. A verifier that looks up the key by `kid` across the union of several trusted issuers' JWK Sets will accept a token whose `iss` names one issuer and whose `kid` names a key belonging to another: the signature verifies against the key that `kid` selected, and the `iss` and `aud` comparisons pass because the attacker set both to what the verifier expects. No key needs to be stolen, and the deployment need not be multi-tenant.
+**Issuer confusion.** Attacker presents token from different issuer verifier also trusts, e.g. partner tenant or self-service account at public identity provider. Comparing `iss` string alone doesn't stop this if verifier resolves verification key independently of `iss`. Verifier looking up key by `kid` across union of several trusted issuers' JWK Sets accepts token whose `iss` names one issuer and `kid` names another's key: signature verifies against key `kid` selected; `iss` and `aud` comparisons pass because attacker set both to expected values. No key theft needed; deployment needn't be multi-tenant.
 
 Mitigations:
 
-- Validate `iss` against what the deployment trusts, as a case-sensitive comparison of the whole string including scheme and path. Where a single issuer is expected this is an equality check. Where issuers are provisioned dynamically, through a discovery protocol for example, it becomes membership of an explicit allowlist of issuer identifiers, rather than acceptance of whatever `iss` the token presents.
-- Select the verification key from the set bound to the validated `iss`, for example that issuer's `jwks_uri`; never verify against a union of keys from several issuers. In multi-tenant deployments this means resolving the key set from an allowlist keyed by issuer rather than searching every tenant's keys.
-- Validate that the recipient's own identifier is present in `aud`, whether `aud` is a single string or an array of strings.
-- Where the deployment relies on these claims, reject tokens in which `iss` or `aud` is missing. RFC 7519 makes both optional, so this is a deployment decision rather than a specification requirement: a verifier with no `iss` has nothing to bind the key to, and one with no `aud` cannot tell whether the token was meant for it, but a profile that establishes either by other means does not need the claim itself.
+- Validate `iss` against what deployment trusts: case-sensitive comparison of whole string incl. scheme and path. Single expected issuer → equality check. Dynamically provisioned issuers (e.g. discovery protocol) → membership of explicit allowlist of issuer identifiers, not acceptance of whatever `iss` token presents.
+- Select verification key from set bound to validated `iss`, e.g. that issuer's `jwks_uri`; never verify against union of keys from several issuers. Multi-tenant: resolve key set from allowlist keyed by issuer, not by searching every tenant's keys.
+- Validate recipient's own identifier present in `aud`, whether `aud` is single string or array of strings.
+- Where deployment relies on these claims, reject tokens missing `iss` or `aud`. RFC 7519 makes both optional → deployment decision, not spec requirement: verifier w/o `iss` has nothing to bind key to; w/o `aud` can't tell if token meant for it; but profile establishing either by other means doesn't need the claim.
 
-The related case, where the key material itself is taken from the token rather than merely selected by it, is covered in [Trusting key material named in the token header](#trusting-key-material-named-in-the-token-header). Where verification uses a MAC, see also the secret reuse points under [MAC](#mac).
+Related case, key material taken from token rather than merely selected by it: [Trusting key material named in the token header](#trusting-key-material-named-in-the-token-header). Where verification uses MAC, see also secret reuse points under [MAC](#mac).
 
-Example of strict validation in Python with PyJWT, resolving the key from the expected issuer's JWK Set rather than accepting one supplied independently:
+Strict validation in Python w/ PyJWT, resolving key from expected issuer's JWK Set rather than accepting independently supplied one:
 
 ```python
 import jwt
@@ -369,27 +367,27 @@ decoded_payload = jwt.decode(
 )
 ```
 
-Note: in PyJWT the `issuer` and `audience` arguments perform the validation. The `verify_iss` and `verify_aud` options are enabled by default and gate checks that do nothing on their own, so a token is only checked against an expected issuer and audience when those arguments are passed.
+Note: PyJWT `issuer`/`audience` arguments perform validation. `verify_iss`/`verify_aud` options enabled by default but gate checks that do nothing alone → token checked against expected issuer/audience only when those arguments passed.
 
 References:
 
-- [RFC 8725, Substitution Attacks](https://datatracker.ietf.org/doc/html/rfc8725#name-substitution-attacks);
-- [RFC 8725, Validate Issuer and Subject](https://datatracker.ietf.org/doc/html/rfc8725#name-validate-issuer-and-subject);
-- [RFC 8725, Use and Validate Audience](https://datatracker.ietf.org/doc/html/rfc8725#name-use-and-validate-audience);
-- [RFC 7519, "iss" (Issuer) Claim](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.1);
-- [RFC 7519, "aud" (Audience) Claim](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.3).
+- RFC 8725, Substitution Attacks;
+- RFC 8725, Validate Issuer and Subject;
+- RFC 8725, Use and Validate Audience;
+- RFC 7519, "iss" (Issuer) Claim;
+- RFC 7519, "aud" (Audience) Claim.
 
 ### Cross-JWT and token type confusion
 
-Cross-JWT (or token type) confusion occurs when validation rules fail to distinguish token kinds, allowing a token issued for one purpose (such as an ID or password-reset token) to be accepted as another (such as an access token). Overlapping claims or shared signing keys are common enabling conditions (see [RFC 8725 §2.8](https://datatracker.ietf.org/doc/html/rfc8725#name-cross-jwt-confusion)).
+Cross-JWT (token type) confusion: validation rules fail to distinguish token kinds, so token issued for one purpose (e.g. ID or password-reset token) accepted as another (e.g. access token). Overlapping claims or shared signing keys common enablers (RFC 8725 section 2.8).
 
 Mitigations:
 
-- **Use explicit typing (`typ`):** Set the `typ` header parameter to a specific media type distinguishing the token's purpose, such as `"at+jwt"` for OAuth 2.0 access tokens ([RFC 9068](https://datatracker.ietf.org/doc/html/rfc9068)), `"logout+jwt"` for logout tokens ([OpenID Connect Back-Channel Logout 1.0 §2.4](https://openid.net/specs/openid-connect-backchannel-1_0.html#LogoutToken)), or custom types (e.g., `example-reset+jwt`) for internal tokens.
-- **Validate `typ` at the verifier:** For token profiles that require or reliably provide explicit typing, reject tokens with missing or unexpected `typ` values at that endpoint. Note that `typ` is case-insensitive and the `application/` prefix may be omitted ([RFC 7515 §4.1.9](https://datatracker.ietf.org/doc/html/rfc7515#section-4.1.9)).
-- **Use mutually exclusive validation rules:** Where explicit typing cannot be enforced interoperably (e.g., standard OIDC ID tokens omitting `typ`), distinguish token kinds using separate signing keys, required claims, or strict **`iss` and `aud` isolation** ([RFC 8725 §3.12](https://datatracker.ietf.org/doc/html/rfc8725#name-use-mutually-exclusive-vali)).
+- **Use explicit typing (`typ`):** set `typ` header to specific media type distinguishing token purpose, e.g. `"at+jwt"` for OAuth 2.0 access tokens (RFC 9068), `"logout+jwt"` for logout tokens (OpenID Connect Back-Channel Logout 1.0 section 2.4), or custom types (e.g., `example-reset+jwt`) for internal tokens.
+- **Validate `typ` at verifier:** for token profiles requiring/reliably providing explicit typing, reject tokens w/ missing or unexpected `typ` at that endpoint. `typ` is case-insensitive; `application/` prefix may be omitted (RFC 7515 section 4.1.9).
+- **Use mutually exclusive validation rules:** where explicit typing can't be enforced interoperably (e.g., standard OIDC ID tokens omitting `typ`), distinguish token kinds via separate signing keys, required claims, or strict **`iss` and `aud` isolation** (RFC 8725 section 3.12).
 
-Example of validation enforcing explicit token type:
+Validation enforcing explicit token type:
 
 ```python
 import jwt
@@ -412,21 +410,21 @@ if typ not in ["at+jwt", "application/at+jwt"]:
 
 References:
 
-- [RFC 8725 §3.11, Use Explicit Typing](https://datatracker.ietf.org/doc/html/rfc8725#name-use-explicit-typing);
-- [RFC 8725 §3.12, Use Mutually Exclusive Validation Rules for Different Kinds of JWTs](https://datatracker.ietf.org/doc/html/rfc8725#name-use-mutually-exclusive-vali);
-- [RFC 9068, JSON Web Token (JWT) Profile for OAuth 2.0 Access Tokens](https://datatracker.ietf.org/doc/html/rfc9068).
+- RFC 8725 §3.11, Use Explicit Typing;
+- RFC 8725 §3.12, Use Mutually Exclusive Validation Rules for Different Kinds of JWTs;
+- RFC 9068, JSON Web Token (JWT) Profile for OAuth 2.0 Access Tokens.
 
 ## JWT revocation
 
 ### Token Status List
 
-If revocation of the JWTs by the issuer is needed, the [Token Status Lists](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-status-list) (TSL) can be used:
+Issuer-side JWT revocation needed → use Token Status Lists (TSL):
 
-- the JWT contains the URI of a TSL;
-- the TSL aggregates the revocation status of several tokens in compressed form;
-- the consumer of the token can fetch the TSL to obtain the revocation status of the JWT.
+- JWT contains URI of a TSL;
+- TSL aggregates revocation status of several tokens in compressed form;
+- token consumer fetches TSL to get JWT's revocation status.
 
-The issuer includes a `status` claim in the JWT. This claims contains the URI of the associated TSL and the index of the status of the JWT within this list:
+Issuer includes `status` claim in JWT: URI of associated TSL + index of JWT's status within list:
 
 ```json
 {
@@ -448,9 +446,9 @@ The issuer includes a `status` claim in the JWT. This claims contains the URI of
 
 ### JWT denylist
 
-In some cases, the consumer of the token might want to maintain a JWT denylist. This might be for example used a simple form of JWT replay protection or as a workaround for the “stateless session” invalidation problem.
+Token consumer might maintain JWT denylist, e.g. as simple JWT replay protection or workaround for "stateless session" invalidation problem.
 
-A JWT deny list can typically be implemented based on the  `jti` and `iss` claims:
+Deny list typically based on `jti` and `iss` claims:
 
 ```python
 def revoke_token(claims):
@@ -465,12 +463,12 @@ def is_token_revoked(claims) -> bool:
     return deny_list.contains((jti, iss))
 ```
 
-Depending on the application and the type of JWT, other claims might be more suitable.
+Other claims might suit better depending on application and JWT type.
 
-**Warning:** Using the raw JWT or a secure hash of the JWT (`SHA-256(token)`) as the denylist key is *not safe* and might expose the application to **denylist bypass through [JWT malleability](https://www.gabriel.urdhr.fr/2026/06/27/ecdsa-jwt-malleability/)**. An attacker in possession of a revoked JWT might be able to modify an alternative representation of the JWT that still passes signature verification:
+**Warning:** Raw JWT or secure hash of JWT (`SHA-256(token)`) as denylist key is *not safe*; may expose application to **denylist bypass through JWT malleability**. Attacker holding revoked JWT might modify an alternative representation that still passes signature verification:
 
-- because of non-strict JWT parsing of the JWT implementation;
-- for ECDSA JWTs, because of the malleability of ECDSA signatures.
+- because of non-strict JWT parsing by implementation;
+- for ECDSA JWTs, because of ECDSA signature malleability.
 
 ```python
 # Not secure. Might be vulnerable to JWT malleability:
@@ -480,48 +478,48 @@ def unsafe_revoke_token(claims):
     deny_list.insert(token_hash, exp)
 ```
 
-Before implementing such a JWT denylist, you should consider whether there is a better solution for your problem:
+Before implementing denylist, consider better solutions:
 
-- Token Status List is a scalable solution for revocation of the JWT by the issuer.
-- Freshness and replay protection can often by implementing by using a `nonce` bound to the session in the JWT claims. This approach is [used in OpenID Connect](https://openid.net/specs/openid-connect-core-1_0.html#NonceNotes).
-- Token reuse can be mitigated by using short expiration time in the JWT.
-- Sender-constrained access tokens, such as [DPoP-bound tokens](https://datatracker.ietf.org/doc/html/rfc9449#section-2) or [mutual-TLS certificate-bound tokens](https://www.rfc-editor.org/rfc/rfc8705.html#section-3), limit an attacker's ability to use a stolen token without its associated private key. They do not prevent token disclosure. Protect tokens and keys, use HTTPS, and prevent [untrusted code from using the client's signing key](https://datatracker.ietf.org/doc/html/rfc9449#section-11.4).
+- Token Status List: scalable issuer-side revocation.
+- Freshness/replay protection often via `nonce` bound to session in JWT claims (used in OpenID Connect).
+- Token reuse mitigated by short JWT expiration time.
+- Sender-constrained access tokens, e.g. DPoP-bound tokens or mutual-TLS certificate-bound tokens (RFC 8705 section 3), limit attacker's ability to use stolen token w/o associated private key. Don't prevent token disclosure. Protect tokens and keys, use HTTPS, prevent untrusted code from using client's signing key.
 
 ## Token Confidentiality and JWE
 
 ### Signed JWTs are not confidential
 
-A signed JWT ([JSON Web Signature](https://datatracker.ietf.org/doc/html/rfc7515), JWS) provides integrity and authenticity, but not confidentiality. The payload is only base64url encoded, not encrypted, so anyone who obtains the token can read every claim. With a MAC (`HS*`), a valid signature also only proves that the token was produced by some holder of the shared secret, see [Public-key Signatures vs. MAC](#public-key-signatures-vs-mac).
+Signed JWT (JSON Web Signature, JWS) gives integrity + authenticity, not confidentiality. Payload only base64url encoded, not encrypted → anyone obtaining token reads every claim. With MAC (`HS*`), valid signature only proves token produced by some holder of shared secret, see [Public-key Signatures vs. MAC](#public-key-signatures-vs-mac).
 
-TLS prevents the token from being read in transit, but the claims remain exposed elsewhere: in application logs, in browser storage, in referrer headers, and to any intermediary that terminates TLS.
+TLS prevents reading in transit, but claims remain exposed elsewhere: application logs, browser storage, referrer headers, any intermediary terminating TLS.
 
-[Omitting privacy-sensitive information from a JWT is the simplest way of minimizing privacy issues](https://datatracker.ietf.org/doc/html/rfc7519#section-12). Prefer keeping sensitive data server-side behind an opaque reference token. Use JWE only when the claims must travel with the token to a party that cannot resolve them with the issuer.
+Omitting privacy-sensitive info from JWT = simplest way to minimize privacy issues (RFC 7519 section 12). Prefer keeping sensitive data server-side behind opaque reference token. Use JWE only when claims must travel with token to party that can't resolve them with issuer.
 
 ### Using JWE
 
-When claims must be kept confidential, use [JSON Web Encryption (JWE)](https://datatracker.ietf.org/doc/html/rfc7516). JWE uses two algorithms:
+Claims must stay confidential → use JSON Web Encryption (JWE, RFC 7516). JWE uses two algorithms:
 
-- **`alg`:** the key management algorithm, which [encrypts or agrees upon](https://datatracker.ietf.org/doc/html/rfc7518#section-4.1) the Content Encryption Key (CEK) for the intended recipient (for example `RSA-OAEP-256` or `ECDH-ES+A256KW`).
-- **`enc`:** the content encryption algorithm, which encrypts the payload using authenticated encryption (for example `A256GCM`).
+- **`alg`:** key management algorithm; encrypts or agrees upon (RFC 7518 section 4.1) Content Encryption Key (CEK) for intended recipient (e.g. `RSA-OAEP-256` or `ECDH-ES+A256KW`).
+- **`enc`:** content encryption algorithm; encrypts payload using authenticated encryption (e.g. `A256GCM`).
 
-JWE provides confidentiality and ciphertext integrity, **not** issuer authentication. With a public-key `alg`, anyone holding the recipient's public key can produce a token that decrypts successfully, so never make authorization decisions on claims from an unsigned JWE.
+JWE gives confidentiality + ciphertext integrity, **not** issuer authentication. With public-key `alg`, anyone holding recipient's public key can produce token that decrypts successfully → never make authorization decisions on claims from unsigned JWE.
 
-When both authenticity and confidentiality are needed, use a **nested JWT**: sign the claims first (JWS), then encrypt the result (JWE). This [prevents attacks in which the signature is stripped, leaving just an encrypted message, as well as providing privacy for the signer](https://datatracker.ietf.org/doc/html/rfc7519#section-11.2). In the outer JWE, the `cty` header [MUST be set to `JWT`](https://datatracker.ietf.org/doc/html/rfc7519#section-5.2) to signal the nesting.
+Need both authenticity and confidentiality → **nested JWT**: sign claims first (JWS), then encrypt result (JWE). Prevents attacks where signature stripped leaving just encrypted message, and provides privacy for signer (RFC 7519 section 11.2). In outer JWE, `cty` header MUST be set to `JWT` to signal nesting (RFC 7519 section 5.2).
 
-When consuming a nested JWT, decrypt the outer JWE **and** verify the inner JWS signature, rejecting the token if either step fails. [Both the outer and the inner operations MUST be validated](https://datatracker.ietf.org/doc/html/rfc8725#section-3.3): successful decryption on its own proves nothing about who issued the claims.
+Consuming nested JWT: decrypt outer JWE **and** verify inner JWS signature; reject token if either fails. Both outer and inner operations MUST be validated (RFC 8725 section 3.3): successful decryption alone proves nothing about who issued claims.
 
-Two further requirements apply to JWE:
+Two further JWE requirements:
 
-- Accept only an allowlisted `alg`/`enc` pair and bind each key to a single algorithm. Never let the token header select the algorithm, because this [enables a downgrade attack that can recover the CEK](https://datatracker.ietf.org/doc/html/rfc7516#section-11.4).
-- Do not compress the claims before encryption (the `zip` header), because [compressed data often reveals information about the plaintext](https://datatracker.ietf.org/doc/html/rfc8725#section-3.6).
+- Accept only allowlisted `alg`/`enc` pair; bind each key to single algorithm. Never let token header select algorithm: enables downgrade attack that can recover CEK (RFC 7516 section 11.4).
+- Don't compress claims before encryption (`zip` header): compressed data often reveals info about plaintext (RFC 8725 section 3.6).
 
 **Note:**
 
-Full JWE implementation guidance is out of scope for this cheat sheet and will be addressed in a dedicated JWE cheat sheet.
+Full JWE implementation guidance out of scope; to be addressed in dedicated JWE cheat sheet.
 
 ## References
 
-- [RFC 7519: JSON Web Token](https://datatracker.ietf.org/doc/html/rfc7519)
-- [RFC 8725: JSON Web Token Best Current Practices](https://datatracker.ietf.org/doc/html/rfc8725)
-- [RFC 7516: JSON Web Encryption](https://datatracker.ietf.org/doc/html/rfc7516)
-- [RFC 7517: JSON Web Key](https://datatracker.ietf.org/doc/html/rfc7517)
+- RFC 7519: JSON Web Token
+- RFC 8725: JSON Web Token Best Current Practices
+- RFC 7516: JSON Web Encryption
+- RFC 7517: JSON Web Key

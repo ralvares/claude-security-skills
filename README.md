@@ -6,7 +6,7 @@ Two pieces work together:
 
 | Piece | Loaded | Cost |
 | --- | --- | --- |
-| `SECURITY-RULES.md`: seven rules (untrusted input, deny by default, no secrets, parameterise, least privilege, fail closed, a Security section in every plan) | Every session, through an `@` import | about 350 tokens |
+| `SECURITY-RULES.md`: seven core rules plus 107 rules distilled from all 133 sheets, each citing its sheets | Every session, through an `@` import | about 6k tokens |
 | `owasp` skill: a router from task to sheet, plus 133 sheets | Only when a task touches security | router about 2k tokens, then 1 to 4 sheets |
 
 Building a webhook receiver, for example, loads the router, `Webhook_Security.md` and `Server_Side_Request_Forgery_Prevention.md`. Nothing else.
@@ -62,14 +62,13 @@ Claude matches the task against the skill description and invokes `owasp` on its
 
 The sheets quote attack payloads as examples. The skill tells Claude to treat them as reference data, never as instructions.
 
-## Update the sheets
+## Format
 
-```bash
-scripts/sync-owasp.sh          # latest OWASP master
-scripts/sync-owasp.sh <full SHA> # a specific commit
-```
+The sheets and rules are written in telegraphic style (no articles or filler, terse bullets) to cut tokens. Headings, code blocks, inline code and every number are kept exactly as OWASP published them; reference link lists and external URLs are dropped. `scripts/check-index.sh` confirms every sheet is listed in `SKILL.md`; `scripts/check-rules.sh` confirms every sheet is cited in `SECURITY-RULES.md` and the file stays under 24 KB.
 
-The script copies `cheatsheets/*.md`, drops the `_Cheat_Sheet` suffix, rewrites links, skips deprecated stubs and updates the commit in `skills/owasp/NOTICE.md`. It prints sheets that are new (add a row to `SKILL.md`) or removed (drop the row). `scripts/check-index.sh` confirms every sheet is listed and every listed sheet exists.
+## Updates
+
+There is no automatic sync with OWASP. To take a newer OWASP sheet, rewrite it by hand in the same style and update `skills/owasp/NOTICE.md`.
 
 ## License
 

@@ -2,19 +2,19 @@
 
 ## Introduction
 
-Network segmentation is the core of multi-layer defense in depth for modern services. Segmentation slow down an attacker if he cannot implement attacks such as:
+Network segmentation = core of multi-layer defense in depth for modern services. Slows attacker if he cannot implement attacks such as:
 
 - SQL-injections, see [SQL Injection Prevention Cheat Sheet](SQL_Injection_Prevention.md);
 - compromise of workstations of employees with elevated privileges;
-- compromise of another server in the perimeter of the organization;
-- compromise of the target service through the compromise of the LDAP directory, DNS server, and other corporate services and sites published on the Internet.
+- compromise of another server in organization perimeter;
+- compromise of target service via compromise of LDAP directory, DNS server, other corporate services + sites published on Internet.
 
-The main goal of this cheat sheet is to show the basics of network segmentation to effectively counter attacks by building a secure and maximally isolated service network architecture.
+Goal: basics of network segmentation to counter attacks by building secure, maximally isolated service network architecture.
 
-Segmentation will avoid the following situations:
+Segmentation avoids:
 
-- executing arbitrary commands on a public web server (NginX, Apache, Internet Information Service) prevents an attacker from gaining direct access to the database;
-- having unauthorized access to the database server, an attacker cannot access CnC on the Internet.
+- arbitrary command execution on public web server (NginX, Apache, Internet Information Service) giving attacker direct database access;
+- attacker w/ unauthorized database server access reaching CnC on Internet.
 
 ## Content
 
@@ -28,22 +28,22 @@ Segmentation will avoid the following situations:
 
 Elements used in network diagrams:
 
-![Schematic symbols](https://raw.githubusercontent.com/OWASP/CheatSheetSeries/master/assets/Network_Segmentation_Cheat_Sheet_Schematic_symbols.drawio.png)
+[Diagram: Schematic symbols]
 
-Crossing the border of the rectangle means crossing the firewall:
-![Traffic passes through two firewalls](https://raw.githubusercontent.com/OWASP/CheatSheetSeries/master/assets/Network_Segmentation_Cheat_Sheet_firewall_1.drawio.png)
+Crossing rectangle border = crossing firewall:
+[Diagram: Traffic passes through two firewalls]
 
-In the image above, traffic passes through two firewalls with the names FW1 and FW2
+Above: traffic passes through two firewalls named FW1 and FW2
 
-![Traffic passes through one firewall](https://raw.githubusercontent.com/OWASP/CheatSheetSeries/master/assets/Network_Segmentation_Cheat_Sheet_firewall_2.drawio.png)
+[Diagram: Traffic passes through one firewall]
 
-In the image above, traffic passes through one firewall, behind which there are two VLANs
+Above: traffic passes through one firewall, behind which two VLANs
 
-Further, the schemes do not contain firewall icons so as not to overload the schemes
+Later schemes omit firewall icons to avoid overload
 
 ## Three-layer network architecture
 
-By default, developed information systems should consist of at least three components (**security zones**):
+Information systems should by default consist of ≥3 components (**security zones**):
 
 1. [FRONTEND](Network_Segmentation.md#FRONTEND);
 2. [MIDDLEWARE](Network_Segmentation.md#MIDDLEWARE);
@@ -51,84 +51,84 @@ By default, developed information systems should consist of at least three compo
 
 ### FRONTEND
 
-FRONTEND - A frontend is a set of segments with the following network elements:
+FRONTEND - set of segments with network elements:
 
 - balancer;
 - application layer firewall;
 - web server;
 - web cache.
 
-![FRONTEND](https://raw.githubusercontent.com/OWASP/CheatSheetSeries/master/assets/Network_Segmentation_Cheat_Sheet_FRONTEND.drawio.png)
+[Diagram: FRONTEND]
 
 ### MIDDLEWARE
 
-MIDDLEWARE - a set of segments to accommodate the following network elements:
+MIDDLEWARE - set of segments for network elements:
 
-- web applications that implement the logic of the information system (processing requests from clients, other services of the company and external services; execution of requests);
+- web applications implementing information system logic (processing requests from clients, other company services, external services; executing requests);
 - authorization services;
 - analytics services;
 - message queues;
 - stream processing platform.
 
-![MIDDLEWARE](https://raw.githubusercontent.com/OWASP/CheatSheetSeries/master/assets/Network_Segmentation_Cheat_Sheet_MIDDLEWARE.drawio.png)
+[Diagram: MIDDLEWARE]
 
 ### BACKEND
 
-BACKEND - a set of network segments to accommodate the following network elements:
+BACKEND - set of network segments for network elements:
 
 - SQL database;
 - LDAP directory (Domain controller);
 - storage of cryptographic keys;
 - file server.
 
-![BACKEND](https://raw.githubusercontent.com/OWASP/CheatSheetSeries/master/assets/Network_Segmentation_Cheat_Sheet_BACKEND.drawio.png)
+[Diagram: BACKEND]
 
 ### Example of Three-layer network architecture
 
-![BACKEND](https://raw.githubusercontent.com/OWASP/CheatSheetSeries/master/assets/Network_Segmentation_Cheat_Sheet_TIER_Example.drawio.png)
-The following example shows an organization's local network. The organization is called "Сontoso".
+[Diagram: BACKEND]
+Example: organization's local network, organization "Сontoso".
 
-The edge firewall contains 2 VLANs of **FRONTEND** security zone:
+Edge firewall contains 2 VLANs of **FRONTEND** security zone:
 
-- _DMZ Inbound_ - a segment for hosting services and applications accessible from the Internet, they must be protected by WAF;
-- _DMZ Outgoing_ - a segment for hosting services that are inaccessible from the Internet, but have access to external networks (the firewall does not contain any rules for allowing traffic from external networks).
+- _DMZ Inbound_ - segment hosting services/apps accessible from Internet; must be protected by WAF;
+- _DMZ Outgoing_ - segment hosting services inaccessible from Internet but with access to external networks (firewall has no rules allowing traffic from external networks).
 
-The internal firewall contains 4 VLANs:
+Internal firewall contains 4 VLANs:
 
-- **MIDDLEWARE** security zone contains only one VLAN with name _APPLICATIONS_ - a segment designed to host information system applications that interact with each other (interservice communication) and interact with other services;
-- **BACKEND** security zone contains:
-    - _DATABASES_ - a segment designed to delimit various databases of an automated system;
-    - _AD SERVICES_ - segment designed to host various Active Directory services, in the example only one server with a domain controller Contoso.com is shown;
-    - _LOGS_ - segment, designed to host servers with logs, servers centrally store application logs of an automated system.
+- **MIDDLEWARE** security zone: one VLAN _APPLICATIONS_ - segment hosting information system apps that interact with each other (interservice communication) and other services;
+- **BACKEND** security zone:
+    - _DATABASES_ - segment delimiting various databases of automated system;
+    - _AD SERVICES_ - segment hosting Active Directory services; example shows one server with domain controller Contoso.com;
+    - _LOGS_ - segment hosting servers that centrally store application logs of automated system.
 
 ## Interservice interaction
 
-Usually some information systems of the company interact with each other. It is important to define a firewall policy for such interactions.
-The base allowed interactions are indicated by the green arrows in the image below:
-![Interservice interaction](https://raw.githubusercontent.com/OWASP/CheatSheetSeries/master/assets/Network_Segmentation_Cheat_Sheet_interservice.drawio.png)
-The image above also shows the allowed access from the FRONTEND and MIDDLEWARE segments to external networks (the Internet, for example).
+Company information systems usually interact. Define firewall policy for such interactions.
+Base allowed interactions = green arrows in image below:
+[Diagram: Interservice interaction]
+Image also shows allowed access from FRONTEND and MIDDLEWARE segments to external networks (e.g., Internet).
 
-From this image follows:
+Image implies:
 
-1. Access between FRONTEND and MIDDLEWARE segments of different information systems is prohibited;
-2. Access from the MIDDLEWARE segment to the BACKEND segment of another service is prohibited (access to a foreign database bypassing the application server is prohibited).
+1. Access between FRONTEND and MIDDLEWARE segments of different information systems prohibited;
+2. Access from MIDDLEWARE segment to BACKEND segment of another service prohibited (no access to foreign database bypassing application server).
 
-Forbidden accesses are indicated by red arrows in the image below:
-![Prohibited Interservice Communication](https://raw.githubusercontent.com/OWASP/CheatSheetSeries/master/assets/Network_Segmentation_Cheat_Sheet_interservice_deny.drawio.png)
+Forbidden accesses = red arrows in image below:
+[Diagram: Prohibited Interservice Communication]
 
 ### Many applications on the same network
 
-If you prefer to have fewer networks in your organization and host more applications on each network, it is acceptable to host the load balancer on those networks. This balancer will balance traffic to applications on the network.
-In this case, it will be necessary to open one port to such a network, and balancing will be performed, for example, based on the HTTP request parameters.
-An example of such segmentation:
-![Interservice Communication with balancing](https://raw.githubusercontent.com/OWASP/CheatSheetSeries/master/assets/Network_Segmentation_Cheat_Sheet_interservice_balancer.drawio.png)
+To have fewer networks + more apps per network, acceptable to host load balancer on those networks; balances traffic to apps on network.
+Then open one port to such network; balancing e.g. based on HTTP request parameters.
+Example:
+[Diagram: Interservice Communication with balancing]
 
-As you can see, there is only one incoming access to each network, access is opened up to the balancer in the network. However, in this case, segmentation no longer works, access control between applications from different network segments is performed at the 7th level of the OSI model using a balancer.
+Only one incoming access per network, opened to balancer in network. But segmentation no longer works: access control between apps from different network segments done at 7th level of OSI model by balancer.
 
 ## Network security policy
 
-The organization must define a "paper" policy that describes firewall rules and basic allowed network access.
-This policy is at least useful for:
+Organization must define "paper" policy describing firewall rules + basic allowed network access.
+Useful at least for:
 
 - network administrators;
 - security representatives;
@@ -137,35 +137,35 @@ This policy is at least useful for:
 - developers;
 - IT administrators.
 
-It is convenient when the policy is described by similar images. The information is presented as concisely and simply as possible.
+Convenient to describe policy with similar images. Present info as concisely + simply as possible.
 
 ### Examples of individual policy provisions
 
-Examples in the network policy will help colleagues quickly understand what access is potentially allowed and can be requested.
+Examples help colleagues quickly understand what access is potentially allowed + can be requested.
 
 #### Permissions for CI/CD
 
-The network security policy may define, for example, the basic permissions allowed for the software development system. Let's look at an example of what such a policy might look like:
-![CI-CD](https://raw.githubusercontent.com/OWASP/CheatSheetSeries/master/assets/Network_Segmentation_Cheat_Sheet_repo.drawio.png)
+Policy may define e.g. basic permissions allowed for software development system. Example:
+[Diagram: CI-CD]
 
 #### Secure logging
 
-It is important that in the event of a compromise of any information system, its logs are not subsequently modified by an attacker. To do this, you can do the following: copy the logs to a separate server, for example, using the syslog protocol, which does not allow an attacker to modify the logs, syslog only allows you to add new events to the logs.
-The network security policy for this activity looks like this:
-![Logging](https://raw.githubusercontent.com/OWASP/CheatSheetSeries/master/assets/Network_Segmentation_Cheat_Sheet_logs.drawio.png)
+If any information system compromised, attacker must not later modify its logs. Copy logs to separate server, e.g., via syslog protocol, which only allows appending new events, not modifying logs.
+Network security policy for this:
+[Diagram: Logging]
 
-In this example, we are also talking about application logs that may contain security events, as well as potentially important events that may indicate an attack.
+Example also covers application logs that may contain security events + potentially important events indicating attack.
 
 #### Permissions for monitoring systems
 
-Suppose a company uses Zabbix as an IT monitoring system. In this case, the policy might look like this:
-![Zabbix-Example](https://raw.githubusercontent.com/OWASP/CheatSheetSeries/master/assets/Network_Segmentation_Cheat_Sheet_Monitoring.drawio.png)
+Company uses Zabbix as IT monitoring system; policy might look like:
+[Diagram: Zabbix-Example]
 
 ## Useful links
 
-- Full network segmentation cheat sheet by [sergiomarotco](https://github.com/sergiomarotco): [link](https://github.com/sergiomarotco/Network-segmentation-cheat-sheet).
+- Full network segmentation cheat sheet by sergiomarotco.
 
 ## References
 
-- [NIST SP 800-41 Rev. 1: Guidelines on Firewalls and Firewall Policy](https://csrc.nist.gov/pubs/sp/800/41/r1/final)
-- [NIST SP 800-215: Guide to a Secure Enterprise Network Landscape](https://csrc.nist.gov/pubs/sp/800/215/final)
+- NIST SP 800-41 Rev. 1: Guidelines on Firewalls and Firewall Policy
+- NIST SP 800-215: Guide to a Secure Enterprise Network Landscape

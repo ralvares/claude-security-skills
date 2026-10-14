@@ -2,13 +2,13 @@
 
 ## Introduction
 
-XPath selects data from XML documents. [XPath injection](https://cwe.mitre.org/data/definitions/643.html) occurs when external input becomes part of an expression's syntax, allowing it to change the query's meaning. Prevent it by keeping expressions under application control and passing external values through variable binding.
+XPath selects data from XML documents. XPath injection (CWE-643): external input becomes part of expression syntax, changing query meaning. Prevent: keep expressions under app control, pass external values via variable binding.
 
 ## Bind Values to Fixed Expressions
 
-Use an XPath API that supports variables. Write the expression in application code and supply external values separately. Do not concatenate or interpolate input into the expression, even if you compile it afterward: [compilation alone does not separate data from query syntax](https://cwe.mitre.org/data/definitions/643.html).
+Use XPath API supporting variables. Write expression in app code, supply external values separately. Don't concatenate/interpolate input into expression, even if compiled afterward: compilation alone doesn't separate data from query syntax.
 
-For example, Python's [lxml `xpath()` method accepts variables as keyword arguments](https://lxml.de/xpathxslt.html#the-xpath-method). This illustrative lookup assumes `xml_document` is an already parsed lxml document and `requested_id` is an external string:
+E.g., Python lxml `xpath()` accepts variables as keyword arguments. Illustrative lookup assumes `xml_document` = already parsed lxml document, `requested_id` = external string:
 
 ```python
 books = xml_document.xpath(
@@ -17,34 +17,34 @@ books = xml_document.xpath(
 )
 ```
 
-The expression stays fixed; `requested_id` supplies only the value of `$book_id`. The application must separately authorize access to the selected books.
+Expression stays fixed; `requested_id` supplies only value of `$book_id`. App must separately authorize access to selected books.
 
-For Java, use the resolver pattern in the [Java Security Cheat Sheet](Java_Security.md#xml-xpath-injection). Check the documentation for your particular API: accepting an XPath string or compiling an expression does not by itself mean the API provides variable binding.
+Java: use resolver pattern in [Java Security Cheat Sheet](Java_Security.md#xml-xpath-injection). Check your API's docs: accepting XPath string or compiling expression ≠ variable binding support.
 
-If the API cannot bind values, prefer one that can. Where practical, use a fixed expression to retrieve an authorized set of records and compare values in application code. Do not substitute ad hoc quote replacement for variable binding.
+API can't bind values → prefer one that can. Where practical, use fixed expression to retrieve authorized record set, compare values in app code. Don't substitute ad hoc quote replacement for variable binding.
 
 ## Keep Query Structure Under Application Control
 
-[XPath variables represent values](https://www.w3.org/TR/xpath-31/#id-variables); they do not substitute expression fragments. When a user chooses a query mode, map that choice to a complete, fixed expression defined by the application. Reject unknown choices and bind any external data values separately.
+XPath variables represent values, not expression fragments. User chooses query mode → map choice to complete fixed expression defined by app. Reject unknown choices, bind external data values separately.
 
-For example, a catalog application can map the choices `books` and `magazines` to the fixed paths `/catalog/book` and `/catalog/magazine`. Do not insert the selected choice directly into a path or accept user-supplied predicates, operators, or function calls.
+E.g., catalog app maps choices `books` and `magazines` to fixed paths `/catalog/book` and `/catalog/magazine`. Don't insert selected choice directly into path or accept user-supplied predicates, operators, function calls.
 
-Validate values against the application's expected types, lengths, and business rules, following the [Input Validation Cheat Sheet](Input_Validation.md). Validation complements binding; it does not make dynamically constructed XPath safe by itself.
+Validate values against expected types, lengths, business rules per [Input Validation Cheat Sheet](Input_Validation.md). Validation complements binding; doesn't make dynamically constructed XPath safe alone.
 
 ## Limit Exposure and Review Usage
 
-Keep these controls separate from the binding mechanism:
+Keep these controls separate from binding:
 
-- **Authorization:** Check the caller's permission to access each requested resource. A fixed query, narrow path, or bound identifier does not establish permission. Follow the [Authorization Cheat Sheet](Authorization.md#validate-the-permissions-on-every-request) and the [principle of least privilege](https://owasp.org/www-community/Access_Control#principle-of-least-privilege) to limit the data an operation can access and return.
-- **Error handling:** Keep XPath expressions, XML contents, and stack traces out of client-facing error messages. Follow the [Error Handling Cheat Sheet](Error_Handling.md). Generic errors reduce disclosure; they do not prevent injection.
-- **XML parsing:** Configure the parser according to the [XML External Entity Prevention Cheat Sheet](XML_External_Entity_Prevention.md). Parser hardening addresses XML parser risks, not unsafe XPath construction; binding values does not harden the parser.
+- **Authorization:** check caller's permission for each requested resource. Fixed query, narrow path, bound identifier ≠ permission. Follow [Authorization Cheat Sheet](Authorization.md#validate-the-permissions-on-every-request) and principle of least privilege to limit data an operation can access/return.
+- **Error handling:** keep XPath expressions, XML contents, stack traces out of client-facing errors. Follow [Error Handling Cheat Sheet](Error_Handling.md). Generic errors reduce disclosure; don't prevent injection.
+- **XML parsing:** configure parser per [XML External Entity Prevention Cheat Sheet](XML_External_Entity_Prevention.md). Parser hardening addresses parser risks, not unsafe XPath construction; value binding doesn't harden parser.
 
-During code review, locate calls that evaluate or compile XPath. Trace each expression back to application-controlled text and verify that external values reach it only through variable binding. For fixed query mappings, verify that unknown choices are rejected. Include correctness checks for ordinary valid values, absent records, and access to resources outside the caller's permissions.
+Code review: locate calls evaluating/compiling XPath. Trace each expression to app-controlled text; verify external values reach it only via variable binding. Fixed query mappings: verify unknown choices rejected. Include correctness checks for ordinary valid values, absent records, access to resources outside caller's permissions.
 
-For security assessment guidance, see the [Web Security Testing Guide's XPath injection chapter](https://wstg.owasp.org/latest/4-Web_Application_Security_Testing/07-Injection/09-XPath_Injection/).
+Security assessment: Web Security Testing Guide's XPath injection chapter.
 
 ## References
 
-- [CWE-643: XPath Injection](https://cwe.mitre.org/data/definitions/643.html)
-- [lxml: XPath Variables](https://lxml.de/xpathxslt.html#the-xpath-method)
-- [W3C XPath 3.1: Variable References](https://www.w3.org/TR/xpath-31/#id-variables)
+- CWE-643: XPath Injection
+- lxml: XPath Variables
+- W3C XPath 3.1: Variable References

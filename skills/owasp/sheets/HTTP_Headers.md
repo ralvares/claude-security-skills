@@ -2,317 +2,317 @@
 
 ## Introduction
 
-HTTP Headers are a great booster for web security with easy implementation. Proper HTTP response headers can help prevent security vulnerabilities like Cross-Site Scripting, Clickjacking, Information disclosure and more.
+HTTP headers boost web security, easy to implement. Proper response headers help prevent vulnerabilities like Cross-Site Scripting, Clickjacking, Information disclosure, more.
 
-In this cheat sheet, we will review all security-related HTTP headers, recommended configurations, and reference other sources for complicated headers.
+Sheet reviews all security-related HTTP headers, recommended configurations, references to other sources for complicated headers.
 
 ## Security Headers
 
 ### X-Frame-Options
 
-The `X-Frame-Options` HTTP response header can be used to indicate whether or not a browser should be allowed to render a page in a `<frame>`, `<iframe>`, `<embed>` or `<object>`. Sites can use this to avoid [clickjacking](https://owasp.org/www-community/attacks/Clickjacking) attacks, by ensuring that their content is not embedded into other sites.
+`X-Frame-Options` response header indicates whether browser may render page in `<frame>`, `<iframe>`, `<embed>` or `<object>`. Sites use it to avoid [clickjacking](https://owasp.org/www-community/attacks/Clickjacking) by preventing embedding in other sites.
 
-Content Security Policy (CSP) frame-ancestors directive obsoletes X-Frame-Options for supporting browsers ([source](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options)).
+Content Security Policy (CSP) frame-ancestors directive obsoletes X-Frame-Options for supporting browsers (MDN).
 
-X-Frame-Options header is only useful when the HTTP response where it is included has something to interact with (e.g. links, buttons). If the HTTP response is a redirect or an API returning JSON data, X-Frame-Options does not provide any security.
+Useful only when response has something to interact with (e.g. links, buttons). Redirect or JSON API response: X-Frame-Options gives no security.
 
 #### Recommendation
 
-Use Content Security Policy (CSP) frame-ancestors directive if possible.
+Use CSP frame-ancestors directive if possible.
 
-Do not allow displaying of the page in a frame.
+Disallow displaying page in frame.
 > `X-Frame-Options: DENY`
 
 ### X-XSS-Protection
 
-The HTTP `X-XSS-Protection` response header is a feature of Internet Explorer, Chrome, and Safari that stops pages from loading when they detect reflected cross-site scripting (XSS) attacks.
+`X-XSS-Protection` response header = Internet Explorer, Chrome, Safari feature stopping page loads on detecting reflected cross-site scripting (XSS).
 
-WARNING: Even though this header can protect users of older web browsers that don't yet support CSP, in some cases, this header can create XSS vulnerabilities in otherwise safe websites [source](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection).
+WARNING: Protects users of older browsers lacking CSP, but in some cases creates XSS vulnerabilities in otherwise safe websites (MDN).
 
 #### Recommendation
 
-Use a Content Security Policy (CSP) that disables the use of inline JavaScript.
+Use CSP disabling inline JavaScript.
 
-Do not set this header or explicitly turn it off.
+Don't set header or explicitly turn off.
 > `X-XSS-Protection: 0`
 
-Please see [Mozilla X-XSS-Protection](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection) for details.
+Details: Mozilla X-XSS-Protection.
 
 ### X-Content-Type-Options
 
-The `X-Content-Type-Options` response HTTP header is used by the server to indicate to the browsers that the MIME types advertised in the Content-Type headers should be followed and not guessed.
+`X-Content-Type-Options` response header: server tells browsers to follow MIME types advertised in Content-Type headers, not guess.
 
-This header is used to block browsers' [MIME type sniffing](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types#mime_sniffing), which can transform non-executable MIME types into executable MIME types ([MIME Confusion Attacks](https://blog.mozilla.org/security/2016/08/26/mitigating-mime-confusion-attacks-in-firefox/)).
+Blocks browsers' MIME type sniffing, which can turn non-executable MIME types into executable ones (MIME Confusion Attacks).
 
 #### Recommendation
 
-Set the Content-Type header correctly throughout the site.
+Set Content-Type header correctly throughout site.
 
 > `X-Content-Type-Options: nosniff`
 
 ### Referrer-Policy
 
-The `Referrer-Policy` HTTP header controls how much referrer information (sent via the Referer header) should be included with requests.
+`Referrer-Policy` header controls how much referrer info (via Referer header) goes with requests.
 
 #### Recommendation
 
-Modern browsers default to [`strict-origin-when-cross-origin`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Referrer-Policy#strict-origin-when-cross-origin): same-origin requests include the origin, path, and query string in the `Referer` header; cross-origin requests include only the origin, except HTTPS-to-HTTP requests, which omit the header. Set the header explicitly rather than relying on browser defaults.
+Modern browsers default to `strict-origin-when-cross-origin`: same-origin requests include origin, path, query string in `Referer` header; cross-origin requests include only origin, except HTTPS-to-HTTP requests, which omit header. Set header explicitly; don't rely on browser defaults.
 
 > `Referrer-Policy: strict-origin-when-cross-origin`
 
-- *NOTE:* For more information on configuring this header please see [Mozilla Referrer-Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy).
+- *NOTE:* Configuration details: Mozilla Referrer-Policy.
 
 ### Content-Type
 
-The [`Content-Type`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type) representation header is used to indicate the original media type of the resource (before any content encoding is applied for sending). If not set correctly, the resource (e.g. an image) may be interpreted as HTML, making XSS vulnerabilities possible.
+`Content-Type` representation header indicates original media type of resource (before content encoding for sending). If wrong, resource (e.g. image) may be interpreted as HTML → XSS possible.
 
-Although it is recommended to always set the `Content-Type` header correctly, it would constitute a vulnerability only if the content is intended to be rendered by the client and the resource is untrusted (provided or modified by a user).
+Always set `Content-Type` correctly; vulnerability only if content intended for client rendering and resource untrusted (user provided/modified).
 
 #### Recommendation
 
 > `Content-Type: text/html; charset=UTF-8`
 
-- *NOTE:* the `charset` attribute is necessary to prevent XSS in **HTML** pages
-- *NOTE*: the `Content-Type` can be any of the possible [MIME types](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types)
+- *NOTE:* `charset` attribute necessary to prevent XSS in **HTML** pages
+- *NOTE*: `Content-Type` can be any possible MIME type
 
 ### Cache-Control
 
-The `Cache-Control` header defines how responses are cached by browsers and intermediate caches.
+`Cache-Control` header defines how browsers and intermediate caches cache responses.
 
 #### Recommendation
 
-- Use [`no-store`](https://www.rfc-editor.org/rfc/rfc9111.html#section-5.2.2.5) for sensitive responses to prohibit storage in compliant HTTP caches.
-- Use `private` to allow caching only in non-shared (user-specific) caches and to prevent storage in shared caches (note that private caches may still persist the response).
-- Avoid relying on default caching behavior for sensitive or protected content.
-- Be aware that `no-cache` does not prevent caching; it allows caches to store responses. It requires revalidation with the origin server before reuse.
+- Use `no-store` for sensitive responses: prohibits storage in compliant HTTP caches.
+- Use `private` to allow caching only in non-shared (user-specific) caches, prevent storage in shared caches (private caches may still persist response).
+- Avoid relying on default caching behavior for sensitive/protected content.
+- `no-cache` does not prevent caching; caches may store responses. Requires revalidation w/ origin server before reuse.
 
-`no-store` does not control every storage mechanism: the [Cache API does not honor HTTP caching headers](https://developer.mozilla.org/en-US/docs/Web/API/Cache). Explicitly exclude sensitive responses from application-managed caches and remove existing sensitive entries; see [Offline Applications](HTML5_Security.md#offline-applications).
+`no-store` does not control every storage mechanism: Cache API does not honor HTTP caching headers. Explicitly exclude sensitive responses from application-managed caches and remove existing sensitive entries; see [Offline Applications](HTML5_Security.md#offline-applications).
 
 #### References
 
-- [MDN - Cache-Control](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control)
+- MDN - Cache-Control
 
 ### Set-Cookie
 
-The [`Set-Cookie`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie) HTTP response header is used to send a cookie from the server to the user agent, so the user agent can send it back to the server later. To send multiple cookies, multiple Set-Cookie headers should be sent in the same response.
+`Set-Cookie` response header sends cookie from server to user agent, which sends it back later. Multiple cookies: send multiple Set-Cookie headers in same response.
 
-This is not a security header per se, but its security attributes are crucial.
+Not a security header per se, but its security attributes crucial.
 
 #### Recommendation
 
-- Please read [Session Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html#cookies) for a detailed explanation on cookie configuration options.
+- Read [Session Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html#cookies) for cookie configuration options.
 
 ### Strict-Transport-Security (HSTS)
 
-The HTTP [`Strict-Transport-Security`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security) response header (often abbreviated as HSTS) instructs browsers to only access the website using HTTPS, even if a user attempts to connect over HTTP.
+`Strict-Transport-Security` response header (HSTS) instructs browsers to access website only via HTTPS, even if user tries HTTP.
 
 #### Recommendation
 
 > `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`
 
-- *NOTE*: Read carefully how this header works before using it. If the HSTS header is misconfigured or if there is a problem with the SSL/TLS certificate being used, legitimate users might be unable to access the website. For example, if the HSTS header is set to a very long duration and the SSL/TLS certificate expires or is revoked, legitimate users might be unable to access the website until the HSTS header duration has expired.
+- *NOTE*: Read how header works before using. Misconfigured HSTS or SSL/TLS certificate problem → legit users may lose access. E.g. very long HSTS duration plus expired/revoked SSL/TLS certificate → users locked out until HSTS duration expires.
 
-See the [HSTS preload requirements](https://hstspreload.org/) before requesting preload inclusion.
+See HSTS preload requirements before requesting preload inclusion.
 
-Please check out [HTTP Strict Transport Security Cheat Sheet](HTTP_Strict_Transport_Security.md) for more information.
+More: [HTTP Strict Transport Security Cheat Sheet](HTTP_Strict_Transport_Security.md).
 
 ### Expect-CT ❌
 
-The `Expect-CT` header lets sites opt-in to reporting of Certificate Transparency (CT) requirements. Given that mainstream clients now require CT qualification, the only remaining value is reporting such occurrences to the nominated report-uri value in the header. The header is now less about enforcement and more about detection/reporting.
+`Expect-CT` header lets sites opt-in to reporting of Certificate Transparency (CT) requirements. Mainstream clients now require CT qualification; remaining value only reporting to header's report-uri. Now detection/reporting, not enforcement.
 
 #### Recommendation
 
-Do not use it. Mozilla [recommends](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Expect-CT) avoiding it, and removing it from existing code if possible.
+Do not use. Mozilla recommends avoiding it, removing from existing code if possible.
 
 ### Content-Security-Policy (CSP)
 
-Content Security Policy (CSP) is a security feature that is used to specify the origin of content that is allowed to be loaded on a website or in a web application. It is an added layer of security that helps to detect and mitigate certain types of attacks, including Cross-Site Scripting (XSS) and data injection attacks. These attacks are used for everything from data theft to site defacement to distribution of malware.
+CSP specifies origins of content allowed to load on website/web app. Extra security layer detecting/mitigating attacks incl. Cross-Site Scripting (XSS) and data injection (used for data theft, site defacement, malware distribution).
 
-- *NOTE*: This header is relevant to be applied in pages which can load and interpret scripts and code, but might be meaningless in the response of a REST API that returns content that is not going to be rendered.
+- *NOTE*: Apply to pages that load/interpret scripts and code; may be meaningless in REST API responses not rendered.
 
 #### Recommendation
 
-Content Security Policy is complex to configure and maintain. For an explanation on customization options, please read [Content Security Policy Cheat Sheet](Content_Security_Policy.md)
+CSP complex to configure/maintain. Customization options: [Content Security Policy Cheat Sheet](Content_Security_Policy.md)
 
 ### Access-Control-Allow-Origin
 
-If you don't use this header, your site is protected by default by the Same Origin Policy (SOP). What this header does is relax this control in specified circumstances.
+Without this header, site protected by default by Same Origin Policy (SOP). Header relaxes SOP in specified circumstances.
 
-The `Access-Control-Allow-Origin` is a CORS (cross-origin resource sharing) header. This header indicates whether the response it is related to can be shared with requesting code from the given origin. In other words, if siteA requests a resource from siteB, siteB should indicate in its `Access-Control-Allow-Origin` header that siteA is allowed to fetch that resource, if not, the access is blocked due to Same Origin Policy (SOP).
+`Access-Control-Allow-Origin` = CORS (cross-origin resource sharing) header. Indicates whether response can be shared with requesting code from given origin. I.e. siteA requests resource from siteB: siteB must indicate in `Access-Control-Allow-Origin` that siteA may fetch it, else access blocked by SOP.
 
 #### Recommendation
 
-If you use it, set specific [origins](https://developer.mozilla.org/en-US/docs/Glossary/Origin) instead of `*`. Check out [Access-Control-Allow-Origin](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin) for details.
+If used, set specific origins instead of `*`. See MDN Access-Control-Allow-Origin.
 > `Access-Control-Allow-Origin: https://yoursite.com`
 
-- *NOTE*: The use of '\*' might be necessary depending on your needs. For example, for a public API that should be accessible from any origin, it might be necessary to allow '\*'.
+- *NOTE*: '\*' may be necessary depending on needs. E.g. public API accessible from any origin may need '\*'.
 
 ### Cross-Origin-Opener-Policy (COOP)
 
-The HTTP `Cross-Origin-Opener-Policy` (COOP) response header allows you to ensure a top-level document does not share a browsing context group with cross-origin documents.
+`Cross-Origin-Opener-Policy` (COOP) response header ensures top-level document doesn't share browsing context group with cross-origin documents.
 
-This header works together with Cross-Origin-Embedder-Policy (COEP) and Cross-Origin-Resource-Policy (CORP) explained below.
+Works with Cross-Origin-Embedder-Policy (COEP) and Cross-Origin-Resource-Policy (CORP) below.
 
-This mechanism protects against attacks like Spectre which can cross the security boundary established by Same Origin Policy (SOP) for resources in the same browsing context group.
+Protects against attacks like Spectre, which can cross SOP security boundary for resources in same browsing context group.
 
-As these headers are very related to browsers, it may not make sense to be applied to REST APIs or clients that are not browsers.
+Very browser-related; may not make sense for REST APIs or non-browser clients.
 
 #### Recommendation
 
-Isolates the browsing context exclusively to same-origin documents.
+Isolates browsing context exclusively to same-origin documents.
 > `Cross-Origin-Opener-Policy: same-origin`
 
 ### Cross-Origin-Embedder-Policy (COEP)
 
-The HTTP [`Cross-Origin-Embedder-Policy`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Embedder-Policy) (COEP) response header prevents a document from loading any cross-origin resources that don't explicitly grant the document permission (using [CORP](#cross-origin-resource-policy-corp) or CORS).
+`Cross-Origin-Embedder-Policy` (COEP) response header prevents document loading cross-origin resources that don't explicitly grant permission (via [CORP](#cross-origin-resource-policy-corp) or CORS).
 
-- *NOTE*: Enabling this will block cross-origin resources not configured correctly from loading.
+- *NOTE*: Enabling blocks cross-origin resources not configured correctly.
 
 #### Recommendation
 
-A document can only load resources from the same origin, or resources explicitly marked as loadable from another origin.
+Document can load only same-origin resources, or resources explicitly marked loadable from another origin.
 > `Cross-Origin-Embedder-Policy: require-corp`
 
-- *NOTE*: The `crossorigin` attribute requests the resource in CORS mode. The resource server must [permit the request through CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Embedder-Policy#require-corp); the attribute alone does not grant permission:
+- *NOTE*: `crossorigin` attribute requests resource in CORS mode. Resource server must permit request through CORS; attribute alone does not grant permission:
 - `<img src="https://thirdparty.com/img.png" crossorigin>`
 
 ### Cross-Origin-Resource-Policy (CORP)
 
-The [`Cross-Origin-Resource-Policy`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Resource-Policy) (CORP) header allows you to control the set of origins that are empowered to include a resource. It is a robust defense against attacks like [Spectre](https://meltdownattack.com/), as it allows browsers to block a given response before it enters an attacker's process.
+`Cross-Origin-Resource-Policy` (CORP) header controls set of origins empowered to include resource. Robust defense against attacks like Spectre: browsers block response before it enters attacker's process.
 
 #### Recommendation
 
-Limit current resource loading to the site and sub-domains only.
+Limit resource loading to site and sub-domains only.
 > `Cross-Origin-Resource-Policy: same-site`
 
 ### Permissions-Policy (formerly Feature-Policy)
 
-Permissions-Policy allows you to control which origins can use which browser features, both in the top-level page and in embedded frames. For every feature controlled by Feature Policy, the feature is only enabled in the current document or frame if its origin matches the allowed list of origins. This means that you can configure your site to never allow the camera or microphone to be activated. This prevents that an injection, for example an XSS, enables the camera, the microphone, or other browser feature.
+Permissions-Policy controls which origins can use which browser features, in top-level page and embedded frames. Feature enabled in current document/frame only if its origin matches allowed list. Can configure site to never allow camera or microphone activation; prevents injection (e.g. XSS) enabling camera, microphone, other browser features.
 
-More information: [Permissions-Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy)
+More: MDN Permissions-Policy
 
 #### Recommendation
 
-Set it and disable all the features that your site does not need or allow them only to the authorized domains:
+Set it; disable all features site doesn't need or allow only to authorized domains:
 > `Permissions-Policy: geolocation=(), camera=(), microphone=()`
 
-- *NOTE*: This example is disabling geolocation, camera, and microphone for all domains.
+- *NOTE*: Example disables geolocation, camera, microphone for all domains.
 
 ### Server
 
-The [`Server`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Server) header describes the software used by the origin server that handled the request — that is, the server that generated the response.
+`Server` header describes software used by origin server that handled request (generated response).
 
-This is not a security header, but how it is used is relevant for security.
+Not a security header, but its use is security-relevant.
 
 #### Recommendation
 
-Remove this header or set non-informative values.
+Remove header or set non-informative values.
 > `Server: webserver`
 
-- *NOTE*: Remember that attackers have other means of fingerprinting the server technology.
+- *NOTE*: Attackers have other means of fingerprinting server technology.
 
 ### X-Powered-By
 
-The `X-Powered-By` header describes the technologies used by the webserver. This information exposes the server to attackers. Using the information in this header, attackers can find vulnerabilities easier.
+`X-Powered-By` header describes webserver technologies. Exposes server; attackers find vulnerabilities easier.
 
 #### Recommendation
 
 Remove all `X-Powered-By` headers.
 
-- *NOTE*: Remember that attackers have other means of fingerprinting your tech stack.
+- *NOTE*: Attackers have other means of fingerprinting your tech stack.
 
 ### X-AspNet-Version
 
-Provides information about the .NET version.
+Provides .NET version info.
 
 #### Recommendation
 
-Disable sending this header. Add the following line in your `web.config` in the `<system.web>` section to remove it.
+Disable sending. Add following line in `web.config` `<system.web>` section to remove it.
 
 ```xml
 <httpRuntime enableVersionHeader="false" />
 ```
 
-- *NOTE*: Remember that attackers have other means of fingerprinting your tech stack.
+- *NOTE*: Attackers have other means of fingerprinting your tech stack.
 
 ### X-AspNetMvc-Version
 
-Provides information about the .NET version.
+Provides .NET version info.
 
 #### Recommendation
 
-Disable sending this header. To remove the `X-AspNetMvc-Version` header, add the below line in `Global.asax` file.
+Disable sending. To remove `X-AspNetMvc-Version` header, add line below in `Global.asax` file.
 
 ```lang-none
 MvcHandler.DisableMvcResponseHeader = true;
 ```
 
-- *NOTE*: Remember that attackers have other means of fingerprinting your tech stack.
+- *NOTE*: Attackers have other means of fingerprinting your tech stack.
 
 ### X-Robots-Tag
 
-The HTTP `X-Robots-Tag` response header controls how search engines and other automated crawlers index and display resources such as PDFs, images, and other non-HTML content.
-It functions similarly to the `<meta name="robots">` tag, but is applied via the HTTP response header, allowing greater flexibility (e.g., for non-HTML files or server-wide rules).
+`X-Robots-Tag` response header controls how search engines/automated crawlers index and display resources such as PDFs, images, other non-HTML content.
+Like `<meta name="robots">` tag but via HTTP response header: more flexible (e.g., non-HTML files, server-wide rules).
 
 ```none
 X-Robots-Tag: noindex, nofollow
 ```
 
-- **Note:** Only compliant crawlers respect these directives, and they must still make an HTTP request to read the headers before deciding how to handle the content.
+- **Note:** Only compliant crawlers respect directives; they must still make HTTP request to read headers before deciding how to handle content.
 
 #### Recommendation
 
-Use the `X-Robots-Tag` header to control crawler behavior:
+Use `X-Robots-Tag` to control crawler behavior:
 
-- For **private or sensitive content** you don’t want indexed:
+- **Private or sensitive content** not to be indexed:
 
   > `X-Robots-Tag: noindex, nofollow`
-  > This prevents compliant search engines from indexing the resource or following links on it.
+  > Prevents compliant search engines indexing resource or following its links.
 
-- For **public content** you want indexed and discoverable (e.g., documentation, datasets):
+- **Public content** to be indexed/discoverable (e.g., documentation, datasets):
 
   > `X-Robots-Tag: index, follow`
-  > This allows search engines to index the resource and follow its links.
+  > Allows search engines to index resource and follow its links.
 
-You can also use other directives such as `noarchive`, `nosnippet`, or `noimageindex` depending on your needs.
-Server configuration can apply this header selectively — for example, only on specific file types (like PDFs or images).
+Other directives: `noarchive`, `nosnippet`, `noimageindex`, per needs.
+Server config can apply header selectively — e.g., only specific file types (PDFs, images).
 
 ### X-DNS-Prefetch-Control
 
-The `X-DNS-Prefetch-Control` HTTP response header controls DNS prefetching, a feature by which browsers proactively perform domain name resolution on both links that the user may choose to follow as well as URLs for items referenced by the document, including images, CSS, JavaScript, and so forth.
+`X-DNS-Prefetch-Control` response header controls DNS prefetching: browsers proactively resolve domain names of links user may follow and URLs of referenced items (images, CSS, JavaScript, etc.).
 
 #### Recommendation
 
-The default behavior of browsers is to perform DNS caching which is good for most websites.
-If you do not control links on your website, you might want to set `off` as a value to disable DNS prefetch to avoid leaking information to those domains.
+Browsers default to DNS caching; good for most websites.
+If you don't control links on your website, consider `off` to disable DNS prefetch, avoiding info leaks to those domains.
 
 > `X-DNS-Prefetch-Control: off`
 
-- *NOTE*: Do not rely on this functionality for anything production sensitive: it is not standard or fully supported and implementation may vary among browsers.
+- *NOTE*: Don't rely on it for anything production sensitive: nonstandard, not fully supported, implementation varies among browsers.
 
 ### Public-Key-Pins (HPKP) ❌
 
-The HTTP `Public-Key-Pins` response header was used to associate a specific cryptographic public key with a web server to mitigate MITM attacks with forged certificates. It was removed from Chromium in 2018 and is unsupported by all modern browsers.
+`Public-Key-Pins` response header associated specific cryptographic public key with web server to mitigate MITM with forged certificates. Removed from Chromium in 2018; unsupported by all modern browsers.
 
 #### Recommendation
 
-Do not use. Remove any `Public-Key-Pins` or `Public-Key-Pins-Report-Only` headers from production. Rely on Certificate Transparency (CT) and CAA DNS records, which provide superior compromise detection without the operational brittleness of pinning.
+Do not use. Remove any `Public-Key-Pins` or `Public-Key-Pins-Report-Only` headers from production. Rely on Certificate Transparency (CT) and CAA DNS records: superior compromise detection w/o operational brittleness of pinning.
 
 ### Secure File Download Headers
 
-When serving user-provided files, proper HTTP headers should be used to prevent unintended execution in the browser.
+Serving user-provided files: use proper headers to prevent unintended browser execution.
 
 - Use `Content-Disposition: attachment` to force download instead of inline rendering.
-- Use `Content-Type: application/octet-stream` for unknown or binary files.
-- Ensure `X-Content-Type-Options: nosniff` is set to prevent MIME type sniffing.
+- Use `Content-Type: application/octet-stream` for unknown/binary files.
+- Ensure `X-Content-Type-Options: nosniff` set to prevent MIME type sniffing.
 
-These headers help reduce risks such as Cross-Site Scripting (XSS) and unintended file execution.
+Reduce risks such as Cross-Site Scripting (XSS) and unintended file execution.
 
 ## Adding HTTP Headers in Different Technologies
 
 ### PHP
 
-The sample code below sets the `X-Frame-Options` header in PHP.
+Sample code sets `X-Frame-Options` header in PHP.
 
 ```php
 header("X-Frame-Options: DENY");
@@ -320,15 +320,15 @@ header("X-Frame-Options: DENY");
 
 ### Apache
 
-Below is an `.htaccess` sample configuration which sets the `X-Frame-Options` header in Apache.
+`.htaccess` sample config setting `X-Frame-Options` header in Apache.
 
-As described in the [Apache documentation](https://httpd.apache.org/docs/2.4/mod/mod_headers.html#header), `Header set` (default `onsuccess`) and `Header always set` operate on separate internal header tables.
+Per Apache documentation, `Header set` (default `onsuccess`) and `Header always set` operate on separate internal header tables.
 
-In some cases, both header tables may be used, which can result in duplicate headers if the same header is configured in both contexts.
+Sometimes both tables used → duplicate headers if same header configured in both contexts.
 
-If a header needs to be removed entirely, it should be unset in both contexts (`onsuccess` and `always`).
+To remove header entirely, unset in both contexts (`onsuccess` and `always`).
 
-To avoid duplication and ensure the header is sent on all responses, unset it first and then use `always set`:
+To avoid duplication and ensure header sent on all responses, unset first, then `always set`:
 
 ```lang-bsh
 <IfModule mod_headers.c>
@@ -339,7 +339,7 @@ To avoid duplication and ensure the header is sent on all responses, unset it fi
 
 ### IIS
 
-Add configurations below to your `Web.config` in IIS to send the `X-Frame-Options` header.
+Add configs below to `Web.config` in IIS to send `X-Frame-Options` header.
 
 ```xml
 <system.webServer>
@@ -355,7 +355,7 @@ Add configurations below to your `Web.config` in IIS to send the `X-Frame-Option
 
 ### HAProxy
 
-Add the line below to your front-end, listen, or backend configurations to send the `X-Frame-Options` header.
+Add line below to front-end, listen, or backend configs to send `X-Frame-Options` header.
 
 ```lang-none
 http-response set-header X-Frame-Options DENY
@@ -363,7 +363,7 @@ http-response set-header X-Frame-Options DENY
 
 ### Nginx
 
-Below is a sample configuration, it sets the `X-Frame-Options` header in Nginx. Note that without the `always` option, the header will only be sent for certain status codes, as described in [the nginx documentation](https://nginx.org/en/docs/http/ngx_http_headers_module.html#add_header).
+Sample config sets `X-Frame-Options` header in Nginx. W/o `always` option, header sent only for certain status codes (see nginx documentation).
 
 ```lang-none
 add_header "X-Frame-Options" "DENY" always;
@@ -371,7 +371,7 @@ add_header "X-Frame-Options" "DENY" always;
 
 ### Express
 
-You can use [helmet](https://www.npmjs.com/package/helmet) to setup HTTP headers in Express. The code below is a sample for adding the `X-Frame-Options` header.
+Use helmet to set HTTP headers in Express. Sample code adds `X-Frame-Options` header.
 
 ```javascript
 const helmet = require('helmet');
@@ -388,15 +388,15 @@ app.use(
 
 ### Mozilla Observatory
 
-The [Mozilla Observatory](https://observatory.mozilla.org/) is an online tool which helps you to check your website's header status.
+Mozilla Observatory = online tool checking website's header status.
 
 ### SmartScanner
 
-[SmartScanner](https://www.thesmartscanner.com/) has a dedicated [test profile](https://www.thesmartscanner.com/docs/configuring-security-tests) for testing security of HTTP headers.
-Online tools usually test the homepage of the given address. But SmartScanner scans the whole website. So, you can make sure all of your web pages have the right HTTP Headers in place.
+SmartScanner has dedicated test profile for HTTP header security tests.
+Online tools usually test homepage of given address; SmartScanner scans whole website → ensures all pages have right HTTP Headers.
 
 ## References
 
-- [MDN Web Docs: X-Content-Type-Options](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options)
-- [MDN Web Docs: Cross-Origin-Opener-Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Opener-Policy)
-- [OWASP Secure Headers Project: Response Headers](https://owasp.github.io/www-project-secure-headers/response-headers/)
+- MDN Web Docs: X-Content-Type-Options
+- MDN Web Docs: Cross-Origin-Opener-Policy
+- OWASP Secure Headers Project: Response Headers

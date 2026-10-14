@@ -2,25 +2,25 @@
 
 ## Introduction
 
-Insecure Direct Object Reference (IDOR) is a vulnerability that arises when attackers can access or modify objects by manipulating identifiers used in a web application's URLs or parameters. It occurs due to missing access control checks, which fail to verify whether a user should be allowed to access specific data.
+IDOR: attacker accesses/modifies objects by manipulating identifiers in URLs or parameters. Cause: missing access control checks; app doesn't verify user may access specific data.
 
-There are three ingredients to an IDOR:
+Three ingredients:
 
-1. An **object** such as an account, document, support ticket, transaction or partner profile.
-2. A **reference** to that object in the form of an ID, UUID, account number, token or slug.
-3. A **missing object-level authorization check** that allows a user to access or manipulate an object they should not be able to access.
+1. **Object**: account, document, support ticket, transaction, partner profile.
+2. **Reference** to object: ID, UUID, account number, token, slug.
+3. **Missing object-level authorization check**: user accesses/manipulates object they shouldn't.
 
 ## Examples
 
-For instance, when a user accesses their profile, the application might generate a URL like this:
+Profile URL:
 
 ```text
 https://example.org/users/123
 ```
 
-The 123 in the URL is a direct reference to the user's record in the database, often represented by the primary key. If an attacker changes this number to 124 and gains access to another user's information, the application is vulnerable to Insecure Direct Object Reference. This happens because the app didn't properly check if the user had permission to view data for user 124 before displaying it.
+123 = direct reference to user's DB record (often primary key). Attacker changes to 124, gets other user's info → vulnerable. App didn't check permission for user 124.
 
-In some cases, the identifier may not be in the URL, but rather in the POST body, as shown in the following example:
+Identifier may be in POST body:
 
 ```html
 <form action="/update_profile" method="post">
@@ -30,46 +30,43 @@ In some cases, the identifier may not be in the URL, but rather in the POST body
 </form>
 ```
 
-In this example, the application allows users to update their profiles by submitting a form with the user ID in a hidden field. If the app doesn't perform proper access control on the server-side, attackers can manipulate the "user_id" field to modify profiles of other users without authorization.
+Hidden-field user ID; w/o server-side access control, attacker manipulates "user_id" → modifies other users' profiles.
 
-IDORs however are not limited to user profiles and sequential IDs. For instance:
+IDORs not limited to user profiles/sequential IDs:
 
 ```http
 GET /documents/annual-report.pdf
 ```
 
-In this example, the filename acts as the object reference. If an attacker modifies the filename to another valid document, such as:
+Filename = object reference. Attacker modifies to another valid document:
 
 ```http
 GET /documents/financial-statement.pdf
 ```
 
-and gains access to a document belonging to another user, the application is vulnerable to IDOR. Object references are not limited to numeric identifiers and may include filenames, account numbers, tokens, or other values.
+and gets other user's document → IDOR. References may be filenames, account numbers, tokens, other values.
 
 ## Identifier complexity
 
-In some cases, using more complex identifiers like GUIDs can make it practically impossible for attackers to guess valid values. However, even with complex identifiers, access control checks are essential. If attackers obtain URLs for unauthorized objects, the application should still block their access attempts.
+Complex identifiers (GUIDs) make guessing practically impossible. Access control checks still essential: if attacker obtains URLs for unauthorized objects, app must still block access.
 
 ## Verifying access controls
 
-When testing for IDOR vulnerabilities, it is useful to create multiple user accounts with different authorization scopes. This allows developers and testers to verify that object-level authorization checks are consistently enforced.
+Test w/ multiple user accounts of different authorization scopes to verify consistent object-level authorization.
 
-For example:
+1. Create User A, User B.
+2. Create objects owned by each (documents, support tickets, invoices, etc.).
+3. Authenticate as User A, access User B's objects by modifying references.
+4. Verify denial regardless of predictable/unguessable identifier.
 
-1. Create User A and User B.
-2. Create objects owned by each user (documents, support tickets, invoices, etc.).
-3. Authenticate as User A and attempt to access User B's objects by modifying object references in requests.
-4. Verify that the application denies unauthorized access regardless of whether the object identifier is predictable or unguessable.
-
-This verification should be performed for all operations involving object references, including read, create, update, delete, export, and administrative actions.
+Perform for all operations involving object references: read, create, update, delete, export, administrative actions.
 
 ## Mitigation
 
-To mitigate IDOR, implement access control checks for each object that users try to access. Web frameworks often provide ways to facilitate this. Additionally, use complex identifiers as a defense-in-depth measure, but remember that access control is crucial even with these identifiers.
-
-Avoid exposing identifiers in URLs and POST bodies if possible. Instead, determine the currently authenticated user from session information. When using multi-step flows, pass identifiers in the session to prevent tampering.
-
-When looking up objects based on primary keys, use datasets that users have access to. For example, in Ruby on Rails:
+- Implement access control checks for each object users try to access. Web frameworks often help.
+- Complex identifiers = defense-in-depth only; access control still crucial.
+- Avoid exposing identifiers in URLs/POST bodies if possible; determine current user from session. Multi-step flows: pass identifiers in session to prevent tampering.
+- Look up objects by primary key within datasets user has access to. Ruby on Rails:
 
 ```ruby
 # vulnerable, searches all projects
@@ -79,13 +76,12 @@ When looking up objects based on primary keys, use datasets that users have acce
 @project = @current_user.projects.find(params[:id])
 ```
 
-Verify the user's permission every time an access attempt is made. Implement this structurally using the recommended approach for your web framework.
-
-As an additional defense-in-depth measure, replace enumerable numeric identifiers with more complex, random identifiers. You can achieve this by adding a column with random strings in the database table and using those strings in the URLs instead of numeric primary keys. Another option is to use UUIDs or other long random values as primary keys. Avoid encrypting identifiers as it can be challenging to do so securely.
+- Verify permission on every access attempt. Implement structurally using framework's recommended approach.
+- Defense-in-depth: replace enumerable numeric identifiers w/ random ones. Add DB column w/ random strings, use in URLs instead of numeric primary keys; or use UUIDs/other long random values as primary keys. Avoid encrypting identifiers: hard to do securely.
 
 ## Java and Spring Boot example
 
-These illustrative examples assume authenticated requests and a policy that only owners can read documents. `currentUser()` represents an application helper that obtains the user from the trusted authentication context. Consider a Spring Boot endpoint that returns a document by its identifier:
+Illustrative; assume authenticated requests, policy: only owners read documents. `currentUser()` = app helper getting user from trusted authentication context. Spring Boot endpoint returning document by identifier:
 
 ```java
 @GetMapping("/documents/{id}")
@@ -94,11 +90,11 @@ public Document getDocument(@PathVariable Long id) {
 }
 ```
 
-The `{id}` path variable is controlled by the requester and flows directly into `findById()`. Nothing verifies that the returned document belongs to the currently authenticated user, so any user who can guess or obtain a valid identifier can read another user's document.
+`{id}` path variable is requester-controlled, flows directly into `findById()`. No check document belongs to authenticated user → anyone guessing/obtaining valid identifier reads other user's document.
 
 ### Fixing the code
 
-Prefer a lookup limited to documents owned by the current user. This mirrors the scoped-query approach shown for Ruby on Rails above:
+Prefer lookup limited to current user's documents (scoped-query approach as in Rails above):
 
 ```java
 @GetMapping("/documents/{id}")
@@ -108,7 +104,7 @@ public Document getDocument(@PathVariable Long id) {
 }
 ```
 
-Alternatively, verify ownership explicitly after fetching the object:
+Alternative: verify ownership explicitly after fetch:
 
 ```java
 @GetMapping("/documents/{id}")
@@ -121,9 +117,9 @@ public Document getDocument(@PathVariable Long id) {
 }
 ```
 
-The post-fetch check can distinguish a missing object from one the caller cannot access. If the resource's existence is sensitive, use the scoped lookup and map both cases to the same public response, such as a [404 (Not Found) response](https://www.rfc-editor.org/rfc/rfc9110.html#section-15.5.4). For example, `GET /user/john@example.com` should not reveal whether an account exists to a caller who is not allowed to know.
+Post-fetch check can distinguish missing object from forbidden one. If existence sensitive, use scoped lookup, map both cases to same public response, e.g. 404 (Not Found) response (RFC 9110). E.g. `GET /user/john@example.com` must not reveal account existence to unauthorized caller.
 
-To use Spring Security's [@PreAuthorize](https://docs.spring.io/spring-security/reference/servlet/authorization/method-security.html) alternative, first enable method security with `@EnableMethodSecurity` on a Spring `@Configuration` class; Spring Boot's security starter does not enable it by default. The following example applies to a Spring-managed component and assumes an application-provided `documentAuthorizationService` that checks ownership:
+Spring Security `@PreAuthorize` alternative: first enable method security via `@EnableMethodSecurity` on Spring `@Configuration` class; Spring Boot security starter doesn't enable by default. Example applies to Spring-managed component, assumes app-provided `documentAuthorizationService` checking ownership:
 
 ```java
 @PreAuthorize("@documentAuthorizationService.isOwner(#id, authentication.name)")
@@ -135,5 +131,5 @@ public Document getDocument(@PathVariable Long id) {
 
 ## References
 
-- [CWE-639: Authorization Bypass Through User-Controlled Key](https://cwe.mitre.org/data/definitions/639.html)
-- [OWASP WSTG: Testing for Insecure Direct Object References](https://wstg.owasp.org/v4.2/4-Web_Application_Security_Testing/05-Authorization_Testing/04-Testing_for_Insecure_Direct_Object_References/)
+- CWE-639: Authorization Bypass Through User-Controlled Key
+- OWASP WSTG: Testing for Insecure Direct Object References

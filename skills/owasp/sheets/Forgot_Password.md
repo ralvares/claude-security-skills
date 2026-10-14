@@ -2,132 +2,132 @@
 
 ## Introduction
 
-In order to implement a proper user management system, systems integrate a **Forgot Password** service that allows the user to request a password reset.
+Proper user management → **Forgot Password** service letting user request password reset.
 
-Even though this functionality looks straightforward and easy to implement, it is a common source of vulnerabilities, such as the renowned [user enumeration attack](https://owasp.org/www-project-web-security-testing-guide/stable/4-Web_Application_Security_Testing/03-Identity_Management_Testing/04-Testing_for_Account_Enumeration_and_Guessable_User_Account.html).
+Looks easy but common vulnerability source, e.g. renowned user enumeration attack.
 
-The following short guidelines can be used as a quick reference to protect the forgot password service:
+Quick reference:
 
-- **Return a consistent message for both existent and non-existent accounts.**
-- **Ensure that the time taken for the user response message is uniform.**
-- **Use a side-channel to communicate the method to reset their password.**
-- **Use [URL tokens](#url-tokens) for the simplest and fastest implementation.**
-- **Ensure that generated tokens or codes are:**
-    - **Randomly generated using a cryptographically safe algorithm.**
-    - **Sufficiently long to protect against brute-force attacks.**
+- **Return consistent message for existent and non-existent accounts.**
+- **Ensure uniform response time for user message.**
+- **Use side-channel to communicate reset method.**
+- **Use [URL tokens](#url-tokens) for simplest, fastest implementation.**
+- **Ensure generated tokens/codes are:**
+    - **Randomly generated w/ cryptographically safe algorithm.**
+    - **Long enough against brute-force attacks.**
     - **Stored securely.**
-    - **Single use and expire after an appropriate period.**
-- **Do not make a change to the account until a valid token is presented, such as locking out the account.**
+    - **Single use, expire after appropriate period.**
+- **No account change (e.g. lockout) until valid token presented.**
 
-This cheat sheet is focused on resetting users passwords. For guidance on resetting multifactor authentication (MFA), see the relevant section in the [Multifactor Authentication Cheat Sheet](Multifactor_Authentication.md#resetting-mfa).
+Sheet covers resetting passwords. MFA reset: see [Multifactor Authentication Cheat Sheet](Multifactor_Authentication.md#resetting-mfa).
 
 ## Forgot Password Service
 
-The password reset process can be broken into two main steps, detailed in the following sections.
+Reset process = two main steps below.
 
 ### Forgot Password Request
 
-When a user uses the forgot password service and inputs their username or email, the below should be followed to implement a secure process:
+User inputs username/email in forgot password service; for secure process:
 
-- Return a consistent message for both existent and non-existent accounts.
-- Ensure that responses return in a consistent amount of time to prevent an attacker enumerating which accounts exist. This could be achieved by using asynchronous calls or by making sure that the same logic is followed, instead of using a quick exit method.
-- Implement protections against excessive automated submissions such as rate-limiting on a per-account basis, requiring a CAPTCHA, or other controls. Otherwise an attacker could make thousands of password reset requests per hour for a given account, flooding the user's intake system (e.g., email inbox or SMS) with useless requests.
-- Employ normal security measures, such as [SQL Injection Prevention methods](SQL_Injection_Prevention.md) and [Input Validation](Input_Validation.md).
+- Return consistent message for existent and non-existent accounts.
+- Return responses in consistent time to prevent account enumeration. Use async calls or same logic path instead of quick exit.
+- Protect against excessive automated submissions: per-account rate-limiting, CAPTCHA, or other controls. Otherwise attacker can send thousands of reset requests/hour for an account, flooding user's intake (e.g., email inbox, SMS) w/ useless requests.
+- Normal security measures: [SQL Injection Prevention methods](SQL_Injection_Prevention.md), [Input Validation](Input_Validation.md).
 
 ### User Resets Password
 
-Once the user has proved their identity by providing the token (sent via an email) or code (sent via SMS or other mechanisms), they should reset their password to a new secure one. In order to secure this step, the measures that should be taken are:
+After user proves identity via token (emailed) or code (SMS/other), they reset to new secure password. Measures:
 
-- The user should confirm the password they set by writing it twice.
-- Ensure that a secure password policy is in place, and is consistent with the rest of the application.
-- Update and store the password following [secure practices](Password_Storage.md).
-- Send the user an email informing them that their password has been reset (do not send the password in the email!).
-- Once they have set their new password, the user should then login through the usual mechanism. Don't automatically log the user in, as this introduces additional complexity to the authentication and session handling code, and increases the likelihood of introducing vulnerabilities.
-- Ask the user if they want to invalidate all of their existing sessions, or invalidate the sessions automatically.
+- User confirms password by typing twice.
+- Secure password policy in place, consistent w/ rest of app.
+- Update/store password per [secure practices](Password_Storage.md).
+- Email user that password was reset (never send password in email!).
+- After setting new password, user logs in via usual mechanism. Don't auto-login: adds complexity to authentication/session code, raises vulnerability likelihood.
+- Ask user whether to invalidate all existing sessions, or invalidate automatically.
 
 ### Account Recovery After Suspected Compromise
 
-A password reset alone may not restore control of a compromised account. An attacker may still have an active session or may have changed recovery information or MFA methods.
+Password reset alone may not restore control of compromised account. Attacker may still hold active session or have changed recovery info or MFA methods.
 
-When recovering a potentially compromised account:
+Recovering potentially compromised account:
 
-- Do not rely solely on recently added or changed recovery information. Use independent, previously established recovery evidence, such as saved recovery codes, in a combination that meets the account's assurance requirements. See [NIST account recovery guidance](https://pages.nist.gov/800-63-4/sp800-63b/events/#recovery).
-- Do not automatically restore superseded recovery addresses or phone numbers; they may have been replaced because they were lost or compromised.
-- Promptly suspend or invalidate authenticators identified as compromised, following [NIST guidance for compromised authenticators](https://pages.nist.gov/800-63-4/sp800-63b/events/#loss-theft-damage-and-compromise).
-- Review recovery addresses, phone numbers, and MFA methods with the verified account owner, and remove unauthorized changes. [Google's compromised-account guidance](https://support.google.com/accounts/answer/6294825) identifies these settings for review and correction.
-- After successful recovery, invalidate existing sessions and outstanding password reset and recovery links or codes so they cannot restore an attacker's access. See [session invalidation guidance](Session_Management.md#session-expiration).
-- Notify the user through all applicable registered notification addresses, including established channels that remain safe to use. Include instructions and contact information for reporting unauthorized recovery, as described in [NIST account notification guidance](https://pages.nist.gov/800-63-4/sp800-63b/events/#notification).
+- Don't rely solely on recently added/changed recovery info. Use independent, previously established recovery evidence (e.g. saved recovery codes), in combination meeting account's assurance requirements. See NIST account recovery guidance.
+- Don't auto-restore superseded recovery addresses/phone numbers; may have been replaced because lost or compromised.
+- Promptly suspend/invalidate authenticators identified as compromised, per NIST guidance for compromised authenticators.
+- Review recovery addresses, phone numbers, MFA methods w/ verified account owner; remove unauthorized changes. Google's compromised-account guidance identifies these settings.
+- After successful recovery, invalidate existing sessions and outstanding password reset/recovery links/codes so they can't restore attacker access. See [session invalidation guidance](Session_Management.md#session-expiration).
+- Notify user via all applicable registered notification addresses, incl. established channels still safe. Include instructions and contact info for reporting unauthorized recovery (NIST account notification guidance).
 
-See [reauthentication after risk events](Authentication.md#re-authentication-after-risk-events) and [MFA recovery](Multifactor_Authentication.md#resetting-mfa) for related controls.
+Related controls: [reauthentication after risk events](Authentication.md#re-authentication-after-risk-events), [MFA recovery](Multifactor_Authentication.md#resetting-mfa).
 
 ## Methods
 
-In order to allow a user to request a password reset, you will need to have some way to identify the user, or a means to reach out to them through a side-channel.
+Need way to identify user or reach them via side-channel.
 
-This can be done through any of the following methods:
+Methods:
 
 - [URL tokens](#url-tokens).
 - [PINs](#pins)
 - [Offline methods](#offline-methods)
 - [Security questions](#security-questions).
 
-These methods can be used together to provide a greater degree of assurance that the user is who they claim to be. No matter what, you must ensure that a user always has a way to recover their account, even if that involves contacting the support team and proving their identity to staff.
+Combine for greater assurance of identity. Always ensure user has recovery path, even if via support team and proving identity to staff.
 
 ### General Security Practices
 
-It is essential to employ good security practices for the reset identifiers (tokens, codes, PINs, etc.). Some points don't apply to the [offline methods](#offline-methods), such as the lifetime restriction. All tokens and codes should be:
+Good practices essential for reset identifiers (tokens, codes, PINs, etc.). Some points (e.g. lifetime restriction) don't apply to [offline methods](#offline-methods). All tokens/codes should be:
 
-- Generated using a [cryptographically secure random number generator](Cryptographic_Storage.md#secure-random-number-generation).
-    - It is also possible to use JSON Web Tokens (JWTs) in place of random tokens, although this can introduce additional vulnerability, such as those discussed in the [JSON Web Token Cheat Sheet](JSON_Web_Token.md).
-- Long enough to protect against brute-force attacks.
-- Linked to an individual user in the database.
-- Invalidated after they have been used.
-- Stored in a secure manner, as discussed in the [Password Storage Cheat Sheet](Password_Storage.md).
+- Generated w/ [cryptographically secure random number generator](Cryptographic_Storage.md#secure-random-number-generation).
+    - JSON Web Tokens (JWTs) possible instead of random tokens, but may add vulnerabilities, see [JSON Web Token Cheat Sheet](JSON_Web_Token.md).
+- Long enough against brute-force attacks.
+- Linked to individual user in database.
+- Invalidated after use.
+- Stored securely, per [Password Storage Cheat Sheet](Password_Storage.md).
 
 ### URL Tokens
 
-URL tokens are passed in the query string of the URL, and are typically sent to the user via email. The basic overview of the process is as follows:
+Passed in URL query string, typically emailed. Process:
 
-1. Generate a token for the user and attach it in the URL query string.
-2. Send this token to the user via email.
-   - Don't rely on the [Host](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Host) header while creating the reset URLs to avoid [Host Header Injection](https://owasp.org/www-project-web-security-testing-guide/stable/4-Web_Application_Security_Testing/07-Input_Validation_Testing/17-Testing_for_Host_Header_Injection) attacks. The URL should either be hard-coded, or validated against a list of trusted domains.
-   - Ensure that the URL is using HTTPS.
-3. The user receives the email, and browses to the URL with the attached token.
-   - Ensure that the reset password page adds the [Referrer Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy) tag with the `no-referrer` value in order to avoid [referrer leakage](https://portswigger.net/kb/issues/00500400_cross-domain-referer-leakage).
-   - Implement appropriate protection to prevent users from brute-forcing tokens in the URL, such as rate limiting.
-4. If required, perform any additional validation steps such as requiring the user to answer [security questions](#security-questions).
-5. Let the user create a new password and confirm it. Ensure that the same password policy used elsewhere in the application is applied.
+1. Generate token for user, attach in URL query string.
+2. Email token to user.
+   - Don't rely on Host header when creating reset URLs → avoids Host Header Injection. URL hard-coded or validated against list of trusted domains.
+   - Ensure URL uses HTTPS.
+3. User opens email, browses to URL w/ token.
+   - Reset password page adds Referrer Policy tag w/ `no-referrer` value to avoid referrer leakage.
+   - Protect against brute-forcing tokens in URL, e.g. rate limiting.
+4. If required, add validation steps e.g. [security questions](#security-questions).
+5. User creates new password and confirms. Apply same password policy as elsewhere in app.
 
-*Note:* URL tokens can follow on the same behavior of the [PINs](#pins) by creating a restricted session from the token. Decision should be made based on the needs and the expertise of the developer.
+*Note:* URL tokens can follow [PINs](#pins) behavior by creating restricted session from token. Decide per needs and developer expertise.
 
 ### PINs
 
-PINs are numbers (between 6 and 12 digits) that are sent to the user through a side-channel such as SMS.
+PINs = numbers (between 6 and 12 digits) sent to user via side-channel e.g. SMS.
 
-1. Generate a PIN.
-2. Send it to the user via SMS or another mechanism.
-   - Breaking the PIN up with spaces makes it easier for the user to read and enter.
-3. The user then enters the PIN along with their username on the password reset page.
-4. Create a limited session from that PIN that only permits the user to reset their password.
-5. Let the user create a new password and confirm it. Ensure that the same password policy used elsewhere in the application is applied.
+1. Generate PIN.
+2. Send via SMS or other mechanism.
+   - Splitting PIN with spaces eases reading/entering.
+3. User enters PIN + username on reset page.
+4. Create limited session from PIN permitting only password reset.
+5. User creates new password and confirms. Apply same password policy as elsewhere in app.
 
 ### Offline Methods
 
-Offline methods differ from other methods by allowing the user to reset their password without requesting a special identifier (such as a token or PIN) from the backend. However, authentication still needs to be conducted by the backend to ensure that the request is legitimate. Offline methods provide a certain identifier either on registration, or when the user wishes to configure it.
+Differ from others: user resets password w/o requesting special identifier (token/PIN) from backend. Backend must still authenticate to ensure request legit. Identifier provided on registration or when user configures it.
 
-These identifiers should be stored offline and in a secure fashion (*e.g.* password managers), and the backend should properly follow the [general security practices](#general-security-practices). Some implementations are built on [hardware OTP tokens](Multifactor_Authentication.md#hardware-otp-tokens), [certificates](Multifactor_Authentication.md#certificates), or any other implementation that could be used inside of an enterprise. These are out of scope for this cheat sheet.
+Store identifiers offline, securely (*e.g.* password managers); backend follows [general security practices](#general-security-practices). Some implementations built on [hardware OTP tokens](Multifactor_Authentication.md#hardware-otp-tokens), [certificates](Multifactor_Authentication.md#certificates), or other enterprise implementations; out of scope here.
 
-If account has MFA enabled, and you are looking for MFA recovery, different methods can be found in the corresponding [Multifactor Authentication cheat sheet](Multifactor_Authentication.md#resetting-mfa).
+Account w/ MFA needing MFA recovery: methods in [Multifactor Authentication cheat sheet](Multifactor_Authentication.md#resetting-mfa).
 
 ### Security Questions
 
-Security questions should not be used as the sole mechanism for resetting passwords due to their answers frequently being easily guessable or obtainable by attackers. However, they can provide an additional layer of security when combined with the other methods discussed in this cheat sheet. If they are used, then ensure that secure questions are chosen as discussed in the [Security Questions cheat sheet](Choosing_and_Using_Security_Questions.md).
+Not sole mechanism for password reset: answers often guessable/obtainable by attackers. Can add extra layer combined w/ other methods here. If used, choose secure questions per [Security Questions cheat sheet](Choosing_and_Using_Security_Questions.md).
 
 ## Account Lockout
 
-Accounts should not be locked out in response to a forgotten password attack, as this can be used to deny access to users with known usernames. For more details on account lockouts, see the [Authentication Cheat Sheet](Authentication.md).
+Don't lock accounts in response to forgotten password attack: enables denying access to users w/ known usernames. See [Authentication Cheat Sheet](Authentication.md).
 
 ## References
 
-- [NIST SP 800-63B-4: Account Recovery](https://pages.nist.gov/800-63-4/sp800-63b/events/#recovery)
-- [OWASP Application Security Verification Standard (ASVS): V6.4 Authentication Factor Lifecycle and Recovery](https://github.com/OWASP/ASVS/blob/master/5.0/en/0x15-V6-Authentication.md#v64-authentication-factor-lifecycle-and-recovery)
+- NIST SP 800-63B-4: Account Recovery
+- OWASP Application Security Verification Standard (ASVS): V6.4 Authentication Factor Lifecycle and Recovery

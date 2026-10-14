@@ -2,23 +2,21 @@
 
 ## Introduction
 
-The Lightweight Directory Access Protocol (LDAP) allows an application to remotely perform operations such as searching and modifying records in
-directories. LDAP injection results from inadequate input sanitization and validation and allows malicious users to glean restricted information using the
-directory service. For general information about LDAP please visit [lightweight directory access protocol (LDAP)](https://www.redhat.com/en/topics/security/what-is-ldap-authentication).
+Lightweight Directory Access Protocol (LDAP) lets application remotely search/modify directory records. LDAP injection: inadequate input sanitization/validation lets malicious users glean restricted info via directory service. General LDAP info: lightweight directory access protocol (LDAP).
 
-LDAP Injection is an attack used to exploit web based applications that construct LDAP statements based on user input. When an application fails to properly sanitize user input, it's possible to modify LDAP statements through techniques similar to [SQL Injection](https://owasp.org/www-community/attacks/SQL_Injection).
+LDAP Injection exploits web apps constructing LDAP statements from user input. Unsanitized input → LDAP statements modifiable via techniques similar to SQL Injection.
 
-This cheatsheet is focused on providing clear, simple, actionable guidance for preventing LDAP Injection flaws in your applications. [LDAP injection](https://owasp.org/www-community/attacks/LDAP_Injection) attacks are common due to two factors:
+Cheatsheet gives actionable guidance preventing LDAP Injection. LDAP injection attacks common due to two factors:
 
-1. The lack of safer, parameterized LDAP query interfaces
-2. The widespread use of LDAP to authenticate users to systems.
+1. Lack of safer, parameterized LDAP query interfaces
+2. Widespread use of LDAP to authenticate users to systems.
 
-LDAP injection attacks could result in the granting of permissions to unauthorized queries, and content modification inside the LDAP tree.
+LDAP injection can grant permissions to unauthorized queries, modify content inside LDAP tree.
 
 Primary Defenses:
 
-- Escape all variables using the right LDAP encoding function
-- Use a framework that escapes automatically.
+- Escape all variables using right LDAP encoding function
+- Use framework that escapes automatically.
 
 Additional Defenses:
 
@@ -31,9 +29,9 @@ Additional Defenses:
 
 #### Distinguished Name Escaping
 
-The main way LDAP stores names is based on DN (distinguished name). You can think of this like a unique identifier. These are sometimes used to access resources, like a username.
+LDAP stores names mainly by DN (distinguished name), like unique identifier. Sometimes used to access resources, like username.
 
-A DN might look like this
+DN examples
 
 `cn=Richard Feynman, ou=Physics Department, dc=Caltech, dc=edu`
 
@@ -41,12 +39,11 @@ or
 
 `uid=inewton, ou=Mathematics Department, dc=Cambridge, dc=com`
 
-An allowlist can be used to restrict input to a list of valid characters. Characters and character sequences that must be excluded from allowlists — including
-Java Naming and Directory Interface (JNDI) metacharacters and LDAP special characters — are listed in the following list.
+Allowlist restricts input to valid characters. Characters/sequences excluded from allowlists, incl. Java Naming and Directory Interface (JNDI) metacharacters and LDAP special characters, listed below.
 
-The [exhaustive list](https://ldapwiki.com/wiki/Wiki.jsp?page=DN%20Escape%20Values) is the following: `\ # + < > , ; " =` and leading or trailing spaces.
+Exhaustive list: `\ # + < > , ; " =` and leading or trailing spaces.
 
-Some "special" characters that are allowed in Distinguished Names and do not need to be escaped include:
+"Special" characters allowed in Distinguished Names, no escaping needed:
 
 ```text
 * ( ) . & - _ [ ] ` ~ | @ $ % ^ ? : { } ! '
@@ -54,32 +51,32 @@ Some "special" characters that are allowed in Distinguished Names and do not nee
 
 #### Search Filter Escaping
 
-Each DN points to exactly 1 entry, which can be thought of sort of like a row in a RDBMS. For each entry, there will be 1 or more attributes which are analogous to RDBMS columns. If you are interested in searching through LDAP for users with certain attributes, you may do so with search filters.
+Each DN points to exactly 1 entry (like RDBMS row). Each entry has 1 or more attributes (like RDBMS columns). Search LDAP for users with certain attributes via search filters.
 
-In a search filter, you can use standard boolean logic to get a list of users matching an arbitrary constraint. Search filters are written in Polish notation AKA prefix notation.
+Search filter uses standard boolean logic to list users matching arbitrary constraint. Written in Polish notation AKA prefix notation.
 
 Example:
 
 ```text
 (&(ou=Physics)(|
-(manager=cn=Freeman Dyson,ou=Physics,dc=Caltech,dc=edu)
-(manager=cn=Albert Einstein,ou=Physics,dc=Princeton,dc=edu)
+(manager=cn=Freeman Dyson,ou=Physics,dc=Caltech,dc=edu)
+(manager=cn=Albert Einstein,ou=Physics,dc=Princeton,dc=edu)
 ))
 ```
 
-When building LDAP queries in application code, you MUST escape any untrusted data that is added to any LDAP query. There are two forms of LDAP escaping. Encoding for LDAP Search and Encoding for LDAP DN (distinguished name). The proper escaping depends on whether you are sanitizing input for a search filter, or you are using a DN as a username-like credential for accessing some resource.
+Building LDAP queries in application code: MUST escape any untrusted data added to any LDAP query. Two forms of LDAP escaping: Encoding for LDAP Search, Encoding for LDAP DN (distinguished name). Proper escaping depends on whether sanitizing input for search filter, or using DN as username-like credential to access resource.
 
-Some "special" characters that are allowed in search filters and must be escaped include:
+"Special" characters allowed in search filters that must be escaped:
 
 ```text
 * ( ) \ NUL
 ```
 
-For more information on search filter escaping visit [RFC4515](https://datatracker.ietf.org/doc/html/rfc4515#section-3).
+Search filter escaping: RFC4515 section 3.
 
 #### Safe Java Escaping Example
 
-The following example validates `userSN` with an allowlist. With Java's default [predefined character classes](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#predef), it accepts ASCII letters, digits, underscores, and whitespace (including tabs and line breaks); `*` also permits an empty string. This illustrative rule is not a general validation policy for personal names. Choose an allowlist that matches the application's requirements and apply the appropriate LDAP escaping for values outside that restricted set.
+Example validates `userSN` with allowlist. Java's default predefined character classes: accepts ASCII letters, digits, underscores, whitespace (incl. tabs, line breaks); `*` also permits empty string. Illustrative rule, not general validation policy for personal names. Choose allowlist matching application requirements; apply appropriate LDAP escaping for values outside restricted set.
 
 ```java
 // String userSN = "Sherlock Holmes"; // Valid
@@ -95,13 +92,9 @@ String filter = "(sn = " + userSN + ")";
 // ... remainder of LDAPInjection.searchRecord()... 
 ```
 
-When a database field must include special characters, it is critical to ensure that the authentic data is stored in sanitized form in the
-database and also that any user input is normalized before the validation or comparison takes place. Using characters that have special meanings in JNDI
-and LDAP in the absence of a comprehensive normalization and allowlisting-based routine is discouraged. Special characters must be transformed to
-sanitized, safe values before they are added to the allowlist expression against which input will be validated. Likewise, normalization of user input should
-occur before the validation step (source: [Prevent LDAP injection](https://wiki.sei.cmu.edu/confluence/spaces/flyingpdf/pdfpageexport.action?pageId=88487534)).
+Database field must include special characters: critical to store authentic data in sanitized form and normalize any user input before validation/comparison. Using characters with special meanings in JNDI and LDAP w/o comprehensive normalization + allowlisting-based routine discouraged. Transform special characters to sanitized, safe values before adding to allowlist expression validating input. Normalize user input before validation step (source: Prevent LDAP injection).
 
-The [OWASP ESAPI `Encoder` API](https://javadoc.io/static/org.owasp.esapi/esapi/2.7.0.0/org/owasp/esapi/Encoder.html) provides `encodeForLDAP(String)` for search-filter values and `encodeForDN(String)` for distinguished-name values. Choose the method for the LDAP context where the value will be used.
+OWASP ESAPI `Encoder` API provides `encodeForLDAP(String)` for search-filter values, `encodeForDN(String)` for distinguished-name values. Choose method for LDAP context where value used.
 
 #### Insecure vs Secure Java LDAP Query Construction
 
@@ -124,43 +117,42 @@ NamingEnumeration<SearchResult> results =
 
 #### Safe C Sharp .NET TBA Example
 
-[.NET AntiXSS](https://blogs.msdn.microsoft.com/securitytools/2010/09/30/antixss-4-0-released/) (now the Encoder class) has LDAP encoding functions including `Encoder.LdapFilterEncode(string)`, `Encoder.LdapDistinguishedNameEncode(string)` and `Encoder.LdapDistinguishedNameEncode(string, bool, bool)`.
+.NET AntiXSS (now Encoder class) has LDAP encoding functions incl. `Encoder.LdapFilterEncode(string)`, `Encoder.LdapDistinguishedNameEncode(string)` and `Encoder.LdapDistinguishedNameEncode(string, bool, bool)`.
 
-`Encoder.LdapFilterEncode` encodes input according to [RFC4515](https://datatracker.ietf.org/doc/html/rfc4515) where unsafe values are converted to `\XX` where `XX` is the representation of the unsafe character.
+`Encoder.LdapFilterEncode` encodes input per RFC4515; unsafe values converted to `\XX` where `XX` = representation of unsafe character.
 
-Use `Encoder.LdapDistinguishedNameEncode` for distinguished-name attribute values. In [DN string escaping](https://datatracker.ietf.org/doc/html/rfc4514#section-2.4), `\XX` represents an escaped byte using two hexadecimal digits; selected special characters can instead be prefixed with a backslash. Escape leading spaces or `#` and trailing spaces. A leading `#` followed by hexadecimal pairs represents an entire attribute value encoded using Basic Encoding Rules (BER), not individual character escapes.
+Use `Encoder.LdapDistinguishedNameEncode` for distinguished-name attribute values. In DN string escaping (RFC 4514 section 2.4), `\XX` = escaped byte as two hexadecimal digits; selected special characters can instead be prefixed with backslash. Escape leading spaces or `#` and trailing spaces. Leading `#` followed by hexadecimal pairs = entire attribute value encoded using Basic Encoding Rules (BER), not individual character escapes.
 
-`LdapDistinguishedNameEncode(string, bool, bool)` is also provided so you may turn off the initial or final character escaping rules, for example if you are concatenating the escaped distinguished name fragment into the midst of a complete distinguished name.
+`LdapDistinguishedNameEncode(string, bool, bool)` also lets you turn off initial/final character escaping rules, e.g. when concatenating escaped DN fragment into middle of complete DN.
 
 ### Defense Option 2: Use Frameworks that Automatically Protect from LDAP Injection
 
 #### Safe .NET Example
 
-We recommend using [LINQ to LDAP](https://www.nuget.org/packages/LinqToLdap/) (for .NET Framework 4.5 or lower [until it has been updated](https://github.com/madhatter22/LinqToLdap/issues/31)) in DotNet. It provides automatic LDAP encoding when building LDAP queries.
-Contact the [Readme file](https://github.com/madhatter22/LinqToLdap/blob/master/README.md) in the project repository.
+Recommended: LINQ to LDAP (for .NET Framework 4.5 or lower until updated) in DotNet. Automatic LDAP encoding when building LDAP queries. See project repository Readme file.
 
 ## Additional Defenses
 
-Beyond adopting one of the two primary defenses, we also recommend adopting all of these additional defenses in order to provide defense in depth. These additional defenses are:
+Besides one of two primary defenses, adopt all additional defenses for defense in depth:
 
 - **Least Privilege**
 - **Allow-List Input Validation**
 
 ### Least Privilege
 
-To minimize the potential damage of a successful LDAP injection attack, you should minimize the privileges assigned to the LDAP binding account in your environment.
+Minimize privileges of LDAP binding account to limit damage of successful LDAP injection.
 
 ### Enabling Bind Authentication
 
-Authenticated LDAP bind establishes an [authenticated authorization state](https://datatracker.ietf.org/doc/html/rfc4513#section-5.1.3); it does not prevent user input from changing a search filter constructed by the application. Continue to apply the [primary injection defenses](#primary-defenses), including [search-filter escaping](https://datatracker.ietf.org/doc/html/rfc4515#section-3), even when the application binds with valid credentials.
+Authenticated LDAP bind establishes authenticated authorization state (RFC 4513 section 5.1.3); doesn't prevent user input changing search filter constructed by application. Keep applying [primary injection defenses](#primary-defenses), incl. search-filter escaping (RFC 4515 section 3), even when application binds with valid credentials.
 
-When using name/password authentication, reject empty passwords before binding. A nonempty name with an empty password can perform an [unauthenticated bind](https://datatracker.ietf.org/doc/html/rfc4513#section-5.1.2) that establishes anonymous authorization; a successful result in that case does not prove the user's identity. Require authenticated access to protected directory data and use a least-privileged binding account.
+Name/password authentication: reject empty passwords before binding. Nonempty name with empty password can perform unauthenticated bind (RFC 4513 section 5.1.2) establishing anonymous authorization; success then doesn't prove user identity. Require authenticated access to protected directory data; use least-privileged binding account.
 
 ### Allow-List Input Validation
 
-Input validation can be used to detect unauthorized input before it is passed to the LDAP query. For more information please see the [Input Validation Cheat Sheet](Input_Validation.md).
+Input validation detects unauthorized input before it reaches LDAP query. See [Input Validation Cheat Sheet](Input_Validation.md).
 
 ## References
 
-- [RFC 4515: LDAP String Representation of Search Filters](https://datatracker.ietf.org/doc/html/rfc4515)
-- [RFC 4514: LDAP String Representation of Distinguished Names](https://datatracker.ietf.org/doc/html/rfc4514)
+- RFC 4515: LDAP String Representation of Search Filters
+- RFC 4514: LDAP String Representation of Distinguished Names

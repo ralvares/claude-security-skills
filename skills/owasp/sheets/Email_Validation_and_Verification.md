@@ -2,151 +2,151 @@
 
 ## Introduction
 
-Email addresses are widely used as primary identifiers in authentication and account recovery workflows. Improper handling of email validation, normalization, and verification can lead to account takeover, user enumeration, and identity confusion.
+Email = primary identifier in authentication + account recovery. Improper validation, normalization, verification → account takeover, user enumeration, identity confusion.
 
-This cheat sheet provides guidance on securely handling email addresses within identity systems. See the [Authentication Cheat Sheet](Authentication.md) for broader identity controls.
+Guidance for secure email handling in identity systems. Broader identity controls: [Authentication Cheat Sheet](Authentication.md).
 
 ## Goals
 
-- Safely treat email as an identifier
+- Treat email safely as identifier
 - Prevent account takeover via email-based flows
 - Reduce user enumeration risk
-- Define secure verification and change workflows
+- Define secure verification + change workflows
 
 ## Threat Model
 
-Attackers may attempt to:
+Attackers may:
 
-- Register equivalent or visually similar email addresses
+- Register equivalent/visually similar email addresses
 - Exploit inconsistent normalization logic
-- Abuse password reset functionality
+- Abuse password reset
 - Enumerate valid accounts
-- Take over accounts through email change workflows
+- Take over accounts via email change workflows
 
 ## Email Canonicalization
 
-Applications must define a consistent normalization strategy before storing or comparing email addresses.
+MUST define consistent normalization strategy before storing/comparing email addresses.
 
 ### Recommendations
 
-- Normalize the domain portion to lowercase
+- Normalize domain portion to lowercase
 - Avoid provider-specific transformations (e.g., Gmail dot removal) unless fully controlled
 - Store both:
-    - Original input (for display and communication)
-    - Canonical form (for comparison according to your policy)
-- Document the comparison policy explicitly and apply it consistently across registration, login, password reset, account recovery, and account linking flows
+    - Original input (display + communication)
+    - Canonical form (comparison per your policy)
+- Document comparison policy explicitly; apply consistently across registration, login, password reset, account recovery, account linking
 
 ## Email Format Validation
 
-Strict regex-based validation often rejects valid addresses or introduces inconsistencies.
+Strict regex validation often rejects valid addresses or adds inconsistencies.
 
 ### Recommendations
 
-- Use well-tested libraries instead of custom regex
-- Accept a broad range of valid formats
+- Use well-tested libraries, not custom regex
+- Accept broad range of valid formats
 - Reject clearly malformed input only
 
 ## Unicode and IDN Considerations
 
-Unicode introduces spoofing risks via visually similar characters.
+Unicode → spoofing via visually similar characters.
 
 ### Recommendations
 
 - Normalize Unicode input
 - Convert internationalized domains to punycode for comparison
-- Be aware of homoglyph attacks (e.g., Latin vs Cyrillic characters)
-- Be especially cautious with internationalized local-parts, because normalization and comparison behavior may differ across systems
+- Beware homoglyph attacks (e.g., Latin vs Cyrillic characters)
+- Extra caution w/ internationalized local-parts: normalization/comparison behavior may differ across systems
 
 ## Case Sensitivity
 
 - Domain part: always case-insensitive
-- Local part: technically case-sensitive under SMTP, though many providers do not enforce this in practice
+- Local part: technically case-sensitive under SMTP, though many providers don't enforce in practice
 
 ### Recommendation
 
-- Preserve the original email address as entered by the user
-- Define an explicit comparison policy for the local part based on your identity architecture and interoperability requirements
-- Only fold or normalize the local part when the system fully owns that behavior and the decision will not create account-collision or mistaken-account risk
+- Preserve original email as user entered
+- Define explicit local-part comparison policy per identity architecture + interoperability requirements
+- Fold/normalize local part only when system fully owns that behavior and decision won't create account-collision or mistaken-account risk
 
 ## Email Ownership Verification
 
-Email ownership must be verified before enabling account use.
+Verify email ownership before enabling account use.
 
 ### Recommendations
 
 - Use cryptographically secure, random tokens
-- Ensure tokens are:
+- Tokens:
     - Single-use
     - Time-limited
-- Do not activate accounts before verification is completed
+- Don't activate accounts before verification completes
 
 ## Password Reset Flows
 
-Password reset is a high-risk operation. See the [Forgot Password Cheat Sheet](Forgot_Password.md) for recovery controls.
+Password reset = high-risk operation. Recovery controls: [Forgot Password Cheat Sheet](Forgot_Password.md).
 
 ### Recommendations
 
-- Use single-use, time-limited tokens
-- Do not disclose whether an email exists in the system
+- Single-use, time-limited tokens
+- Don't disclose whether email exists
 - Invalidate tokens after use or expiration
 - Rate limit reset requests
 
 ## Email Change Workflows
 
-Changing an email address is equivalent to changing identity.
+Changing email = changing identity.
 
 ### Recommendations
 
 - Require re-authentication
-- Notify the existing email address of the change
-- Require confirmation of the new email address
-- Consider requiring confirmation from both addresses for high-risk systems
+- Notify existing email of change
+- Require confirmation of new email
+- Consider confirmation from both addresses for high-risk systems
 
 ## Anti-Enumeration Controls
 
-Attackers should not be able to determine whether an email is registered.
+Attackers must not determine whether email is registered.
 
 ### Recommendations
 
-- Use consistent responses for login and reset flows
-- Avoid timing discrepancies between valid and invalid cases
-- Implement rate limiting and monitoring
+- Consistent responses for login + reset flows
+- Avoid timing discrepancies between valid/invalid cases
+- Rate limiting + monitoring
 
 ## Temporary Email Abuse
 
-Disposable email services can be used to bypass controls.
+Disposable email services can bypass controls.
 
 ### Recommendations
 
-- Maintain a list of known disposable domains if appropriate
+- Maintain list of known disposable domains if appropriate
 - Prefer risk-based controls over strict blocking
-- Monitor for suspicious patterns of account creation
+- Monitor suspicious account-creation patterns
 
 ## Email as an Authentication Factor
 
-Email should not be treated as a strong authentication factor.
+Email ≠ strong authentication factor.
 
 ### Recommendations
 
-- Treat email as a weak factor
+- Treat email as weak factor
 - Require multi-factor authentication (MFA) for sensitive operations
-- Do not rely on email alone for account security
+- Don't rely on email alone for account security
 
 ## Logging and Monitoring
 
-Monitoring email-related flows helps detect abuse.
+Monitoring email flows detects abuse.
 
 ### Recommendations
 
-- Log verification attempts and failures
+- Log verification attempts + failures
 - Monitor password reset activity
 - Detect abnormal patterns (e.g., high-frequency requests)
-- Avoid logging full email addresses; mask or pseudonymize them where logging is necessary (e.g., `j***@example.com`)
-- Never log verification, reset, or authentication tokens or full verification/reset URLs
-- Treat email addresses and related identifiers in logs as personal or sensitive data and restrict access accordingly
+- Avoid logging full email addresses; mask/pseudonymize where logging necessary (e.g., `j***@example.com`)
+- Never log verification, reset, authentication tokens or full verification/reset URLs
+- Treat email addresses + related identifiers in logs as personal/sensitive data; restrict access
 
 ## References
 
-- [RFC 5322: Internet Message Format](https://datatracker.ietf.org/doc/html/rfc5322)
-- [RFC 5321: Simple Mail Transfer Protocol](https://www.rfc-editor.org/info/rfc5321/)
-- [NIST SP 800-63B-4: Authentication and Authenticator Management](https://pages.nist.gov/800-63-4/sp800-63b.html)
+- RFC 5322: Internet Message Format
+- RFC 5321: Simple Mail Transfer Protocol
+- NIST SP 800-63B-4: Authentication and Authenticator Management

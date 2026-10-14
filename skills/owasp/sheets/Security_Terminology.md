@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This cheat sheet provides clear definitions and distinctions for security terminology that is often confused, even by experienced developers. Understanding these terms is critical for correctly implementing security controls and following standards like the [OWASP ASVS](https://owasp.org/www-project-application-security-verification-standard/).
+Definitions/distinctions for often-confused security terms. Critical for correct controls + standards like OWASP ASVS.
 
 ## Table of Contents
 
@@ -14,70 +14,70 @@ This cheat sheet provides clear definitions and distinctions for security termin
 
 ## Data Handling: Encoding, Escaping, Sanitization, and Serialization
 
-These terms relate to how data is transformed for transport, storage, or display. See the [Input Validation Cheat Sheet](Input_Validation.md) for validation guidance.
+How data is transformed for transport, storage, display. Validation: [Input Validation Cheat Sheet](Input_Validation.md).
 
 ### Encoding
 
-**Definition:** Transforming data into a different format using a publicly available scheme, so that it can be safely consumed by a different system.
+**Definition:** Transform data to different format via public scheme, so another system can safely consume it.
 
-- **Purpose:** Represent data for a particular transport, storage, or output context.
+- **Purpose:** Represent data for transport, storage, or output context.
 - **Reversibility:** Always reversible.
 - **Examples:** Base64, URL Encoding, HTML Entity Encoding.
-- **Security Context:** Base64 does not provide confidentiality. Context-appropriate [output encoding is an XSS defense](https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/XSS#output_encoding); using the wrong encoding for the destination context can leave an injection vulnerability.
+- **Security Context:** Base64 gives no confidentiality. Context-appropriate output encoding = XSS defense; wrong encoding for destination context can leave injection vulnerability.
 
 ### Escaping
 
-**Definition:** Representing characters with parser-specific escape sequences so they are interpreted literally in a particular context.
+**Definition:** Represent characters w/ parser-specific escape sequences so they're interpreted literally in a context.
 
-- **Purpose:** To ensure the interpreter treats the data as text rather than code/commands.
+- **Purpose:** Interpreter treats data as text, not code/commands.
 - **Examples:** `\"` inside a JSON string, `&lt;` in HTML text.
-- **Security Context:** Escaping rules depend on the parser and context. For SQL values, use [parameterized queries](SQL_Injection_Prevention.md#primary-defenses) instead of constructing SQL with escaped strings.
+- **Security Context:** Rules depend on parser + context. SQL values: use [parameterized queries](SQL_Injection_Prevention.md#primary-defenses), not escaped-string SQL.
 
 ### Sanitization
 
-**Definition:** The process of cleaning or filtering input by removing, replacing, or modifying potentially dangerous characters or content.
+**Definition:** Clean/filter input by removing, replacing, modifying potentially dangerous characters/content.
 
-- **Purpose:** To make "dirty" input "clean" according to a security policy.
-- **Examples:** Using a maintained HTML sanitizer to allow approved elements and attributes in user-authored HTML.
-- **Security Context:** Use [HTML sanitization](Cross_Site_Scripting_Prevention.md#html-sanitization) when untrusted input must be rendered as HTML. Removing `<script>` tags alone is insufficient; other elements and attributes can execute scripts. Use output encoding when the value should be displayed as text.
+- **Purpose:** Make "dirty" input "clean" per security policy.
+- **Examples:** Maintained HTML sanitizer allowing approved elements + attributes in user-authored HTML.
+- **Security Context:** Use [HTML sanitization](Cross_Site_Scripting_Prevention.md#html-sanitization) when untrusted input must render as HTML. Removing `<script>` tags alone insufficient; other elements/attributes can execute scripts. Use output encoding when value displays as text.
 
 ### Serialization
 
-**Definition:** Converting an object or data structure into a format that can be stored or transmitted (e.g., a byte stream) and later reconstructed.
+**Definition:** Convert object/data structure to storable/transmittable format (e.g., byte stream), later reconstructable.
 
-- **Purpose:** Data persistence and communication.
-- **Security Context:** **Insecure Deserialization** occurs when untrusted data is used to reconstruct an object, potentially leading to Remote Code Execution (RCE).
+- **Purpose:** Data persistence + communication.
+- **Security Context:** **Insecure Deserialization** = untrusted data reconstructs object → potential Remote Code Execution (RCE).
 
 ---
 
 ## Cryptography: Encryption, Hashing, and Signatures
 
-These terms relate to protecting the confidentiality, integrity, and authenticity of data. See the [Key Management Cheat Sheet](Key_Management.md) and [Password Storage Cheat Sheet](Password_Storage.md) for implementation guidance.
+Protect confidentiality, integrity, authenticity. Implementation: [Key Management Cheat Sheet](Key_Management.md), [Password Storage Cheat Sheet](Password_Storage.md).
 
 ### Encryption
 
-**Definition:** Transforming data (plaintext) into an unreadable format (ciphertext) using a secret key.
+**Definition:** Transform data (plaintext) → unreadable format (ciphertext) using secret key.
 
-- **Purpose:** **Confidentiality**. Only authorized parties with the key can read the data.
-- **Reversibility:** Reversible (Decryption) with the correct key.
-- **Types:** Symmetric (same key) and Asymmetric (public/private keys).
+- **Purpose:** **Confidentiality**. Only authorized key holders read data.
+- **Reversibility:** Reversible (Decryption) w/ correct key.
+- **Types:** Symmetric (same key), Asymmetric (public/private keys).
 
 ### Hashing
 
-**Definition:** Transforming data into a fixed-size string (a "hash" or "digest") using a mathematical function.
+**Definition:** Transform data → fixed-size string ("hash"/"digest") via math function.
 
-- **Purpose:** **Integrity**. A small change in the input results in a completely different hash.
+- **Purpose:** **Integrity**. Small input change → completely different hash.
 - **Reversibility:** One-way (non-reversible).
-- **Security Context:** Used for password storage (with salt) and verifying file integrity.
+- **Security Context:** Password storage (w/ salt), file integrity verification.
 - **Examples:** SHA-256, Argon2, bcrypt.
 
 ### Signatures (Digital Signatures)
 
-**Definition:** Using asymmetric cryptography to provide proof of the origin and integrity of a message.
+**Definition:** Asymmetric cryptography proving origin + integrity of message.
 
-- **Purpose:** **Authenticity** and **Non-repudiation**. Proves who sent the message and that it wasn't altered.
-- **Mechanism:** The signing algorithm uses the signer's private key; verification uses a trusted public key bound to that signer. Follow the algorithm's [message-processing rules](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.186-5.pdf#page=18); do not add a separate prehash unless the chosen algorithm and API require it.
-- **Examples:** Asymmetrically signed JWTs and GPG signatures. [JWTs can also use shared-key message authentication codes or encryption](https://www.rfc-editor.org/info/rfc7519/); the JWT format does not imply a digital signature.
+- **Purpose:** **Authenticity** + **Non-repudiation**. Proves who sent message, not altered.
+- **Mechanism:** Signing uses signer's private key; verification uses trusted public key bound to signer. Follow algorithm's message-processing rules (FIPS 186-5); no separate prehash unless chosen algorithm/API requires it.
+- **Examples:** Asymmetrically signed JWTs, GPG signatures. JWTs can also use shared-key message authentication codes or encryption (RFC 7519); JWT format ≠ digital signature.
 
 ---
 
@@ -85,14 +85,14 @@ These terms relate to protecting the confidentiality, integrity, and authenticit
 
 ### Authentication (AuthN)
 
-**Definition:** The process of verifying who a user is.
+**Definition:** Verify who user is.
 
 - **Question:** "Who are you?"
-- **Factors:** Something you know (password), something you have (token), something you are (biometrics).
+- **Factors:** Something you know (password), have (token), are (biometrics).
 
 ### Authorization (AuthZ)
 
-**Definition:** The process of verifying what a user has permission to do.
+**Definition:** Verify what user may do.
 
 - **Question:** "Are you allowed to do this?"
 - **Security Context:** Occurs *after* successful authentication.
@@ -102,18 +102,18 @@ These terms relate to protecting the confidentiality, integrity, and authenticit
 
 ## Federated Identity Terms
 
-When working with OAuth2, SAML, or OIDC, these terms are frequently used:
+Common in OAuth2, SAML, OIDC:
 
 | Term | Definition | Context |
 | :--- | :--- | :--- |
-| **Identity Provider (IdP)** | The system that creates, maintains, and manages identity information and provides authentication services. | Google, Okta, Azure AD |
-| **Relying Party (RP)** | An application or service that relies on an IdP to authenticate users. | Your web app using "Login with Google" |
-| **Service Provider (SP)** | In SAML, the equivalent of a Relying Party. | Your enterprise app using SAML |
-| **Principal** | The entity (user, service, or device) being authenticated. | The user logging in |
+| **Identity Provider (IdP)** | System creating, maintaining, managing identity info + providing authentication services. | Google, Okta, Azure AD |
+| **Relying Party (RP)** | App/service relying on IdP to authenticate users. | Your web app using "Login with Google" |
+| **Service Provider (SP)** | In SAML, equivalent of Relying Party. | Your enterprise app using SAML |
+| **Principal** | Entity (user, service, device) being authenticated. | The user logging in |
 
 ---
 
 ## References
 
-- [RFC 4949: Internet Security Glossary, Version 2](https://www.rfc-editor.org/info/rfc4949/)
-- [OpenID Connect Core 1.0: Terminology](https://openid.net/specs/openid-connect-core-1_0.html#Terminology)
+- RFC 4949: Internet Security Glossary, Version 2
+- OpenID Connect Core 1.0: Terminology

