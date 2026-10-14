@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "owasp-security",
-      "description": "Always-loaded OWASP sheet index plus an owasp skill that reads only the sheets a task needs.",
+      "description": "An owasp skill that loads its index and only the sheets a task needs, when a task touches security. Nothing loads at session start.",
       "source": "./",
       "category": "security"
     }

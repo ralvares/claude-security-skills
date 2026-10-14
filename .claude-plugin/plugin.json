@@ -1,23 +1,10 @@
 {
   "name": "owasp-security",
-  "description": "OWASP Cheat Sheet Series for Claude Code: an always-loaded index of all 133 sheets and an owasp skill that reads only the sheets a task needs.",
-  "version": "1.0.0",
+  "description": "OWASP Cheat Sheet Series for Claude Code: an owasp skill that, when a task touches security, reads its index and only the sheets that task needs. Nothing loads at session start.",
+  "version": "1.1.0",
   "author": {
     "name": "ralvares",
     "url": "https://github.com/ralvares"
   },
-  "license": "CC-BY-SA-4.0",
-  "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "cat \"${CLAUDE_PLUGIN_ROOT}/skills/owasp/INDEX.md\"",
-            "timeout": 5
-          }
-        ]
-      }
-    ]
-  }
+  "license": "CC-BY-SA-4.0"
 }

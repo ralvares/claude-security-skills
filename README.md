@@ -72,7 +72,7 @@ This lets the skill read its own guides and nothing else.
 
 ## How it works
 
-- At the start of every session the plugin adds a one-page topic list (about 2.5k tokens) so Claude knows which guide covers what.
+- Nothing loads at session start. When a task touches security, the skill reads its one-page topic list, then only the guides that match.
 - When your task matches a topic, Claude opens the `owasp` skill, which reads only the matching guides.
 - The guides are the official OWASP cheat sheets, rewritten in a compact style to save tokens. All code samples, numbers and headings are kept exactly as OWASP wrote them.
 
