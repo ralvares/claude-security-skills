@@ -7,7 +7,7 @@ cd "$(dirname "$0")/../skills/owasp"
 all=$( (grep -o '`[A-Za-z0-9_.-]*\.md`' INDEX.md || true) | tr -d '`' | sort)
 named=$(echo "$all" | uniq)
 dupes=$(echo "$all" | uniq -d)
-present=$(cd sheets && ls -- *.md | sort -u)
+present=$(cd references && ls -- *.md | sort -u)
 
 missing=$(comm -23 <(echo "$named") <(echo "$present"))
 unindexed=$(comm -13 <(echo "$named") <(echo "$present"))

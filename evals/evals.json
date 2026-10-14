@@ -1,0 +1,51 @@
+{
+  "skill_name": "owasp",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Add a webhook receiver to my Express (Node 22, TypeScript) app: POST /webhooks/billing receives events from our payment provider and marks the matching order in Postgres as paid. Use the pg library. Write the route file.",
+      "expected_output": "Route that verifies an HMAC signature over the raw body with constant-time compare, rejects stale timestamps, deduplicates by event ID, uses parameterised SQL, returns generic errors.",
+      "files": [],
+      "assertions": [
+        "Verifies an HMAC-SHA256 signature computed over the raw request body (not re-serialised JSON)",
+        "Compares signatures in constant time (e.g. crypto.timingSafeEqual)",
+        "Rejects events whose signed timestamp is outside a tolerance window (about 5 minutes)",
+        "Deduplicates events by event ID or makes the update idempotent",
+        "SQL uses parameter placeholders ($1...), no string concatenation",
+        "Webhook secret comes from configuration or a secret store, not hard-coded",
+        "Bad signature returns a generic 4xx without revealing why"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "In my FastAPI app, add an endpoint where logged-in users upload a profile picture. Save it locally so the frontend can show it. Write the code.",
+      "expected_output": "Endpoint with extension allow-list, size cap, content check, random server-side filename, storage outside the web root or served safely, authenticated user only.",
+      "files": [],
+      "assertions": [
+        "Endpoint requires an authenticated user and stores the file against that user",
+        "Allows only an explicit list of image types or extensions",
+        "Enforces a size limit while reading, without loading an unbounded file into memory",
+        "Checks file content (magic bytes or image decode), not only Content-Type or extension",
+        "Saves under a random server-generated name; the client filename never becomes a path",
+        "Re-encodes or sanitises the image (strips metadata, defeats polyglots)",
+        "Stored files are served safely (outside code dir, correct Content-Type, nosniff or equivalent)"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "We're adding an AI assistant to our support desk (Python). It reads a customer's ticket and can call two tools: lookup_order(order_id) and issue_refund(order_id, amount). Write the tool-calling handler that runs the model's tool calls.",
+      "expected_output": "Handler that treats ticket text as untrusted, validates tool arguments in code, checks the order belongs to the ticket's customer, caps refund amount, requires human approval for refunds, allow-lists tools and fails closed on unknown tools.",
+      "files": [],
+      "assertions": [
+        "Only allow-listed tools run; an unknown tool name is rejected (fail closed)",
+        "Tool arguments are validated in code (types, formats, ranges) before use",
+        "Checks the order belongs to the ticket's customer before lookup or refund",
+        "Refund amount is capped (not above the order total or a configured limit)",
+        "Refunds require human approval or a separate confirmation step, not auto-executed",
+        "Ticket text is treated as untrusted data and gains no authority over tool policy",
+        "Limits the number of tool calls or loop iterations per ticket",
+        "Logs tool calls for audit without secrets"
+      ]
+    }
+  ]
+}

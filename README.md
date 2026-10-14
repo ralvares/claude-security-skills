@@ -4,33 +4,35 @@ Secure coding guidance for Claude Code, built on the [OWASP Cheat Sheet Series](
 
 | Piece | Loaded | Cost |
 | --- | --- | --- |
-| `skills/owasp/INDEX.md`: one line per sheet, "use case → file", all 133 sheets | Every session, through an `@` import | about 2.5k tokens |
-| `skills/owasp/sheets/*.md`: the 133 sheets | Only the files whose line matches the task | 1 to 4 sheets |
+| `skills/owasp/INDEX.md`: one line per sheet, "use case → file", all 133 sheets | Every session, by the plugin's SessionStart hook | about 2.5k tokens |
+| `skills/owasp/references/*.md`: the 133 sheets | Only the files whose line matches the task | 1 to 4 sheets |
 
 Building a webhook receiver, for example, matches the webhook and SSRF lines, so Claude reads `Webhook_Security.md` and `Server_Side_Request_Forgery_Prevention.md`. Nothing else.
 
 ## Install
 
+### Claude Code (recommended): plugin
+
+```
+/plugin install owasp-security --marketplace ralvares/claude-security-skills
+```
+
+On Claude Code older than 2.1.275, add the marketplace first:
+
+```bash
+claude plugin marketplace add ralvares/claude-security-skills
+claude plugin install owasp-security@claude-security-skills
+```
+
+The plugin installs the `owasp` skill and a SessionStart hook that loads `INDEX.md` into every session. Nothing to add to `CLAUDE.md`.
+
+### Other agents: skill only
+
 ```bash
 npx skills@latest add ralvares/claude-security-skills -g -y --copy
 ```
 
-This puts the skill in `~/.claude/skills/owasp/`. Keep `--copy`: without it the installer links the folder from `~/.agents/skills/`, and Claude Code checks read permission on the link target too, so the sheets need a prompt every time. Without Node:
-
-```bash
-git clone https://github.com/ralvares/claude-security-skills
-cp -R claude-security-skills/skills/owasp ~/.claude/skills/
-```
-
-Then load the index in every session. Add this line to `~/.claude/CLAUDE.md`:
-
-```
-@skills/owasp/INDEX.md
-```
-
-Without it the skill still works: Claude invokes it from its description and reads the index then.
-
-Check it in Claude Code: `/owasp` should appear in the skill list.
+This copies the skill without the hook; Claude invokes it from its description and reads the index then. Keep `--copy`: a linked install makes Claude Code check permission on the link target too, so every sheet read prompts. To get the always-loaded index in Claude Code this way, add `@skills/owasp/INDEX.md` to `~/.claude/CLAUDE.md`.
 
 ## Permissions
 
@@ -42,16 +44,10 @@ allowed-tools: Read(/${CLAUDE_SKILL_DIR}/**)
 
 Because the skill grants a permission, Claude Code asks you once to allow the skill itself. Choose "don't ask again" and the sheets load silently from then on.
 
-Headless runs (`claude -p`, CI, scripts) cannot answer that question. Allow the skill up front, either per run:
-
-```bash
-claude -p "..." --allowedTools "Skill(owasp)"
-```
-
-or for every session, in `~/.claude/settings.json`:
+Headless runs (`claude -p`, CI, scripts) cannot answer that question. Allow the skill up front, per run with `--allowedTools`, or in `~/.claude/settings.json`:
 
 ```json
-{ "permissions": { "allow": ["Skill(owasp)"] } }
+{ "permissions": { "allow": ["Skill(owasp-security:owasp)"] } }
 ```
 
 This allows only running this skill. It grants no other file or tool access.

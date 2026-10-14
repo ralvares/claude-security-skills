@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "claude-security-skills",
+  "description": "Secure-coding guidance for Claude Code built on the OWASP Cheat Sheet Series.",
+  "owner": {
+    "name": "ralvares",
+    "url": "https://github.com/ralvares"
+  },
+  "plugins": [
+    {
+      "name": "owasp-security",
+      "description": "Always-loaded OWASP sheet index plus an owasp skill that reads only the sheets a task needs.",
+      "source": "./",
+      "category": "security"
+    }
+  ]
+}

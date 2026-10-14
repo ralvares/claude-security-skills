@@ -1,0 +1,22 @@
+[
+  {"query": "can you add a /api/v1/stripe/events endpoint to our koa server? stripe posts payment_intent.succeeded and we need to flip invoices.status to 'paid' in mysql", "should_trigger": true},
+  {"query": "I need password reset for our Rails 7 app — user enters email, gets a link, sets a new password. we use devise but the reset flow is custom in app/controllers/resets_controller.rb", "should_trigger": true},
+  {"query": "build me a small flask route where employees upload their expense receipts (pdf or jpg) and they get stored in ./receipts/<employee_id>/", "should_trigger": true},
+  {"query": "our nextjs app needs a server action that lets admins change another user's role from 'member' to 'admin'. prisma + postgres. can you write it?", "should_trigger": true},
+  {"query": "We're wiring an LLM agent into our internal Slack bot. It can read Jira tickets and run `kubectl rollout restart` on our staging cluster when asked. Write the tool executor in Go.", "should_trigger": true},
+  {"query": "add JWT auth to my express api, tokens issued by our own /login, 24h expiry, and protect /api/orders/:id so users only see their own orders", "should_trigger": true},
+  {"query": "write a github actions workflow that builds our docker image on PRs from forks too and pushes to ghcr on main, with the AWS deploy step at the end", "should_trigger": true},
+  {"query": "the 'preview link' feature: user pastes any URL into a chat message and our backend fetches the page to show title + thumbnail. node/axios. how would you implement the fetcher?", "should_trigger": true},
+  {"query": "set up multi-tenant data isolation for our django saas — every model has org_id and right now some views forget to filter by it", "should_trigger": true},
+  {"query": "review this PR diff for anything risky before I merge: it adds a search box that builds a mongo query from req.query.filter", "should_trigger": true},
+  {"query": "write a blog post for our company site explaining what the OWASP Top 10 is, aimed at non-technical managers, ~800 words", "should_trigger": false},
+  {"query": "can you summarise CVE-2025-29927 (the Next.js middleware bypass) and tell me which versions are affected? just the facts, I'm writing an internal advisory", "should_trigger": false},
+  {"query": "our pentest report came back as a 40 page PDF in ~/Downloads/pentest-2026.pdf — turn the findings table into a CSV with severity, title, affected host", "should_trigger": false},
+  {"query": "rename the column `pwd_hash` to `password_hash` across the codebase and the alembic migrations, nothing else should change", "should_trigger": false},
+  {"query": "make the login page look nicer — center the card, use our brand purple #6B4EFF, bigger inputs, it looks dated", "should_trigger": false},
+  {"query": "fix the flaky test in tests/test_session_cache.py, it fails maybe 1 in 10 runs with a KeyError on 'expires_at'", "should_trigger": false},
+  {"query": "explain the difference between symmetric and asymmetric encryption like I'm 12, for my kid's school project", "should_trigger": false},
+  {"query": "bump react from 18.2 to 19 in web/package.json and fix whatever breaks in the build", "should_trigger": false},
+  {"query": "write a python script that reads our nginx access.log and prints the top 20 IPs by request count", "should_trigger": false},
+  {"query": "draft a reply to the customer who emailed asking if we're SOC 2 compliant — we're in the middle of the Type I audit, expected done in March", "should_trigger": false}
+]

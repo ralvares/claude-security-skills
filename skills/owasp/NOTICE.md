@@ -1,6 +1,6 @@
 # Notice
 
-The files in `sheets/` come from the [OWASP Cheat Sheet Series](https://github.com/OWASP/CheatSheetSeries), copyright the OWASP Foundation and its contributors, licensed under [Creative Commons Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/).
+The files in `references/` come from the [OWASP Cheat Sheet Series](https://github.com/OWASP/CheatSheetSeries), copyright the OWASP Foundation and its contributors, licensed under [Creative Commons Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/).
 
 Source commit: `ae965343` (imported 2026-10-12, rewritten 2026-10-14).
 
