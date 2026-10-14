@@ -102,10 +102,10 @@ The 7 rules cover only part of the OWASP Top 10. When Claude does not recognise 
 - `scripts/check-rules.sh`: every sheet in `sheets/` is cited in `SECURITY-RULES.md`; size under 24 KB.
 
 ## Steps
-11. [ ] Extract: 7 parallel agents, each reads about 19 sheets in full and writes `sheet | category | 1 to 3 rules` to the scratchpad. Check: 133 sheets present across the outputs.
-12. [ ] Compile `SECURITY-RULES.md` from the extracts: merge duplicates, group by category. Check: `scripts/check-rules.sh` prints `OK: 133 sheets cited, <size> bytes`.
-13. [ ] Spot-check 10 bullets against their sheets (values and wording match).
-14. [ ] Update README cost table, commit, push; copy to `~/.claude/SECURITY.md`.
+11. [x] Extract: 7 parallel agents, each reads about 19 sheets in full and writes `sheet | category | 1 to 3 rules` to the scratchpad. Check: 133 sheets present across the outputs.
+12. [x] Compile `SECURITY-RULES.md` from the extracts: merge duplicates, group by category. Check: `scripts/check-rules.sh` prints `OK: 133 sheets cited, <size> bytes`.
+13. [x] Spot-check 10 bullets against their sheets (values and wording match).
+14. [x] Update README cost table, commit, push; copy to `~/.claude/SECURITY.md`.
 
 ## Decisions
 - Always-on rules cover the full Cheat Sheet Series, not only the Top 10; cost accepted (owner, 2026-10-14).
@@ -118,9 +118,9 @@ Fewer tokens per session and per sheet read, same guidance. Owner: "apply the te
 ## Steps
 15. [x] Delete `scripts/sync-owasp.sh`; README and NOTICE describe manual updates.
 16. [x] `SECURITY-RULES.md` in telegraphic style. Check: `scripts/check-rules.sh` → `OK: 133 sheets cited, <24576 bytes`.
-17. [ ] Pilot: rewrite 3 sheets (Authorization, Webhook_Security, Java_Security). Check: scratchpad `check_compress.py` reports no lost code blocks, inline code, numbers, headings or sheet links; size ratio recorded.
-18. [ ] Rewrite the remaining 130 sheets in parallel batches with the same rules and checker.
-19. [ ] `scripts/check-index.sh` passes; spot-read 5 sheets for meaning; NOTICE lists the rewrite; commit, push, reinstall with `--copy`.
+17. [x] Pilot: rewrite 3 sheets (Authorization, Webhook_Security, Java_Security). Check: scratchpad `check_compress.py` reports no lost code blocks, inline code, numbers, headings or sheet links; size ratio recorded.
+18. [x] Rewrite the remaining 130 sheets in parallel batches with the same rules and checker.
+19. [x] `scripts/check-index.sh` passes; spot-read 5 sheets for meaning; NOTICE lists the rewrite; commit, push, reinstall with `--copy`.
 
 ## Decisions
 - No upstream sync; updates are manual from now on (owner, 2026-10-14).
